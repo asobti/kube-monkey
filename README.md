@@ -27,24 +27,22 @@ that belong to a Deployment as Pods inherit labels from their Deployment.
 
 ####Example of opted-in Deployment
 
-    {
-        apiVersion: "extensions/v1beta1",
-        kind: "Deployment",
-        metadata: {
-            name: "monkey-victim",
-            namespace: "app-namespace",
-        },
-        spec: {
-            template: {
-                metadata: {
-                    labels: {
-                        "kube-monkey/enabled": "enabled",
-                        "kube-monkey/identifier": "monkey-victim",
-                        "kube-monkey/mtbf": "2",
-                    },
-                },
-        [... ommitted ...]
-    }
+```yaml
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: monkey-victim
+  namespace: app-namespace
+spec:
+  template:
+    metadata:
+      labels:
+        kube-monkey/enabled: enabled
+        kube-monkey/identifier: monkey-victim
+        kube-monkey/mtbf: '2'
+[... omitted ...]
+```
 
 ## How kube-monkey works
 
@@ -62,23 +60,37 @@ At termination time, kube-monkey will:
 2. Get a list of running pods for the deployment  
 3. Select one random pod and delete it  
 
+## Building
+
+Clone the repository and build the container.
+
+```
+$ git clone https://github.com/asobti/kube-monkey
+$ cd kube-monkey
+$ make container
+```
+
 ## Configuring
 kube-monkey is configured by a toml file placed at `/etc/kube-monkey/config.toml`.  
-Configuration keys and descriptions can be found in [`config/param/param.go`](https://githug.com/asobti/kube-monkey/blob/master/config/param/param.go)
+Configuration keys and descriptions can be found in [`config/param/param.go`](https://github.com/asobti/kube-monkey/blob/master/config/param/param.go)
 
 #### Example config file
 
-	[kubemonkey]
-	dry_run = true                           # Terminations are only logged
-	run_hour = 8                             # Run scheduling at 8am on weekdays
-	start_hour = 10                          # Don't schedule any pod deaths before 10am
-	end_hour = 4                             # Don't schedule any pod deaths after 4pm
-	blacklisted_namespaces = ["kube-system"] # Critical deployments live here
+```toml
+[kubemonkey]
+dry_run = true                           # Terminations are only logged
+run_hour = 8                             # Run scheduling at 8am on weekdays
+start_hour = 10                          # Don't schedule any pod deaths before 10am
+end_hour = 16                            # Don't schedule any pod deaths after 4pm
+blacklisted_namespaces = ["kube-system"] # Critical deployments live here
+```
 
 ## Deploying
 
 Run kube-monkey as a Deployment within the Kubernetes cluster, in a namespace that has permissions to kill Pods
-in other namespaces.
+in other namespaces (eg. `kube-system`).
+
+See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
 ## Compatibility with Kubernetes
 
