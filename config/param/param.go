@@ -45,7 +45,7 @@ const (
 	// A list of namespaces for which terminations should never
 	// be carried out.
 	// Type: list
-	// Default: []
+	// Default: [ "kube-system" ]
 	BlacklistedNamespaces = "kubemonkey.blacklisted_namespaces"
 
 	// Set to true to enable debug mode

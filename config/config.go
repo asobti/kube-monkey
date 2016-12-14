@@ -21,6 +21,8 @@ const (
 	EnabledLabelKey   = "kube-monkey/enabled"
 	EnabledLabelValue = "enabled"
 	MtbfLabelKey      = "kube-monkey/mtbf"
+
+	KubeSystemNamespace = "kube-system"
 )
 
 func SetDefaults() {
@@ -30,7 +32,7 @@ func SetDefaults() {
 	viper.SetDefault(param.StartHour, 10)
 	viper.SetDefault(param.EndHour, 16)
 	viper.SetDefault(param.GracePeriodSec, 5)
-	viper.SetDefault(param.BlacklistedNamespaces, []string{})
+	viper.SetDefault(param.BlacklistedNamespaces, []string{KubeSystemNamespace})
 
 	viper.SetDefault(param.DebugEnabled, false)
 	viper.SetDefault(param.DebugScheduleDelay, 30)
