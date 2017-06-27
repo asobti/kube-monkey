@@ -143,6 +143,16 @@ func (d *Deployment) IsEnrolled(client *kube.Clientset) (bool, error) {
 	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
+func (d * Deployment) HasKillAll(client *kube.Clientset) (bool, error) {
+	deployment, err := client.Extensions().Deployments(d.namespace).Get(d.name)
+	if err != nil {
+		// Ran into some error: return 'false' for killAll to be safe
+		return false, nil
+	}
+
+	return deployment.Labels[config.KillAllLabelKey] == config.KillAllLabelValue, nil
+}
+
 // Checks if this deployment is blacklisted
 func (d *Deployment) IsBlacklisted(blacklist sets.String) bool {
 	return blacklist.Has(d.namespace)

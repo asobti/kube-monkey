@@ -21,6 +21,8 @@ const (
 	EnabledLabelKey   = "kube-monkey/enabled"
 	EnabledLabelValue = "enabled"
 	MtbfLabelKey      = "kube-monkey/mtbf"
+	KillAllLabelKey   = "kube-monkey/kill-all"
+	KillAllLabelValue = "kill-all"
 
 	KubeSystemNamespace = "kube-system"
 )
