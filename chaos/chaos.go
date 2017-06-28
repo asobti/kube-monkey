@@ -117,13 +117,13 @@ func (c *Chaos) Terminate(client *kube.Clientset) error {
 func (c *Chaos) TerminateAll(client *kube.Clientset) error {
 	fmt.Printf("Terminating ALL pods for deployment %s\n", c.deployment.Name())
 
-	pods, err := c.deployment.RunningPods(client)
+	pods, err := c.deployment.Pods(client)
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("Deployment %s has no running pods at the moment", c.deployment.Name())
+		return fmt.Errorf("Deployment %s has no pods at the moment", c.deployment.Name())
 	}
 
 	for _, pod := range pods {
@@ -142,10 +142,7 @@ func (c *Chaos) DeletePod(client *kube.Clientset, podName string) error {
 		fmt.Printf("[DryRun Mode] Terminated pod %s for deployment %s\n", podName, c.deployment.Name())
 		return nil
 	} else {
-		deleteopts := &api.DeleteOptions{
-			GracePeriodSeconds: config.GracePeriodSeconds(),
-		}
-		return client.Core().Pods(c.deployment.Namespace()).Delete(podName, deleteopts)
+		return c.deployment.DeletePod(client, podName)
 	}
 }
 

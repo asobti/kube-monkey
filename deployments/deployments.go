@@ -116,6 +116,14 @@ func (d *Deployment) Pods(client *kube.Clientset) ([]v1.Pod, error) {
 	return podlist.Items, nil
 }
 
+func (d *Deployment) DeletePod(client *kube.Clientset, podName string) error {
+	deleteopts := &api.DeleteOptions{
+		GracePeriodSeconds: config.GracePeriodSeconds(),
+	}
+
+	return client.Core().Pods(d.namespace).Delete(podName, deleteopts)
+}
+
 // Create a label filter to filter only for pods that belong to the this
 // deployment. This is done using the identifier label
 func (d *Deployment) LabelFilterForPods() (*api.ListOptions, error) {
