@@ -23,9 +23,11 @@ Opt-in is done by setting the following labels on a Kubernetes Deployment:
 **`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the Deployment can expect to have a Pod
 killed approximately every third weekday.  
 **`kube-monkey/identifier`**: A unique identifier for the deployment (eg. the deployment's name). This is used to identify the pods 
-that belong to a Deployment as Pods inherit labels from their Deployment.
+that belong to a Deployment as Pods inherit labels from their Deployment.  
+**`kube-monkey/kill-all`**: Set this label's value to `"kill-all"` if you want kube-monkey to kill ALL of your pods. Default behavior in the absence of this label is to kill only ONE pod. **Use this label carefully.**
 
-####Example of opted-in Deployment
+
+#### Example of opted-in Deployment
 
 ```yaml
 ---

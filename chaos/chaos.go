@@ -15,7 +15,6 @@ import (
 type Chaos struct {
 	killAt        time.Time
 	deployment    *deployments.Deployment
-	targetPodName string
 }
 
 // Create a new Chaos instance
@@ -74,48 +73,76 @@ func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
 		return
 	}
 
-	// Pick a target pod to kill
-	if err = c.PopulateTargetPod(client); err != nil {
-		resultchan <- c.NewResult(err)
-		return
-	}
-
 	// Do the termination
-	if err = c.Terminate(client); err != nil {
-		resultchan <- c.NewResult(err)
-		return
-	}
-
-	// Send a success msg
-	resultchan <- c.NewResult(nil)
-}
-
-// Picks a random target pod from the list of running pods for the deployment
-func (c *Chaos) PopulateTargetPod(client *kube.Clientset) error {
-	pods, err := c.deployment.RunningPods(client)
+	killAll, err := c.deployment.HasKillAll(client)
 	if err != nil {
-		return err
-	}
-	if len(pods) == 0 {
-		return fmt.Errorf("Deployment %s has no running pods at the moment", c.deployment.Name())
+		fmt.Printf("Failed to check KillAll label for deployment %s. Proceeding with termination of a single pod.\n", c.deployment.Name())
+		fmt.Printf(err.Error())
 	}
 
-	c.targetPodName = RandomPodName(pods)
-	return nil
+	if killAll {
+		err = c.TerminateAll(client)
+	} else {
+		err = c.Terminate(client)
+	}
+
+	if err != nil {
+		resultchan <- c.NewResult(err)
+	} else {
+		// Send a success msg
+		resultchan <- c.NewResult(nil)
+	}
 }
 
 // Runs the actual pod-termination logic
 func (c *Chaos) Terminate(client *kube.Clientset) error {
-	fmt.Printf("Terminating pod %s for deployment %s\n", c.targetPodName, c.deployment.Name())
+	// Pick a target pod to delete
+	pods, err := c.deployment.RunningPods(client)
+	if err != nil {
+		return err
+	}
 
+	if len(pods) == 0 {
+		return fmt.Errorf("Deployment %s has no running pods at the moment", c.deployment.Name())
+	}
+
+	targetPod := RandomPodName(pods)
+
+	fmt.Printf("Terminating pod %s for deployment %s\n", targetPod, c.deployment.Name())
+	return c.DeletePod(client, targetPod)
+}
+
+// Terminates ALL pods for the deployment
+// Not the default, or recommended, behavior
+func (c *Chaos) TerminateAll(client *kube.Clientset) error {
+	fmt.Printf("Terminating ALL pods for deployment %s\n", c.deployment.Name())
+
+	pods, err := c.deployment.Pods(client)
+	if err != nil {
+		return err
+	}
+
+	if len(pods) == 0 {
+		return fmt.Errorf("Deployment %s has no pods at the moment", c.deployment.Name())
+	}
+
+	for _, pod := range pods {
+		// In case of error, log it and move on to next pod
+		if err = c.DeletePod(client, pod.Name); err != nil {
+			fmt.Printf("Failed to delete pod %s for deployment %s", pod.Name, c.deployment.Name())
+		}
+	}
+
+	return nil
+}
+
+// Deletes a pod for a deployment
+func (c *Chaos) DeletePod(client *kube.Clientset, podName string) error {
 	if config.DryRun() {
-		fmt.Printf("[DryRun Mode] Terminated pod %s for deployment %s\n", c.targetPodName, c.deployment.Name())
+		fmt.Printf("[DryRun Mode] Terminated pod %s for deployment %s\n", podName, c.deployment.Name())
 		return nil
 	} else {
-		deleteopts := &api.DeleteOptions{
-			GracePeriodSeconds: config.GracePeriodSeconds(),
-		}
-		return client.Core().Pods(c.deployment.Namespace()).Delete(c.targetPodName, deleteopts)
+		return c.deployment.DeletePod(client, podName)
 	}
 }
 
