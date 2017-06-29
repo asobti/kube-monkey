@@ -6,7 +6,6 @@ import (
 	"github.com/asobti/kube-monkey/deployments"
 	"github.com/asobti/kube-monkey/kubernetes"
 	kube "k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"math/rand"
 	"time"
