@@ -102,6 +102,14 @@ func BlacklistedNamespaces() sets.String {
 	return sets.NewString(namespaces...)
 }
 
+func ClusterAPIServerHost() (string, bool) {
+	if viper.IsSet(param.ClusterAPIServerHost) {
+		return viper.GetString(param.ClusterAPIServerHost), true
+	} else {
+		return "", false
+	}
+}
+
 func DebugEnabled() bool {
 	return viper.GetBool(param.DebugEnabled)
 }

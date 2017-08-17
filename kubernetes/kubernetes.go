@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	cfg "github.com/asobti/kube-monkey/config"
 	kube "k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/rest"
 )
@@ -10,6 +11,11 @@ func NewInClusterClient() (*kube.Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if apiserverHost, override := cfg.ClusterAPIServerHost(); override {
+		config.Host = apiserverHost
+	}
+
 	clientset, err := kube.NewForConfig(config)
 	if err != nil {
 		return nil, err
