@@ -16,6 +16,7 @@ func verifyKubeClient() error {
 		return err
 	}
 	if !kubernetes.VerifyClient(client) {
+		fmt.Println(err)
 		return fmt.Errorf("Unable to verify client connectivity to Kubernetes server")
 	}
 	return nil
