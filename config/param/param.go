@@ -48,6 +48,15 @@ const (
 	// Default: [ "kube-system" ]
 	BlacklistedNamespaces = "kubemonkey.blacklisted_namespaces"
 
+	// Host URL for Kubernetes cluster APIServer. Use this config
+	// if the apiserver IP address provided by in-cluster config
+	// does not work for you because your certificate does not
+	// conatain the right SAN
+	// Type: string
+	// Default: No default. If not specified, URL provided
+	// by in-cluster config is used
+	ClusterAPIServerHost = "kubernetes.host"
+
 	// Set to true to enable debug mode
 	// Type: bool
 	// Default: false
