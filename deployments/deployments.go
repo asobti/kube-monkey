@@ -26,9 +26,12 @@ func New(dep *v1beta1.Deployment) (*Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-	mtbf, err := meanTimeBetweenFailures(dep)
-	if err != nil {
-		return nil, err
+	mtbf := 1 // because in deployment labels I don't want to put a label with mtbf - no labels in deployment regarding kube-monkey
+	if config.SafeMode() {
+		mtbf, err = meanTimeBetweenFailures(dep)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Deployment{
@@ -39,15 +42,15 @@ func New(dep *v1beta1.Deployment) (*Deployment, error) {
 	}, nil
 }
 
-// Returns the value of the label defined by config.IdentLabelKey
+// Returns the value of the label defined by param.IdentLabelKey
 // from the deployment labels
 // This label should be unique to a deployment, and is used to
 // identify the pods that belong to this deployment, as pods
 // inherit labels from the Deployment
 func identifier(kubedep *v1beta1.Deployment) (string, error) {
-	identifier, ok := kubedep.Labels[config.IdentLabelKey]
+	identifier, ok := kubedep.Labels[config.IdentLabelKey()]
 	if !ok {
-		return "", fmt.Errorf("Deployment %s does not have %s label", kubedep.Name, config.IdentLabelKey)
+		return "", fmt.Errorf("Deployment %s does not have %s label", kubedep.Name, config.IdentLabelKey())
 	}
 	return identifier, nil
 }
@@ -139,7 +142,7 @@ func (d *Deployment) LabelFilterForPods() (*api.ListOptions, error) {
 
 // Create a labels.Requirement that can be used to build a filter
 func (d *Deployment) LabelRequirementForPods() (*labels.Requirement, error) {
-	return labels.NewRequirement(config.IdentLabelKey, selection.Equals, sets.NewString(d.identifier))
+	return labels.NewRequirement(config.IdentLabelKey(), selection.Equals, sets.NewString(d.identifier))
 }
 
 // Checks if the deployment is enrolled in kube-monkey
@@ -148,10 +151,23 @@ func (d *Deployment) IsEnrolled(client *kube.Clientset) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
-	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
+
+	if config.SafeMode() {
+		return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
+	}
+
+	value, check := deployment.Labels[config.DisabledLabelKey]
+	if check {
+		boolVal, err := strconv.ParseBool(value)
+		if err != nil {
+			return false, nil
+		}
+		return !boolVal, nil
+	}
+	return true, nil
 }
 
-func (d * Deployment) HasKillAll(client *kube.Clientset) (bool, error) {
+func (d *Deployment) HasKillAll(client *kube.Clientset) (bool, error) {
 	deployment, err := client.Extensions().Deployments(d.namespace).Get(d.name)
 	if err != nil {
 		// Ran into some error: return 'false' for killAll to be safe

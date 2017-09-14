@@ -1,0 +1,20 @@
+---
+  apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: busybox4
+    namespace: default
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: busybox4
+      spec:
+        containers:
+          - name: busybox
+            image: busybox
+            command:
+              - sleep
+              - "3600"
+            imagePullPolicy: IfNotPresent

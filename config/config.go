@@ -17,12 +17,13 @@ const (
 	// Currently, there does not appear to be
 	// any value in making these configurable
 	// so defining them as consts
-	IdentLabelKey     = "kube-monkey/identifier"
-	EnabledLabelKey   = "kube-monkey/enabled"
-	EnabledLabelValue = "enabled"
-	MtbfLabelKey      = "kube-monkey/mtbf"
-	KillAllLabelKey   = "kube-monkey/kill-all"
-	KillAllLabelValue = "kill-all"
+	EnabledLabelKey    = "kube-monkey/enabled"
+	DisabledLabelKey   = "kube-monkey/disabled"
+	EnabledLabelValue  = "enabled"
+	DisabledLabelValue = "true"
+	MtbfLabelKey       = "kube-monkey/mtbf"
+	KillAllLabelKey    = "kube-monkey/kill-all"
+	KillAllLabelValue  = "kill-all"
 
 	KubeSystemNamespace = "kube-system"
 )
@@ -35,6 +36,8 @@ func SetDefaults() {
 	viper.SetDefault(param.EndHour, 16)
 	viper.SetDefault(param.GracePeriodSec, 5)
 	viper.SetDefault(param.BlacklistedNamespaces, []string{KubeSystemNamespace})
+	viper.SetDefault(param.SafeMode, true)
+	viper.SetDefault(param.IdentLabelKey, "kube-monkey/identifier")
 
 	viper.SetDefault(param.DebugEnabled, false)
 	viper.SetDefault(param.DebugScheduleDelay, 30)
@@ -108,6 +111,14 @@ func ClusterAPIServerHost() (string, bool) {
 	} else {
 		return "", false
 	}
+}
+
+func SafeMode() bool {
+	return viper.GetBool(param.SafeMode)
+}
+
+func IdentLabelKey() string {
+	return viper.GetString(param.IdentLabelKey)
 }
 
 func DebugEnabled() bool {

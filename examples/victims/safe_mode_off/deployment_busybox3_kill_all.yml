@@ -1,0 +1,21 @@
+---
+  apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: busybox3
+    namespace: default
+  spec:
+    replicas: 3
+    template:
+      metadata:
+        labels:
+          app: busybox3
+          kube-monkey/kill-all: "kill-all"
+      spec:
+        containers:
+          - name: busybox
+            image: busybox
+            command:
+              - sleep
+              - "3600"
+            imagePullPolicy: IfNotPresent
