@@ -4,10 +4,17 @@ clusters. It randomly deletes Kubernetes pods in the cluster encouraging and val
 services.
 
 --
+kube-monkey has two modes or running:
 
+1. Safe mode on
 kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
 Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and
 defaults to 10am to 4pm.
+
+2. Safe mode off
+kube-monkey runs exactly as in the **Safe mode on** but in this mode the selection of deployments is performed selecting all deployments that are not labeled
+properly for ignoring. Also it takes count of the blacklisted namespaces (no deployment will be selected from the blacklist)
+
 
 kube-monkey can be configured with a list of namespaces to blacklist - any deployments within a blacklisted namespace will not 
 be touched.
@@ -20,6 +27,7 @@ to have their pods terminated by kube-monkey.
 Opt-in is done by setting the following labels on a Kubernetes Deployment:
 
 **`kube-monkey/enabled`**: Set to **`"enabled"`** to opt-in to kube-monkey  
+**`kube-monkey/disabled`**: Set to **`"true"`** for excluding - available only for safe_mode=false
 **`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the Deployment can expect to have a Pod
 killed approximately every third weekday.  
 **`kube-monkey/identifier`**: A unique identifier for the deployment (eg. the deployment's name). This is used to identify the pods 
@@ -45,6 +53,36 @@ spec:
         kube-monkey/mtbf: '2'
 [... omitted ...]
 ```
+## Opting-Out of Chaos
+
+when kube-monkey is configured with **Safe mode off**, this will select all deployments that are not labeled properly. This mode was created for a Development need. You will label the deployments that should not be elected in the scheduling phase.
+
+Opt-out is done by setting the following labels on a Kubernetes Deployment:
+
+**`kube-monkey/disabled`**: Set to **`"true"`** for excluding - available only for safe_mode=false
+**`kube-monkey/identifier`**: This label name can be configured. Rename it properly to match your deployments labels (assuming that you have the same label name with unique value for each Deployment). A unique identifier for the deployment (eg. the deployment's name). This is used to identify the pods 
+that belong to a Deployment as Pods inherit labels from their Deployment.  
+**`kube-monkey/kill-all`**: Set this label's value to `"kill-all"` if you want kube-monkey to kill ALL of your pods. Default behavior in the absence of this label is to kill only ONE pod. **Use this label carefully.**
+
+
+#### Example of opted-in Deployment
+
+```yaml
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: monkey-victim
+  namespace: app-namespace
+spec:
+  template:
+    metadata:
+      labels:
+        kube-monkey/identifier: monkey-victim
+[... omitted ...]
+```
+
+
 
 ## How kube-monkey works
 
@@ -86,6 +124,8 @@ start_hour = 10                          # Don't schedule any pod deaths before 
 end_hour = 16                            # Don't schedule any pod deaths after 4pm
 blacklisted_namespaces = ["kube-system"] # Critical deployments live here
 ```
+
+Also you can find some examples in the **examples** directory.
 
 ## Deploying
 
