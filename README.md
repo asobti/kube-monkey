@@ -3,7 +3,6 @@ kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/
 clusters. It randomly deletes Kubernetes pods in the cluster encouraging and validating the development of failure-resilient
 services.
 
---
 kube-monkey has two modes or running:
 
 1. Safe mode on
@@ -124,8 +123,6 @@ start_hour = 10                          # Don't schedule any pod deaths before 
 end_hour = 16                            # Don't schedule any pod deaths after 4pm
 blacklisted_namespaces = ["kube-system"] # Critical deployments live here
 ```
-
-Also you can find some examples in the **examples** directory.
 
 ## Deploying
 
