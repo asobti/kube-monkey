@@ -2,9 +2,9 @@ package chaos
 
 import (
 	"fmt"
-	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/deployments"
-	"github.com/asobti/kube-monkey/kubernetes"
+	"github.com/andreic92/kube-monkey/config"
+	"github.com/andreic92/kube-monkey/deployments"
+	"github.com/andreic92/kube-monkey/kubernetes"
 	kube "k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"math/rand"
@@ -12,8 +12,8 @@ import (
 )
 
 type Chaos struct {
-	killAt        time.Time
-	deployment    *deployments.Deployment
+	killAt     time.Time
+	deployment *deployments.Deployment
 }
 
 // Create a new Chaos instance

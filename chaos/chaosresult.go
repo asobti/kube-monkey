@@ -1,6 +1,6 @@
 package chaos
 
-import "github.com/asobti/kube-monkey/deployments"
+import "github.com/andreic92/kube-monkey/deployments"
 
 type ChaosResult struct {
 	chaos *Chaos
