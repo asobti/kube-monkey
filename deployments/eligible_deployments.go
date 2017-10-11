@@ -3,8 +3,8 @@ package deployments
 import (
 	"fmt"
 
-	"github.com/andreic92/kube-monkey/config"
-	"github.com/andreic92/kube-monkey/kubernetes"
+	"github.com/asobti/kube-monkey/config"
+	"github.com/asobti/kube-monkey/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.5/pkg/labels"

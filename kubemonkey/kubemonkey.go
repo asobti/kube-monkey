@@ -2,11 +2,11 @@ package kubemonkey
 
 import (
 	"fmt"
-	"github.com/andreic92/kube-monkey/calendar"
-	"github.com/andreic92/kube-monkey/chaos"
-	"github.com/andreic92/kube-monkey/config"
-	"github.com/andreic92/kube-monkey/kubernetes"
-	"github.com/andreic92/kube-monkey/schedule"
+	"github.com/asobti/kube-monkey/calendar"
+	"github.com/asobti/kube-monkey/chaos"
+	"github.com/asobti/kube-monkey/config"
+	"github.com/asobti/kube-monkey/kubernetes"
+	"github.com/asobti/kube-monkey/schedule"
 	"time"
 )
 

@@ -1,4 +1,4 @@
-package: github.com/andreic92/kube-monkey
+package: github.com/asobti/kube-monkey
 import:
 - package: github.com/fsnotify/fsnotify
 - package: github.com/spf13/viper

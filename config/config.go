@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"github.com/andreic92/kube-monkey/config/param"
+	"github.com/asobti/kube-monkey/config/param"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/1.5/pkg/util/sets"

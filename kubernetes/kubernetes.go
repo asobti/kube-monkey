@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
-	cfg "github.com/andreic92/kube-monkey/config"
+	cfg "github.com/asobti/kube-monkey/config"
 	kube "k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/rest"
 )

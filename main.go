@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/andreic92/kube-monkey/config"
-	"github.com/andreic92/kube-monkey/kubemonkey"
+	"github.com/asobti/kube-monkey/config"
+	"github.com/asobti/kube-monkey/kubemonkey"
 )
 
 func initConfig() {
