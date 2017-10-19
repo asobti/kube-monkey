@@ -7,6 +7,19 @@ const (
 	// Default: true
 	DryRun = "kubemonkey.dry_run"
 
+	// If set to true, the deployments selection process is performed considering the
+	// kube-monkey/enabled flag. If it is false, are selected all deployments that are
+	// not labeled with kube-monkey/disabled.
+	// Type: bool
+	// Default: true
+	SafeMode = "kubemonkey.safe_mode"
+
+	// When you create a K8S deployment, you should have a label defining the owned pods.
+	// You can set the name of that label with this parameter in order to match your cluster settings.
+	// Type: string
+	// Default: kube-monkey/identifier
+	IdentLabelKey = "kubemonkey.ident_label_key"
+
 	// The timezone to use when scheduling Pod terminations
 	// Type: string
 	// Default: America/Los_Angeles

@@ -12,13 +12,14 @@
           app: kube-monkey
       spec:
         containers:
-          -  name: kube-monkey
-             command:
-               - "/kube-monkey"
-             image: kube-monkey:v0.1.0
-             volumeMounts:
-               - name: config-volume
-                 mountPath: "/etc/kube-monkey"
+          - name: kube-monkey
+            command:
+              - "/kube-monkey"
+            image: kube-monkey:v0.1.0
+            volumeMounts:
+              - name: config-volume
+                mountPath: "/etc/kube-monkey"
+            imagePullPolicy: IfNotPresent
         volumes:
           - name: config-volume
             configMap:

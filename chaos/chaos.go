@@ -12,8 +12,8 @@ import (
 )
 
 type Chaos struct {
-	killAt        time.Time
-	deployment    *deployments.Deployment
+	killAt     time.Time
+	deployment *deployments.Deployment
 }
 
 // Create a new Chaos instance

@@ -2,6 +2,7 @@ package deployments
 
 import (
 	"fmt"
+
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api"
@@ -21,13 +22,13 @@ func EligibleDeployments() ([]*Deployment, error) {
 	}
 
 	for _, dep := range enabledDeployments {
-		deployment, err := New(&dep)
-		if err != nil {
-			fmt.Printf("Skipping eligible deployment %s because of error:\n%s\n", dep.Name, err.Error())
+		if blacklist.Has(dep.Namespace) {
 			continue
 		}
 
-		if deployment.IsBlacklisted(blacklist) {
+		deployment, err := New(&dep)
+		if err != nil {
+			fmt.Printf("Skipping eligible deployment %s because of error:\n%s\n", dep.Name, err.Error())
 			continue
 		}
 
@@ -57,14 +58,22 @@ func EnrolledDeployments() ([]v1beta1.Deployment, error) {
 
 func EnrollmentFilter() (*api.ListOptions, error) {
 	req, err := EnrollmentRequirement()
+	if config.SafeMode() {
+		req, err = SafeEnrollmentRequirement()
+	}
 	if err != nil {
 		return nil, err
 	}
+
 	return &api.ListOptions{
 		LabelSelector: labels.NewSelector().Add(*req),
 	}, nil
 }
 
 func EnrollmentRequirement() (*labels.Requirement, error) {
+	return labels.NewRequirement(config.DisabledLabelKey, selection.DoesNotExist, nil)
+}
+
+func SafeEnrollmentRequirement() (*labels.Requirement, error) {
 	return labels.NewRequirement(config.EnabledLabelKey, selection.Equals, sets.NewString(config.EnabledLabelValue))
 }
