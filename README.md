@@ -83,11 +83,11 @@ blacklisted_namespaces = ["kube-system"] # Critical deployments live here
 
 ## Deploying
 
-First deploy the expected `kube-monkey-config-map` configmap in the `kube-system` namespace. Make sure to define the keyname as `config.toml` 
+1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml` 
 
-For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml`
+> For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml`
 
-Run kube-monkey as a Deployment within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
+2. Run kube-monkey as a Deployment within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
