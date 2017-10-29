@@ -11,19 +11,19 @@ build: clean
 # Supressing docker build avoids printing the env variables
 container: build
 ifneq ($(and $(http_proxy), $(https_proxy)),)
-        @echo Starting Docker build, importing both http_proxy and https_proxy env variables
-        @docker build --build-arg http_proxy=$(http_proxy) --build-arg https_proxy=$(https_proxy) -t kube-monkey:$(TAG) .
+	@echo Starting Docker build, importing both http_proxy and https_proxy env variables
+	@docker build --build-arg http_proxy=$(http_proxy) --build-arg https_proxy=$(https_proxy) -t kube-monkey:$(TAG) .
 else
 ifdef http_proxy
-        @echo Starting Docker build, importing http_proxy
-        @docker build --build-arg http_proxy=$(http_proxy) -t kube-monkey:$(TAG) .
+	@echo Starting Docker build, importing http_proxy
+	@docker build --build-arg http_proxy=$(http_proxy) -t kube-monkey:$(TAG) .
 else
 ifdef https_proxy
-        @echo Starting Docker build, importing https_proxy
-        @docker build --build-arg https_proxy=$(https_proxy) -t kube-monkey:$(TAG) .
+	@echo Starting Docker build, importing https_proxy
+	@docker build --build-arg https_proxy=$(https_proxy) -t kube-monkey:$(TAG) .
 else
-        @echo no env proxies set, building normally
-        docker build -t kube-monkey:$(TAG) .
+	@echo no env proxies set, building normally
+	docker build -t kube-monkey:$(TAG) .
 endif
 endif
 endif
