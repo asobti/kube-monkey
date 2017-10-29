@@ -40,6 +40,17 @@ spec:
 [... omitted ...]
 ```
 
+### Overriding the apiserver
+#### Use cases:
+* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L336) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver. 
+* If you are running an unauthenticated system, you may need to force the http apiserver enpoint. 
+
+#### To override the apiserver specify in the config.toml file
+```toml
+[kubernetes]
+host="https://your-apiserver-url.com"
+```
+
 ## How kube-monkey works
 
 #### Scheduling time
