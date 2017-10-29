@@ -1,21 +1,15 @@
-## kube-monkey
-kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) 
-clusters. It randomly deletes Kubernetes pods in the cluster encouraging and validating the development of failure-resilient
-services.
+# kube-monkey
+kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes pods in the cluster encouraging and validating the development of failure-resilient services.
 
---
+---
 
-kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
-Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and
-defaults to 10am to 4pm.
+kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and defaults to 10am to 4pm.
 
-kube-monkey can be configured with a list of namespaces to blacklist - any deployments within a blacklisted namespace will not 
-be touched.
+kube-monkey can be configured with a list of namespaces to blacklist - any deployments within a blacklisted namespace will not  be touched.
 
 ## Opting-In to Chaos
 
-kube-monkey works on an opt-in model and will only schedule terminations for Deployments that have explicitly agreed 
-to have their pods terminated by kube-monkey.
+kube-monkey works on an opt-in model and will only schedule terminations for Deployments that have explicitly agreed to have their pods terminated by kube-monkey.
 
 Opt-in is done by setting the following labels on a Kubernetes Deployment:
 
@@ -66,18 +60,18 @@ At termination time, kube-monkey will:
 
 Clone the repository and build the container.
 
-```
+```bash
 go get github.com/asobti/kube-monkey
 cd $GOPATH/src/github.com/asobti/kube-monkey
 make container
 ```
 
 ## Configuring
-kube-monkey is configured by a toml file placed at `/etc/kube-monkey/config.toml`.  
+kube-monkey is configured by a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before deployment. 
+
 Configuration keys and descriptions can be found in [`config/param/param.go`](https://github.com/asobti/kube-monkey/blob/master/config/param/param.go)
 
-#### Example config file
-
+#### Example config.toml file
 ```toml
 [kubemonkey]
 dry_run = true                           # Terminations are only logged
@@ -89,8 +83,11 @@ blacklisted_namespaces = ["kube-system"] # Critical deployments live here
 
 ## Deploying
 
-Run kube-monkey as a Deployment within the Kubernetes cluster, in a namespace that has permissions to kill Pods
-in other namespaces (eg. `kube-system`).
+First deploy the expected `kube-monkey-config-map` configmap in the `kube-system` namespace. Make sure to define the keyname as `config.toml` 
+
+For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml`
+
+Run kube-monkey as a Deployment within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
