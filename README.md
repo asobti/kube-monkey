@@ -108,7 +108,7 @@ kube-monkey is built using v1.5 of [kubernetes/client-go](https://github.com/kub
 [Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which 
 versions of Kubernetes are compatible.
 
-## To do
+## Ways to contribute
 
-- Add tests
+- Add unit [tests](https://golang.org/pkg/testing/)
 - Use a logging library like [glog](https://github.com/golang/glog)
