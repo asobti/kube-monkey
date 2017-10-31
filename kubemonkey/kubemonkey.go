@@ -1,7 +1,6 @@
 package kubemonkey
 
 import (
-	"fmt"
 	"time"
 	
 	"github.com/golang/glog"
@@ -10,19 +9,11 @@ import (
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/calendar"
 	"github.com/asobti/kube-monkey/schedule"
-	"github.com/asobti/kube-monkey/kubernetes"
 )
 
 func verifyKubeClient() error {
-	client, err := kubernetes.NewInClusterClient()
-	if err != nil {
-		return err
-	}
-	
-	if !kubernetes.VerifyClient(client) {
-		return fmt.Errorf("Unable to verify client connectivity to Kubernetes server")
-	}
-	return nil
+	_, err := chaos.CreateClient()
+	return err
 }
 
 func durationToNextRun(runhour int, location *time.Location) time.Duration {
