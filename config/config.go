@@ -2,11 +2,14 @@ package config
 
 import (
 	"fmt"
-	"github.com/asobti/kube-monkey/config/param"
-	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/viper"
-	"k8s.io/client-go/1.5/pkg/util/sets"
 	"time"
+	
+	"github.com/spf13/viper"
+	"github.com/fsnotify/fsnotify"
+	
+	"github.com/asobti/kube-monkey/config/param"
+	
+	"k8s.io/client-go/1.5/pkg/util/sets"
 )
 
 const (

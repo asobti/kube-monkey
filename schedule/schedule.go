@@ -2,12 +2,13 @@ package schedule
 
 import (
 	"fmt"
-	"github.com/asobti/kube-monkey/calendar"
+	"time"
+	"math/rand"
+	
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
+	"github.com/asobti/kube-monkey/calendar"
 	"github.com/asobti/kube-monkey/deployments"
-	"math/rand"
-	"time"
 )
 
 type Schedule struct {

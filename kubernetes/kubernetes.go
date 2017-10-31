@@ -1,10 +1,12 @@
 package kubernetes
 
 import (
+	"fmt"
+	
 	cfg "github.com/asobti/kube-monkey/config"
+	
 	kube "k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/rest"
-	"fmt"
 )
 
 func NewInClusterClient() (*kube.Clientset, error) {

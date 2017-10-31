@@ -2,8 +2,8 @@ package calendar
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
+	"math/rand"
 )
 
 // Checks if specified Time is a weekday

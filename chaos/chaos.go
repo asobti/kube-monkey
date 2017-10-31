@@ -2,13 +2,15 @@ package chaos
 
 import (
 	"fmt"
+	"time"
+	"math/rand"
+	
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/deployments"
 	"github.com/asobti/kube-monkey/kubernetes"
+	
 	kube "k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api/v1"
-	"math/rand"
-	"time"
 )
 
 type Chaos struct {
