@@ -1,9 +1,10 @@
 package schedule
 
 import (
-	"fmt"
 	"time"
 	"math/rand"
+	
+	"github.com/golang/glog"
 	
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
@@ -24,22 +25,22 @@ func (s *Schedule) Add(entry *chaos.Chaos) {
 }
 
 func (s *Schedule) Print() {
-	fmt.Println("********** Today's schedule **********")
+	glog.V(3).Info("********** Today's schedule **********")
 	if len(s.entries) == 0 {
-		fmt.Println("No terminations scheduled")
+		glog.V(3).Info("No terminations scheduled")
 	} else {
-		fmt.Printf("\tDeployment\t\tTermination time\n")
-		fmt.Printf("\t----------\t\t----------------\n")
+		glog.V(3).Info("\tDeployment\t\tTermination time\n")
+		glog.V(3).Info("\t----------\t\t----------------\n")
 		for _, chaos := range s.entries {
-			fmt.Printf("\t%s\t\t%s\n", chaos.Deployment().Name(), chaos.KillAt())
+			glog.V(3).Info("\t%s\t\t%s\n", chaos.Deployment().Name(), chaos.KillAt())
 		}
 	}
 
-	fmt.Println("********** End of schedule **********")
+	glog.V(3).Info("********** End of schedule **********")
 }
 
 func New() (*Schedule, error) {
-	fmt.Println("Generating schedule for terminations")
+	glog.V(2).Info("Generating schedule for terminations")
 	deployments, err := deployments.EligibleDeployments()
 	if err != nil {
 		return nil, err

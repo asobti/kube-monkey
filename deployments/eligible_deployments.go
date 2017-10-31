@@ -1,7 +1,7 @@
 package deployments
 
 import (
-	"fmt"
+	"github.com/golang/glog"
 	
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
@@ -25,7 +25,7 @@ func EligibleDeployments() ([]*Deployment, error) {
 	for _, dep := range enabledDeployments {
 		deployment, err := New(&dep)
 		if err != nil {
-			fmt.Printf("Skipping eligible deployment %s because of error:\n%s\n", dep.Name, err.Error())
+			glog.V(3).Infof("Skipping eligible deployment %s because of error:\n%s\n", dep.Name, err.Error())
 			continue
 		}
 

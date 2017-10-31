@@ -1,9 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"time"
 	
+	"github.com/golang/glog"
 	"github.com/spf13/viper"
 	"github.com/fsnotify/fsnotify"
 	
@@ -49,7 +49,7 @@ func setupWatch() {
 	// TODO: This does not appear to be working
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		fmt.Println("Config change detected")
+		glog.V(2).Infoln("Config change detected")
 		ValidateConfigs()
 	})
 }
@@ -64,7 +64,12 @@ func Init() error {
 		return err
 	}
 
-	ValidateConfigs()
+	if err := ValidateConfigs(); err != nil {
+		glog.Errorf("Failed to validate %v", err)
+		return err
+	} else {
+		glog.V(3).Info("Successfully validated configs")
+	}
 	setupWatch()
 	return nil
 }
@@ -77,7 +82,7 @@ func Timezone() *time.Location {
 	tz := viper.GetString(param.Timezone)
 	location, err := time.LoadLocation(tz)
 	if err != nil {
-		panic(err.Error())
+		glog.Fatal(err.Error())
 	}
 	return location
 }

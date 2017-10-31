@@ -1,7 +1,7 @@
 package kubernetes
 
 import (
-	"fmt"
+	"github.com/golang/glog"
 	
 	cfg "github.com/asobti/kube-monkey/config"
 	
@@ -12,18 +12,18 @@ import (
 func NewInClusterClient() (*kube.Clientset, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		fmt.Println(err)
+		glog.Errorf("failed to obtain config from InClusterConfig: %v", err)
 		return nil, err
 	}
 
 	if apiserverHost, override := cfg.ClusterAPIServerHost(); override {
-		fmt.Printf("API server host overriden to: %s\n", apiserverHost)
+		glog.V(1).Infof("API server host overriden to: %s\n", apiserverHost)
 		config.Host = apiserverHost
 	}
 
 	clientset, err := kube.NewForConfig(config)
 	if err != nil {
-		fmt.Println(err)
+		glog.Errorf("failed to create clientset in NewForConfig: %v", err)
 		return nil, err
 	}
 	return clientset, nil
