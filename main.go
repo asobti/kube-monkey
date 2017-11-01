@@ -12,9 +12,9 @@ import (
 )
 
 func glogUsage() {
-        fmt.Fprintf(os.Stderr, "usage: example -stderrthreshold=[INFO|WARN|FATAL] -log_dir=[string]\n", )
-        flag.PrintDefaults()
-        os.Exit(2)
+	fmt.Fprintf(os.Stderr, "usage: example -stderrthreshold=[INFO|WARN|FATAL] -log_dir=[string]\n", )
+	flag.PrintDefaults()
+	os.Exit(2)
 }
 
 func initConfig() {
@@ -24,14 +24,14 @@ func initConfig() {
 }
 
 func main() {
-        // Check commandline options or "flags" for glog parameters
-        // to be picked up by the glog module
-        flag.Usage = glogUsage
-        flag.Parse()
+	// Check commandline options or "flags" for glog parameters
+	// to be picked up by the glog module
+	flag.Usage = glogUsage
+	flag.Parse()
 
-        // Since km runs as a k8 pod, log everything to stderr (stdout not supported)
-        // this takes advantage of k8's logging driver allowing kubectl logs kube-monkey
-	flag.Lookup("logtostderr").Value.Set("true")
+	// Since km runs as a k8 pod, log everything to stderr (stdout not supported)
+	// this takes advantage of k8's logging driver allowing kubectl logs kube-monkey
+	flag.Lookup("alsologtostderr").Value.Set("true")
 	
 	// Initialize configs
 	initConfig()
