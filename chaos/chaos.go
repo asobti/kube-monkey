@@ -117,7 +117,7 @@ func (c *Chaos) Terminate(client *kube.Clientset) error {
 // Terminates ALL pods for the deployment
 // Not the default, or recommended, behavior
 func (c *Chaos) TerminateAll(client *kube.Clientset) error {
-	glog.Errorf("Terminating ALL pods for deployment %s\n", c.deployment.Name())
+	glog.V(1).Infof("Terminating ALL pods for deployment %s\n", c.deployment.Name())
 
 	pods, err := c.deployment.Pods(client)
 	if err != nil {
@@ -141,7 +141,7 @@ func (c *Chaos) TerminateAll(client *kube.Clientset) error {
 // Deletes a pod for a deployment
 func (c *Chaos) DeletePod(client *kube.Clientset, podName string) error {
 	if config.DryRun() {
-		glog.Errorf("[DryRun Mode] Terminated pod %s for deployment %s\n", podName, c.deployment.Name())
+		glog.V(1).Infof("[DryRun Mode] Terminated pod %s for deployment %s\n", podName, c.deployment.Name())
 		return nil
 	} else {
 		return c.deployment.DeletePod(client, podName)
