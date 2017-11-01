@@ -17,6 +17,24 @@ func glogUsage() {
 	os.Exit(2)
 }
 
+func initLogging() {
+	// Check commandline options or "flags" for glog parameters
+	// to be picked up by the glog module
+	flag.Usage = glogUsage
+	flag.Parse()
+
+	if _, err := os.Stat(flag.Lookup("log_dir").Value.String()); os.IsNotExist(err) {
+		if (os.MkdirAll(flag.Lookup("log_dir").Value.String(), os.ModePerm) != nil) {
+			glog.Errorf("Failed to open custom log directory; defaulting to /tmp! Error: %v", flag.Lookup("log_dir").Value, err)
+		} else {
+			glog.Errorf("Failed to open custom log directory; attempting to create custom directory! Error: %v", flag.Lookup("log_dir").Value, err)
+		}
+	}
+	// Since km runs as a k8 pod, log everything to stderr (stdout not supported)
+	// this takes advantage of k8's logging driver allowing kubectl logs kube-monkey
+	flag.Lookup("alsologtostderr").Value.Set("true")
+}
+
 func initConfig() {
 	if err := config.Init(); err != nil {
 		glog.Fatal(err.Error())
@@ -24,24 +42,13 @@ func initConfig() {
 }
 
 func main() {
-	// Check commandline options or "flags" for glog parameters
-	// to be picked up by the glog module
-	flag.Usage = glogUsage
-	flag.Parse()
-
-	// Since km runs as a k8 pod, log everything to stderr (stdout not supported)
-	// this takes advantage of k8's logging driver allowing kubectl logs kube-monkey
-	flag.Lookup("alsologtostderr").Value.Set("true")
+	// Initialize logging
+	initLogging()
 	
 	// Initialize configs
 	initConfig()
 	
-	if _, err := os.Stat(flag.Lookup("log_dir").Value.String()); !os.IsNotExist(err) {
-		glog.Infof("Starting kube-monkey with v logging level %v and local log directory %s", flag.Lookup("v").Value, flag.Lookup("log_dir").Value)
-	} else {
-		glog.Errorf("Failed to open custom log directory; defaulting to /tmp! Error: %v", flag.Lookup("log_dir").Value, err)
-		glog.Infof("Starting kube-monkey with v logging level %v and default local log directory /tmp", flag.Lookup("v").Value)
-	}
+	glog.Infof("Starting kube-monkey with v logging level %v and local log directory %s", flag.Lookup("v").Value, flag.Lookup("log_dir").Value)
 	
 	if err := kubemonkey.Run(); err != nil {
 		glog.Fatal(err.Error())

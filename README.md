@@ -98,8 +98,6 @@ See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples
 
 kube-monkey uses glog and supports all command-line features for glog. To specify a custom v level or a custom log directory on the pod, see  `args: ["-v=5", "-log_dir=/path/to/custom/log"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
 
-If you specify a directory to log to that doesn't exist naturally, modify the [`Dockerfile`](https://github.com/asobti/kube-monkey/tree/master/Dockerfile#L8) line `RUN mkdir -p /path/to/custom/log`
-
 ## Compatibility with Kubernetes
 
 kube-monkey is built using v1.5 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the 
