@@ -27,7 +27,7 @@ func initLogging() {
 		if (os.MkdirAll(flag.Lookup("log_dir").Value.String(), os.ModePerm) != nil) {
 			glog.Errorf("Failed to open custom log directory; defaulting to /tmp! Error: %v", flag.Lookup("log_dir").Value, err)
 		} else {
-			glog.Errorf("Failed to open custom log directory; attempting to create custom directory! Error: %v", flag.Lookup("log_dir").Value, err)
+			glog.V(3).Infof("Failed to open custom log directory; attempting to create custom directory! Error: %v", flag.Lookup("log_dir").Value, err)
 		}
 	}
 	// Since km runs as a k8 pod, log everything to stderr (stdout not supported)
