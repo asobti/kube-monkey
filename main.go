@@ -47,5 +47,3 @@ func main() {
 		glog.Fatal(err.Error())
 	}
 }
-./main.go:40: cannot use flag.Lookup("log_dir").Value (type flag.Value) as type string in argument to os.Stat
-make: *** [build] Error 2
