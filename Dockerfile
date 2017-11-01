@@ -5,4 +5,5 @@ RUN if (dpkg -l | grep -cq tzdata); then \
         echo "Installing tzdata to avoid go panic caused by missing timezone data"; \
         apt-get update && apt-get install tzdata -y --no-install-recommends apt-utils; \
     fi
+RUN mkdir -p /path/to/custom/log
 COPY kube-monkey /kube-monkey

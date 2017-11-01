@@ -35,10 +35,17 @@ func main() {
 	
 	// Initialize configs
 	initConfig()
-
-	glog.Info("Starting kube-monkey with logging level: ", flag.Lookup("v").Value)
-
+	
+	if _, err := os.Stat(flag.Lookup("log_dir").Value.String()); !os.IsNotExist(err) {
+		glog.Infof("Starting kube-monkey with v logging level %v and local log directory %s", flag.Lookup("v").Value, flag.Lookup("log_dir").Value)
+	} else {
+		glog.Errorf("Failed to open custom log directory; defaulting to /tmp! Error: %v", flag.Lookup("log_dir").Value, err)
+		glog.Infof("Starting kube-monkey with v logging level %v and default local log directory /tmp", flag.Lookup("v").Value)
+	}
+	
 	if err := kubemonkey.Run(); err != nil {
 		glog.Fatal(err.Error())
 	}
 }
+./main.go:40: cannot use flag.Lookup("log_dir").Value (type flag.Value) as type string in argument to os.Stat
+make: *** [build] Error 2
