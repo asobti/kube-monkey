@@ -111,4 +111,4 @@ versions of Kubernetes are compatible.
 ## Ways to contribute
 
 - Add unit [tests](https://golang.org/pkg/testing/)
-- Use a logging library like [glog](https://github.com/golang/glog)
+- Standardize/establish logging convention for [glog](https://github.com/golang/glog) usage
