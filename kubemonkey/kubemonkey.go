@@ -1,35 +1,29 @@
 package kubemonkey
 
 import (
-	"fmt"
-	"github.com/asobti/kube-monkey/calendar"
+	"time"
+	
+	"github.com/golang/glog"
+	
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/kubernetes"
+	"github.com/asobti/kube-monkey/calendar"
 	"github.com/asobti/kube-monkey/schedule"
-	"time"
 )
 
 func verifyKubeClient() error {
-	client, err := kubernetes.NewInClusterClient()
-	if err != nil {
-		return err
-	}
-	if !kubernetes.VerifyClient(client) {
-		fmt.Println(err)
-		return fmt.Errorf("Unable to verify client connectivity to Kubernetes server")
-	}
-	return nil
+	_, err := chaos.CreateClient()
+	return err
 }
 
 func durationToNextRun(runhour int, location *time.Location) time.Duration {
 	if config.DebugEnabled() {
 		debugDelayDuration := config.DebugScheduleDelay()
-		fmt.Printf("Debug mode detected. Next run scheduled in %.0f sec\n", debugDelayDuration.Seconds())
+		glog.V(2).Infof("Debug mode detected! Generating next schedule in %.0f sec\n", debugDelayDuration.Seconds())
 		return debugDelayDuration
 	} else {
 		nextRun := calendar.NextRuntime(location, runhour)
-		fmt.Printf("Next run scheduled at %s\n", nextRun)
+		glog.V(2).Infof("Generating next schedule at %s\n", nextRun)
 		return nextRun.Sub(time.Now())
 	}
 }
@@ -48,7 +42,7 @@ func Run() error {
 
 		schedule, err := schedule.New()
 		if err != nil {
-			panic(err.Error())
+			glog.Fatal(err.Error())
 		}
 		schedule.Print()
 		ScheduleTerminations(schedule.Entries())
@@ -67,19 +61,18 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 	completedCount := 0
 	var result *chaos.ChaosResult
 
-	fmt.Println("Waiting for terminations to run")
+	glog.V(3).Infof("Waiting for terminations to run")
 
 	// Gather results
 	for completedCount < len(entries) {
 		result = <-resultchan
 		if result.Error() != nil {
-			fmt.Printf("Failed to execute termination for deployment %s. Error:\n", result.Deployment().Name())
-			fmt.Println(result.Error().Error())
+			glog.Errorf("Failed to execute termination for deployment %s. Error: %v", result.Deployment().Name(), result.Error().Error())
 		} else {
-			fmt.Printf("Termination successfully executed for deployment %s\n", result.Deployment().Name())
+			glog.V(2).Infof("Termination successfully executed for deployment %s\n", result.Deployment().Name())
 		}
 		completedCount++
 	}
 
-	fmt.Println("All terminations done")
+	glog.V(3).Info("All terminations done")
 }

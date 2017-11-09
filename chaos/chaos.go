@@ -2,13 +2,17 @@ package chaos
 
 import (
 	"fmt"
+	"time"
+	"math/rand"
+	
+	"github.com/golang/glog"
+	
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/deployments"
 	"github.com/asobti/kube-monkey/kubernetes"
+	
 	kube "k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api/v1"
-	"math/rand"
-	"time"
 )
 
 type Chaos struct {
@@ -75,8 +79,7 @@ func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
 	// Do the termination
 	killAll, err := c.deployment.HasKillAll(client)
 	if err != nil {
-		fmt.Printf("Failed to check KillAll label for deployment %s. Proceeding with termination of a single pod.\n", c.deployment.Name())
-		fmt.Printf(err.Error())
+		glog.Errorf("Failed to check KillAll label for deployment %s. Proceeding with termination of a single pod. Error: %v", c.deployment.Name(), err.Error())
 	}
 
 	if killAll {
@@ -107,14 +110,14 @@ func (c *Chaos) Terminate(client *kube.Clientset) error {
 
 	targetPod := RandomPodName(pods)
 
-	fmt.Printf("Terminating pod %s for deployment %s\n", targetPod, c.deployment.Name())
+	glog.Errorf("Terminating pod %s for deployment %s\n", targetPod, c.deployment.Name())
 	return c.DeletePod(client, targetPod)
 }
 
 // Terminates ALL pods for the deployment
 // Not the default, or recommended, behavior
 func (c *Chaos) TerminateAll(client *kube.Clientset) error {
-	fmt.Printf("Terminating ALL pods for deployment %s\n", c.deployment.Name())
+	glog.V(1).Infof("Terminating ALL pods for deployment %s\n", c.deployment.Name())
 
 	pods, err := c.deployment.Pods(client)
 	if err != nil {
@@ -128,7 +131,7 @@ func (c *Chaos) TerminateAll(client *kube.Clientset) error {
 	for _, pod := range pods {
 		// In case of error, log it and move on to next pod
 		if err = c.DeletePod(client, pod.Name); err != nil {
-			fmt.Printf("Failed to delete pod %s for deployment %s", pod.Name, c.deployment.Name())
+			glog.Errorf("Failed to delete pod %s for deployment %s", pod.Name, c.deployment.Name())
 		}
 	}
 
@@ -138,7 +141,7 @@ func (c *Chaos) TerminateAll(client *kube.Clientset) error {
 // Deletes a pod for a deployment
 func (c *Chaos) DeletePod(client *kube.Clientset, podName string) error {
 	if config.DryRun() {
-		fmt.Printf("[DryRun Mode] Terminated pod %s for deployment %s\n", podName, c.deployment.Name())
+		glog.V(1).Infof("[DryRun Mode] Terminated pod %s for deployment %s\n", podName, c.deployment.Name())
 		return nil
 	} else {
 		return c.deployment.DeletePod(client, podName)
@@ -157,13 +160,13 @@ func (c *Chaos) NewResult(e error) *ChaosResult {
 func CreateClient() (*kube.Clientset, error) {
 	client, err := kubernetes.NewInClusterClient()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to generate NewInClusterClient: %v", err)
 	}
 
 	if kubernetes.VerifyClient(client) {
 		return client, nil
 	} else {
-		return nil, fmt.Errorf("Unable to verify Kubernetes client")
+		return nil, fmt.Errorf("Unable to verify client connectivity to Kubernetes apiserver")
 	}
 }
 
