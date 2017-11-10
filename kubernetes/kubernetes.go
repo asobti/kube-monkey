@@ -1,6 +1,9 @@
 package kubernetes
 
 import (
+	"fmt"
+	"os"
+	
 	"github.com/golang/glog"
 	
 	cfg "github.com/asobti/kube-monkey/config"
@@ -44,8 +47,8 @@ func GetConfig() (*rest.Config, error) {
         }
 
 	if apiserverHost, override := cfg.ClusterAPIServerHost(); override {
-		fmt.Printf("API server host overriden to: %s\n", apiserverHost)
-		config.Host = apiserverHost
+		glog.V(3).Infof("API server host overriden to: %s\n", apiserverHost)
+		kubeConfig.Host = apiserverHost
 	}
 
         return &kubeConfig, nil
