@@ -2,7 +2,10 @@ package deployments
 
 import (
 	"fmt"
+	"strconv"
+	
 	"github.com/asobti/kube-monkey/config"
+	
 	kube "k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/v1"
@@ -10,7 +13,6 @@ import (
 	"k8s.io/client-go/1.5/pkg/labels"
 	"k8s.io/client-go/1.5/pkg/selection"
 	"k8s.io/client-go/1.5/pkg/util/sets"
-	"strconv"
 )
 
 type Deployment struct {
