@@ -35,8 +35,30 @@ spec:
     metadata:
       labels:
         kube-monkey/enabled: enabled
-        kube-monkey/identifier: monkey-victim
+        kube-monkey/identifier: monkey-victim-pods
         kube-monkey/mtbf: '2'
+[... omitted ...]
+```
+
+For newer versions of kubernetes you may need to add the labels to the deployment metadata as well.
+
+```yaml
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: monkey-victim
+  namespace: app-namespace
+  labels:
+    kube-monkey/enabled: enabled
+    kube-monkey/identifier: monkey-victim
+    kube-monkey/mtbf: '2'
+spec:
+  template:
+    metadata:
+      labels:
+        kube-monkey/enabled: enabled
+        kube-monkey/identifier: monkey-victim
 [... omitted ...]
 ```
 
