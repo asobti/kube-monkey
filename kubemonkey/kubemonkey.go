@@ -1,6 +1,7 @@
 package kubemonkey
 
 import (
+	"fmt"
 	"time"
 	
 	"github.com/golang/glog"
@@ -46,6 +47,7 @@ func Run() error {
 			glog.Fatal(err.Error())
 		}
 		schedule.Print()
+		fmt.Println(schedule)
 		ScheduleTerminations(schedule.Entries())
 	}
 }

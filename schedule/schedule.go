@@ -1,7 +1,9 @@
 package schedule
 
 import (
+	"fmt"
 	"time"
+	"strings"
 	"math/rand"
 	
 	"github.com/golang/glog"
@@ -37,6 +39,15 @@ func (s *Schedule) Print() {
 	}
 
 	glog.V(4).Info("\t********** End of schedule **********")
+}
+
+func (s Schedule) String() string {
+	schedString := []string{}
+	schedString = append(schedString, fmt.Sprintf("Status Update: %v terminations scheduled today", len(s.entries)))
+	for _, chaos := range s.entries {
+		schedString = append(schedString, fmt.Sprintf("Deployment %s scheduled for termination at %s", chaos.Deployment().Name(), chaos.KillAt()))
+	}
+	return strings.Join(schedString, "\n")
 }
 
 func New() (*Schedule, error) {
