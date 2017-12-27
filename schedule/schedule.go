@@ -25,22 +25,22 @@ func (s *Schedule) Add(entry *chaos.Chaos) {
 }
 
 func (s *Schedule) Print() {
-	glog.V(3).Info("\t********** Today's schedule **********")
+	glog.V(4).Info("\t********** Today's schedule **********")
 	if len(s.entries) == 0 {
-		glog.V(3).Info("No terminations scheduled")
+		glog.V(4).Info("No terminations scheduled")
 	} else {
-		glog.V(3).Info("\tDeployment\t\tTermination time\n")
-		glog.V(3).Info("\t----------\t\t----------------\n")
+		glog.V(4).Info("\tDeployment\t\t\tTermination time\n")
+		glog.V(4).Info("\t----------\t\t\t----------------\n")
 		for _, chaos := range s.entries {
-			glog.V(3).Infof("\t%s\t\t%s\n", chaos.Deployment().Name(), chaos.KillAt())
+			glog.V(4).Infof("\t%s\t\t\t%s\n", chaos.Deployment().Name(), chaos.KillAt().Format("01/01/2017 18:42:05 Z0700 UTC"))
 		}
 	}
 
-	glog.V(3).Info("\t********** End of schedule **********")
+	glog.V(4).Info("\t********** End of schedule **********")
 }
 
 func New() (*Schedule, error) {
-	glog.V(2).Info("Generating schedule for terminations")
+	glog.V(3).Info("Status Update: Generating schedule for terminations")
 	deployments, err := deployments.EligibleDeployments()
 	if err != nil {
 		return nil, err

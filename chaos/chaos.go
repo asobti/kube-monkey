@@ -66,13 +66,13 @@ func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
 		return
 	}
 	if !enrolled {
-		resultchan <- c.NewResult(fmt.Errorf("Deployment %s is no longer enrolled in kube-monkey. Skipping\n", c.deployment.Name()))
+		resultchan <- c.NewResult(fmt.Errorf("Skipping deployment %s; reason=no longer enrolled", c.deployment.Name()))
 		return
 	}
 
 	// Has deployment been blacklisted since scheduling?
 	if c.deployment.IsBlacklisted(config.BlacklistedNamespaces()) {
-		resultchan <- c.NewResult(fmt.Errorf("Deployment %s is blacklisted. Skipping\n", c.deployment.Name()))
+		resultchan <- c.NewResult(fmt.Errorf("Skipping deployment %s; reason=blacklisted", c.deployment.Name()))
 		return
 	}
 
@@ -110,14 +110,14 @@ func (c *Chaos) Terminate(client *kube.Clientset) error {
 
 	targetPod := RandomPodName(pods)
 
-	glog.Errorf("Terminating pod %s for deployment %s\n", targetPod, c.deployment.Name())
+	glog.V(2).Infof("Terminating pod %s for deployment %s", targetPod, c.deployment.Name())
 	return c.DeletePod(client, targetPod)
 }
 
 // Terminates ALL pods for the deployment
 // Not the default, or recommended, behavior
 func (c *Chaos) TerminateAll(client *kube.Clientset) error {
-	glog.V(1).Infof("Terminating ALL pods for deployment %s\n", c.deployment.Name())
+	glog.V(2).Infof("Terminating ALL pods for deployment %s", c.deployment.Name())
 
 	pods, err := c.deployment.Pods(client)
 	if err != nil {
@@ -141,7 +141,7 @@ func (c *Chaos) TerminateAll(client *kube.Clientset) error {
 // Deletes a pod for a deployment
 func (c *Chaos) DeletePod(client *kube.Clientset, podName string) error {
 	if config.DryRun() {
-		glog.V(1).Infof("[DryRun Mode] Terminated pod %s for deployment %s\n", podName, c.deployment.Name())
+		glog.V(2).Infof("[DryRun Mode] Terminated pod %s for deployment %s", podName, c.deployment.Name())
 		return nil
 	} else {
 		return c.deployment.DeletePod(client, podName)
