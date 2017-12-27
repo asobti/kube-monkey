@@ -3,6 +3,7 @@ package tests
 import (
 	"fmt"
 	"math"
+	"net"
 	"time"
 
 	"github.com/mailru/easyjson"
@@ -392,11 +393,54 @@ var rawString = `{` +
 	`}`
 
 type StdMarshaler struct {
-	T time.Time
+	T  time.Time
+	IP net.IP
 }
 
-var stdMarshalerValue = StdMarshaler{T: time.Date(2016, 01, 02, 14, 15, 10, 0, time.UTC)}
-var stdMarshalerString = `{"T":"2016-01-02T14:15:10Z"}`
+var stdMarshalerValue = StdMarshaler{
+	T:  time.Date(2016, 01, 02, 14, 15, 10, 0, time.UTC),
+	IP: net.IPv4(192, 168, 0, 1),
+}
+var stdMarshalerString = `{` +
+	`"T":"2016-01-02T14:15:10Z",` +
+	`"IP":"192.168.0.1"` +
+	`}`
+
+type UserMarshaler struct {
+	V vMarshaler
+	T tMarshaler
+}
+
+type vMarshaler net.IP
+
+func (v vMarshaler) MarshalJSON() ([]byte, error) {
+	return []byte(`"0::0"`), nil
+}
+
+func (v *vMarshaler) UnmarshalJSON([]byte) error {
+	*v = vMarshaler(net.IPv6zero)
+	return nil
+}
+
+type tMarshaler net.IP
+
+func (v tMarshaler) MarshalText() ([]byte, error) {
+	return []byte(`[0::0]`), nil
+}
+
+func (v *tMarshaler) UnmarshalText([]byte) error {
+	*v = tMarshaler(net.IPv6zero)
+	return nil
+}
+
+var userMarshalerValue = UserMarshaler{
+	V: vMarshaler(net.IPv6zero),
+	T: tMarshaler(net.IPv6zero),
+}
+var userMarshalerString = `{` +
+	`"V":"0::0",` +
+	`"T":"[0::0]"` +
+	`}`
 
 type unexportedStruct struct {
 	Value string
@@ -634,3 +678,17 @@ type EncodingFlagsTestMap struct {
 type EncodingFlagsTestSlice struct {
 	F []string
 }
+
+type StructWithInterface struct {
+	Field1 int         `json:"f1"`
+	Field2 interface{} `json:"f2"`
+	Field3 string      `json:"f3"`
+}
+
+type EmbeddedStruct struct {
+	Field1 int    `json:"f1"`
+	Field2 string `json:"f2"`
+}
+
+var structWithInterfaceString = `{"f1":1,"f2":{"f1":11,"f2":"22"},"f3":"3"}`
+var structWithInterfaceValueFilled = StructWithInterface{1, &EmbeddedStruct{11, "22"}, "3"}
