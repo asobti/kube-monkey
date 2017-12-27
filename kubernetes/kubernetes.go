@@ -5,8 +5,8 @@ import (
 	
 	cfg "github.com/asobti/kube-monkey/config"
 	
-	kube "k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/rest"
+	kube "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 func NewInClusterClient() (*kube.Clientset, error) {
