@@ -26,28 +26,28 @@ func (s *Schedule) Add(entry *chaos.Chaos) {
 	s.entries = append(s.entries, entry)
 }
 
-func (s *Schedule) Print() {
-	glog.V(4).Info("\t********** Today's schedule **********")
+func (s *Schedule) String() string {
+	schedString := []string{}
+	schedString = append(schedString, fmt.Sprint("\t********** Today's schedule **********"))
 	if len(s.entries) == 0 {
-		glog.V(4).Info("No terminations scheduled")
+		schedString = append(schedString, fmt.Sprint("No terminations scheduled"))
 	} else {
-		glog.V(4).Info("\tDeployment\t\t\tTermination time\n")
-		glog.V(4).Info("\t----------\t\t\t----------------\n")
+		schedString = append(schedString, fmt.Sprint("\tDeployment\t\t\tTermination time"))
+		schedString = append(schedString, fmt.Sprint("\t----------\t\t\t----------------"))
 		for _, chaos := range s.entries {
-			glog.V(4).Infof("\t%s\t\t\t%s\n", chaos.Deployment().Name(), chaos.KillAt().Format("01/01/2017 18:42:05 Z0700 UTC"))
+			schedString = append(schedString, fmt.Sprintf("\t%s\t\t\t%s", chaos.Deployment().Name(), chaos.KillAt().Format("01/01/2017 18:42:05 Z0700 UTC")))
 		}
 	}
+	schedString = append(schedString, fmt.Sprint("\t********** End of schedule **********"))
 
-	glog.V(4).Info("\t********** End of schedule **********")
+	return strings.Join(schedString, "\n")
 }
 
-func (s Schedule) String() string {
-	schedString := []string{}
-	schedString = append(schedString, fmt.Sprintf("Status Update: %v terminations scheduled today", len(s.entries)))
+func (s Schedule) Print() {
+	glog.V(4).Infof("Status Update: %v terminations scheduled today", len(s.entries))
 	for _, chaos := range s.entries {
-		schedString = append(schedString, fmt.Sprintf("Deployment %s scheduled for termination at %s", chaos.Deployment().Name(), chaos.KillAt()))
+		glog.V(4).Infof("Deployment %s scheduled for termination at %s", chaos.Deployment().Name(), chaos.KillAt().Format("01/01/2017 18:42:05 Z0700 UTC"))
 	}
-	return strings.Join(schedString, "\n")
 }
 
 func New() (*Schedule, error) {
