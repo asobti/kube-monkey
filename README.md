@@ -129,6 +129,22 @@ See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples
 
 kube-monkey uses glog and supports all command-line features for glog. To specify a custom v level or a custom log directory on the pod, see  `args: ["-v=5", "-log_dir=/path/to/custom/log"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
 
+> **Standardized glog levels `grep -r V\([0-9]\) *`**
+>
+> L0: None
+>
+> L1: Highest Level current status info and Errors with Terminations
+>
+> L2: Successful terminations
+>
+> L3: More detailed schedule status info
+> 
+> L4: Debugging verbose schedule and config info
+>
+> L5: Auto-resolved inconsequential issues
+
+More resources: See the [k8 logging page](https://kubernetes.io/docs/concepts/cluster-administration/logging/) suggesting [community conventions for logging severity](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
+
 ## Compatibility with Kubernetes
 
 kube-monkey is built using v1.5 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the 
@@ -138,4 +154,3 @@ versions of Kubernetes are compatible.
 ## Ways to contribute
 
 - Add unit [tests](https://golang.org/pkg/testing/)
-- Standardize/establish logging convention for [glog](https://github.com/golang/glog) usage
