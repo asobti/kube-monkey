@@ -1,31 +1,28 @@
-package deployments
+package deployments 
 
 import (
 	"github.com/golang/glog"
-	
-	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/kubernetes"
-	
-	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
+
+	"github.com/asobti/kube-monkey/victims"
+
+	kube "k8s.io/client-go/kubernetes"
+
 	"k8s.io/apimachinery/pkg/util/sets"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func EligibleDeployments() ([]*Deployment, error) {
-	blacklist := config.BlacklistedNamespaces()
-	eligibleDeployments := []*Deployment{}
-
-	enabledDeployments, err := EnrolledDeployments()
+// Get all eligible deployments that opted in and are not in blacklisted nm
+func EligibleDeployments(clientset *kube.Clientset, filter *metav1.ListOptions, blacklist sets.String) (deployVictims []victims.Victim, err error) {
+	// Get all enrolled deployments, filtered by config EnabledLabel
+	enabledDeployments, err := clientset.ExtensionsV1beta1().Deployments(metav1.NamespaceAll).List(*filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, dep := range enabledDeployments {
+	for _, dep := range enabledDeployments.Items {
 		deployment, err := New(&dep)
 		if err != nil {
-			glog.V(1).Infof("Skipping eligible deployment %s because of error:\n%s\n", dep.Name, err.Error())
+			glog.Warningf("Skipping eligible deployment %s because of error:\n%s\n", dep.Name, err.Error())
 			continue
 		}
 
@@ -33,40 +30,9 @@ func EligibleDeployments() ([]*Deployment, error) {
 			continue
 		}
 
-		eligibleDeployments = append(eligibleDeployments, deployment)
+		deployVictims = append(deployVictims, deployment)
 	}
 
-	return eligibleDeployments, nil
+	return
 }
 
-func EnrolledDeployments() ([]v1beta1.Deployment, error) {
-	clientset, err := kubernetes.CreateClient()
-	if err != nil {
-		return nil, err
-	}
-
-	filter, err := EnrollmentFilter()
-	if err != nil {
-		return nil, err
-	}
-
-	deployments, err := clientset.ExtensionsV1beta1().Deployments(meta_v1.NamespaceAll).List(*filter)
-	if err != nil {
-		return nil, err
-	}
-	return deployments.Items, nil
-}
-
-func EnrollmentFilter() (*meta_v1.ListOptions, error) {
-	req, err := EnrollmentRequirement()
-	if err != nil {
-		return nil, err
-	}
-	return &meta_v1.ListOptions{
-		LabelSelector: labels.NewSelector().Add(*req).String(),
-	}, nil
-}
-
-func EnrollmentRequirement() (*labels.Requirement, error) {
-	return labels.NewRequirement(config.EnabledLabelKey, selection.Equals, sets.NewString(config.EnabledLabelValue).UnsortedList())
-}

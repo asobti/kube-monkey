@@ -5,22 +5,18 @@ import (
 	"strconv"
 	
 	"github.com/asobti/kube-monkey/config"
-	
+	"github.com/asobti/kube-monkey/victims"
+
 	kube "k8s.io/client-go/kubernetes"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/sets"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Deployment struct {
-	name       string
-	namespace  string
-	identifier string
-	mtbf       int
+	*victims.VictimBase
 }
 
 // Create a new instance of Deployment
@@ -34,12 +30,7 @@ func New(dep *v1beta1.Deployment) (*Deployment, error) {
 		return nil, err
 	}
 
-	return &Deployment{
-		name:       dep.Name,
-		namespace:  dep.Namespace,
-		identifier: ident,
-		mtbf:       mtbf,
-	}, nil
+	return &Deployment{victims.New("Deployment", dep.Name, dep.Namespace, ident, mtbf)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey
@@ -75,18 +66,6 @@ func meanTimeBetweenFailures(kubedep *v1beta1.Deployment) (int, error) {
 	return mtbfInt, nil
 }
 
-func (d *Deployment) Name() string {
-	return d.name
-}
-
-func (d *Deployment) Namespace() string {
-	return d.namespace
-}
-
-func (d *Deployment) Mtbf() int {
-	return d.mtbf
-}
-
 // Returns a list of running pods for the deployment
 func (d *Deployment) RunningPods(clientset *kube.Clientset) ([]v1.Pod, error) {
 	runningPods := []v1.Pod{}
@@ -107,12 +86,12 @@ func (d *Deployment) RunningPods(clientset *kube.Clientset) ([]v1.Pod, error) {
 
 // Returns a list of pods under the Deployment
 func (d *Deployment) Pods(clientset *kube.Clientset) ([]v1.Pod, error) {
-	labelSelector, err := d.LabelFilterForPods()
+	labelSelector, err := victims.LabelFilterForPods(d.Identifier())
 	if err != nil {
 		return nil, err
 	}
 
-	podlist, err := clientset.Core().Pods(d.namespace).List(*labelSelector)
+	podlist, err := clientset.CoreV1().Pods(d.Namespace()).List(*labelSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -120,34 +99,16 @@ func (d *Deployment) Pods(clientset *kube.Clientset) ([]v1.Pod, error) {
 }
 
 func (d *Deployment) DeletePod(clientset *kube.Clientset, podName string) error {
-	deleteopts := &meta_v1.DeleteOptions{
+	deleteopts := &metav1.DeleteOptions{
 		GracePeriodSeconds: config.GracePeriodSeconds(),
 	}
 
-	return clientset.Core().Pods(d.namespace).Delete(podName, deleteopts)
-}
-
-// Create a label filter to filter only for pods that belong to the this
-// deployment. This is done using the identifier label
-func (d *Deployment) LabelFilterForPods() (*meta_v1.ListOptions, error) {
-	req, err := d.LabelRequirementForPods()
-	if err != nil {
-		return nil, err
-	}
-	labelFilter := &meta_v1.ListOptions{
-		LabelSelector: labels.NewSelector().Add(*req).String(),
-	}
-	return labelFilter, nil
-}
-
-// Create a labels.Requirement that can be used to build a filter
-func (d *Deployment) LabelRequirementForPods() (*labels.Requirement, error) {
-	return labels.NewRequirement(config.IdentLabelKey, selection.Equals, sets.NewString(d.identifier).UnsortedList())
+	return clientset.CoreV1().Pods(d.Namespace()).Delete(podName, deleteopts)
 }
 
 // Checks if the deployment is enrolled in kube-monkey
 func (d *Deployment) IsEnrolled(clientset *kube.Clientset) (bool, error) {
-	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.namespace).Get(d.name, meta_v1.GetOptions{})
+	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
 		return false, nil
 	}
@@ -155,7 +116,7 @@ func (d *Deployment) IsEnrolled(clientset *kube.Clientset) (bool, error) {
 }
 
 func (d * Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
-	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.namespace).Get(d.name, meta_v1.GetOptions{})
+	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
 		// Ran into some error: return 'false' for killAll to be safe
 		return false, nil
@@ -166,5 +127,6 @@ func (d * Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
 
 // Checks if this deployment is blacklisted
 func (d *Deployment) IsBlacklisted(blacklist sets.String) bool {
-	return blacklist.Has(d.namespace)
+	return blacklist.Has(d.Namespace())
 }
+
