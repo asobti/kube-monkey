@@ -40,7 +40,7 @@ func EligibleDeployments() ([]*Deployment, error) {
 }
 
 func EnrolledDeployments() ([]v1beta1.Deployment, error) {
-	clientset, err := kubernetes.NewInClusterClient()
+	clientset, err := kubernetes.CreateClient()
 	if err != nil {
 		return nil, err
 	}

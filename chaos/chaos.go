@@ -53,7 +53,7 @@ func (c *Chaos) DurationToKillTime() time.Duration {
 // The result is sent back over the channel provided
 func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
 	// Create kubernetes client
-	client, err := CreateClient()
+	client, err := kubernetes.CreateClient()
 	if err != nil {
 		resultchan <- c.NewResult(err)
 		return
@@ -153,20 +153,6 @@ func (c *Chaos) NewResult(e error) *ChaosResult {
 	return &ChaosResult{
 		chaos: c,
 		err:   e,
-	}
-}
-
-// Create, verify and return an instance of kubernetes.Clientset
-func CreateClient() (*kube.Clientset, error) {
-	client, err := kubernetes.NewInClusterClient()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to generate NewInClusterClient: %v", err)
-	}
-
-	if kubernetes.VerifyClient(client) {
-		return client, nil
-	} else {
-		return nil, fmt.Errorf("Unable to verify client connectivity to Kubernetes apiserver")
 	}
 }
 
