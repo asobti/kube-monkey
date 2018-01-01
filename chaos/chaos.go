@@ -2,17 +2,17 @@ package chaos
 
 import (
 	"fmt"
-	"time"
 	"math/rand"
-	
+	"time"
+
 	"github.com/golang/glog"
-	
+
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
 	"github.com/asobti/kube-monkey/victims"
-	
-	kube "k8s.io/client-go/kubernetes"
+
 	"k8s.io/api/core/v1"
+	kube "k8s.io/client-go/kubernetes"
 )
 
 type Chaos struct {

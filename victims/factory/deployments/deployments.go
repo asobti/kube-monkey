@@ -3,7 +3,7 @@ package deployments
 import (
 	"fmt"
 	"strconv"
-	
+
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/victims"
 
@@ -11,8 +11,8 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/util/sets"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 type Deployment struct {
@@ -115,7 +115,7 @@ func (d *Deployment) IsEnrolled(clientset *kube.Clientset) (bool, error) {
 	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-func (d * Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
+func (d *Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
 	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
 		// Ran into some error: return 'false' for killAll to be safe
@@ -129,4 +129,3 @@ func (d * Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
 func (d *Deployment) IsBlacklisted(blacklist sets.String) bool {
 	return blacklist.Has(d.Namespace())
 }
-

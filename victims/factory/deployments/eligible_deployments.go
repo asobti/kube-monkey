@@ -1,4 +1,4 @@
-package deployments 
+package deployments
 
 import (
 	"github.com/golang/glog"
@@ -7,8 +7,8 @@ import (
 
 	kube "k8s.io/client-go/kubernetes"
 
-	"k8s.io/apimachinery/pkg/util/sets"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 // Get all eligible deployments that opted in and are not in blacklisted nm
@@ -35,4 +35,3 @@ func EligibleDeployments(clientset *kube.Clientset, filter *metav1.ListOptions, 
 
 	return
 }
-

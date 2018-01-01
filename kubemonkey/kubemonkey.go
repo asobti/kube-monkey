@@ -3,14 +3,14 @@ package kubemonkey
 import (
 	"fmt"
 	"time"
-	
+
 	"github.com/golang/glog"
-	
+
+	"github.com/asobti/kube-monkey/calendar"
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/calendar"
-	"github.com/asobti/kube-monkey/schedule"
 	"github.com/asobti/kube-monkey/kubernetes"
+	"github.com/asobti/kube-monkey/schedule"
 )
 
 func durationToNextRun(runhour int, location *time.Location) time.Duration {
@@ -71,7 +71,7 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 			glog.V(2).Infof("Termination successfully executed for %s %s\n", result.Victim().Kind(), result.Victim().Name())
 		}
 		completedCount++
-		glog.V(4).Info("Status Update: ", len(entries) - completedCount, " scheduled terminations left.")
+		glog.V(4).Info("Status Update: ", len(entries)-completedCount, " scheduled terminations left.")
 	}
 
 	glog.V(3).Info("Status Update: All terminations done.")

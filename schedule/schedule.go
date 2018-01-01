@@ -2,15 +2,15 @@ package schedule
 
 import (
 	"fmt"
-	"time"
-	"strings"
 	"math/rand"
-	
+	"strings"
+	"time"
+
 	"github.com/golang/glog"
-	
+
+	"github.com/asobti/kube-monkey/calendar"
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/calendar"
 	"github.com/asobti/kube-monkey/victims/factory"
 )
 
