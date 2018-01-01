@@ -50,7 +50,7 @@ func NextRuntime(loc *time.Location, r int) time.Time {
 }
 
 // Returns a random time within the range specified by startHour and endHour
-func RandomTimeInRange(startHour int, endHour int, location *time.Location) time.Time {
+func RandomTimeInRange(startHour int, endHour int, loc *time.Location) time.Time {
 	// calculate the number of minutes in the range
 	minutesInRange := (endHour - startHour) * 60
 
@@ -62,6 +62,6 @@ func RandomTimeInRange(startHour int, endHour int, location *time.Location) time
 	// Add the minute offset to the start of the range to get a random
 	// time within the range
 	year, month, date := time.Now().Date()
-	rangeStart := time.Date(year, month, date, startHour, 0, 0, 0, location)
+	rangeStart := time.Date(year, month, date, startHour, 0, 0, 0, loc)
 	return rangeStart.Add(offsetDuration)
 }
