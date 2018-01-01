@@ -11,7 +11,7 @@ import (
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/calendar"
-	"github.com/asobti/kube-monkey/deployments"
+	"github.com/asobti/kube-monkey/victims/factory"
 )
 
 type Schedule struct {
@@ -32,10 +32,10 @@ func (s *Schedule) String() string {
 	if len(s.entries) == 0 {
 		schedString = append(schedString, fmt.Sprint("No terminations scheduled"))
 	} else {
-		schedString = append(schedString, fmt.Sprint("\tDeployment\t\t\tTermination time"))
-		schedString = append(schedString, fmt.Sprint("\t----------\t\t\t----------------"))
+		schedString = append(schedString, fmt.Sprint("\tk8 Api Kind\tKind Name\t\tTermination Time"))
+		schedString = append(schedString, fmt.Sprint("\t-----------\t---------\t\t----------------"))
 		for _, chaos := range s.entries {
-			schedString = append(schedString, fmt.Sprintf("\t%s\t\t\t%s", chaos.Deployment().Name(), chaos.KillAt().Format("01/01/2017 18:42:05 Z0700 UTC")))
+			schedString = append(schedString, fmt.Sprintf("\t%s\t%s\t\t%s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt()))
 		}
 	}
 	schedString = append(schedString, fmt.Sprint("\t********** End of schedule **********"))
@@ -46,13 +46,13 @@ func (s *Schedule) String() string {
 func (s Schedule) Print() {
 	glog.V(4).Infof("Status Update: %v terminations scheduled today", len(s.entries))
 	for _, chaos := range s.entries {
-		glog.V(4).Infof("Deployment %s scheduled for termination at %s", chaos.Deployment().Name(), chaos.KillAt().Format("01/01/2017 18:42:05 Z0700 UTC"))
+		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt())
 	}
 }
 
 func New() (*Schedule, error) {
 	glog.V(3).Info("Status Update: Generating schedule for terminations")
-	deployments, err := deployments.EligibleDeployments()
+	victims, err := factory.EligibleVictims()
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +61,11 @@ func New() (*Schedule, error) {
 		entries: []*chaos.Chaos{},
 	}
 
-	for _, dep := range deployments {
+	for _, victim := range victims {
 		killtime := CalculateKillTime()
 
-		if ShouldScheduleChaos(dep.Mtbf()) {
-			schedule.Add(chaos.New(killtime, dep))
+		if ShouldScheduleChaos(victim.Mtbf()) {
+			schedule.Add(chaos.New(killtime, victim))
 		}
 	}
 

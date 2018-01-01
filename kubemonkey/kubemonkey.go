@@ -66,9 +66,9 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 	for completedCount < len(entries) {
 		result = <-resultchan
 		if result.Error() != nil {
-			glog.Errorf("Failed to execute termination for deployment %s. Error: %v", result.Deployment().Name(), result.Error().Error())
+			glog.Errorf("Failed to execute termination for %s %s. Error: %v", result.Victim().Kind(), result.Victim().Name(), result.Error().Error())
 		} else {
-			glog.V(2).Infof("Termination successfully executed for deployment %s\n", result.Deployment().Name())
+			glog.V(2).Infof("Termination successfully executed for %s %s\n", result.Victim().Kind(), result.Victim().Name())
 		}
 		completedCount++
 		glog.V(4).Info("Status Update: ", len(entries) - completedCount, " scheduled terminations left.")
