@@ -6,11 +6,12 @@ services.
 --
 
 kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
-Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and
-defaults to 10am to 4pm.
+Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and defaults to 10am to 4pm.
 
-kube-monkey can be configured with a list of namespaces to blacklist - any deployments within a blacklisted namespace will not 
-be touched.
+kube-monkey can be configured with a list of namespaces 
+* to blacklist (any deployments within a blacklisted namespace will not be touched) 
+* to whitelist (only deployments within a whitelisted namespace that are not blacklisted will be scheduled)
+The blacklist overrides the whitelist. The config will be populated with default behavior (blacklist `kube-system` and whitelist `default`). To disable either the blacklist or whitelist provide `[""]` to the respective config.param
 
 ## Opting-In to Chaos
 
