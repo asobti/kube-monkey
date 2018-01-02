@@ -14,8 +14,8 @@ import (
 )
 
 // Get all eligible statefulsets that opted in (filtered by config.EnabledLabel)
-func EligibleStatefulSets(clientset *kube.Clientset, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
-	enabledVictims, err := clientset.AppsV1beta1().StatefulSets(metav1.NamespaceAll).List(*filter)
+func EligibleStatefulSets(clientset *kube.Clientset, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
+        enabledVictims, err := clientset.AppsV1beta1().StatefulSets(namespace).List(*filter)
 	if err != nil {
 		return nil, err
 	}
@@ -27,6 +27,9 @@ func EligibleStatefulSets(clientset *kube.Clientset, filter *metav1.ListOptions)
 			continue
 		}
 
+                // TODO: After generating whitelisting ns list, this will move to factory.
+                // IsBlacklisted will change to something like IsAllowedNamespace
+                // and will only be used to verify at time of scheduled execution
 		if victim.IsBlacklisted() {
 			continue
 		}
