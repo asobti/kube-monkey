@@ -6,6 +6,8 @@ New types of kinds can be added easily
 package factory
 
 import (
+	"github.com/golang/glog"
+
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
 	"github.com/asobti/kube-monkey/victims"
@@ -18,30 +20,34 @@ import (
 )
 
 // Gathers list of enabled/enrolled kinds for judgement by the scheduler
+// This checks against config.WhitelistedNamespaces but
+// each victim checks themselves against the ns blacklist
+// TODO: fetch all namespaces from k8 apiserver to check blacklist here
 func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 	clientset, err := kubernetes.CreateClient()
 	if err != nil {
 		return nil, err
 	}
 
+	// Verify opt-in at scheduling time
 	filter, err := enrollmentFilter()
 	if err != nil {
 		return nil, err
 	}
 
-	blacklist := config.BlacklistedNamespaces()
-
 	// Fetch deployments
-	deployments, err := deployments.EligibleDeployments(clientset, filter, blacklist)
+	deployments, err := deployments.EligibleDeployments(clientset, namespace, filter)
 	if err != nil {
-		// Should probably be a warning, allow pass through to schedule other kinds
-		return nil, err
+		//allow pass through to schedule other kinds and namespaces
+		glog.Warningf("Failed to fetch eligible deployments for namespace %s due to error: %s", namespace, err.Error())
+		continue
 	}
 	eligibleVictims = append(eligibleVictims, deployments...)
 
 	return
 }
 
+// Verifies opt-in of victims
 func enrollmentFilter() (*metav1.ListOptions, error) {
 	req, err := enrollmentRequirement()
 	if err != nil {

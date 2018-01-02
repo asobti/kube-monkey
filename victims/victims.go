@@ -1,6 +1,12 @@
 package victims
 
 import (
+	"fmt"
+	"math/rand"
+	"time"
+
+	"github.com/golang/glog"
+
 	"github.com/asobti/kube-monkey/config"
 
 	kube "k8s.io/client-go/kubernetes"
@@ -14,7 +20,7 @@ import (
 
 type Victim interface {
 	VictimBaseTemplate
-	VictimApiCalls
+	VictimSpecificApiCalls
 }
 
 type VictimBaseTemplate interface {
@@ -24,6 +30,14 @@ type VictimBaseTemplate interface {
 	Namespace() string
 	Identifier() string
 	Mtbf() int
+
+	VictimApiCalls
+}
+
+type VictimSpecificApiCalls interface {
+	// Depends on which version i.e. apps/v1 or extensions/v1beta2
+	IsEnrolled(*kube.Clientset) (bool, error)
+	HasKillAll(*kube.Clientset) (bool, error)
 }
 
 type VictimApiCalls interface {
@@ -31,9 +45,8 @@ type VictimApiCalls interface {
 	RunningPods(*kube.Clientset) ([]v1.Pod, error)
 	Pods(*kube.Clientset) ([]v1.Pod, error)
 	DeletePod(*kube.Clientset, string) error
-	IsEnrolled(*kube.Clientset) (bool, error)
-	HasKillAll(*kube.Clientset) (bool, error)
-	IsBlacklisted(sets.String) bool
+	DeleteRandomPod(*kube.Clientset) error
+	IsBlacklisted() bool
 }
 
 type VictimBase struct {
@@ -70,9 +83,72 @@ func (v *VictimBase) Mtbf() int {
 	return v.mtbf
 }
 
+// Returns a list of running pods for the victim
+func (v *VictimBase) RunningPods(clientset *kube.Clientset) (runningPods []v1.Pod, err error) {
+	pods, err := v.Pods(clientset)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pod := range pods {
+		if pod.Status.Phase == v1.PodRunning {
+			runningPods = append(runningPods, pod)
+		}
+	}
+
+	return runningPods, nil
+}
+
+// Returns a list of pods under the victim
+func (v *VictimBase) Pods(clientset *kube.Clientset) ([]v1.Pod, error) {
+	labelSelector, err := labelFilterForPods(v.identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	podlist, err := clientset.CoreV1().Pods(v.namespace).List(*labelSelector)
+	if err != nil {
+		return nil, err
+	}
+	return podlist.Items, nil
+}
+
+// Removes specified pod for victim
+func (v *VictimBase) DeletePod(clientset *kube.Clientset, podName string) error {
+	deleteopts := &metav1.DeleteOptions{
+		GracePeriodSeconds: config.GracePeriodSeconds(),
+	}
+
+	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteopts)
+}
+
+// Remove a random pod for the victim
+func (v *VictimBase) DeleteRandomPod(clientset *kube.Clientset) error {
+	// Pick a target pod to delete
+	pods, err := v.RunningPods(clientset)
+	if err != nil {
+		return err
+	}
+
+	if len(pods) == 0 {
+		return fmt.Errorf("%s %s has no running pods at the moment", v.kind, v.name)
+	}
+
+	targetPod := RandomPodName(pods)
+
+	glog.Errorf("Terminating pod %s for %s %s\n", targetPod, v.kind, v.name)
+	return v.DeletePod(clientset, targetPod)
+}
+
+// Check if this victim is blacklisted
+func (v *VictimBase) IsBlacklisted() bool {
+	blacklist := config.BlacklistedNamespaces()
+	return blacklist.Has(v.namespace)
+}
+
 // Create a label filter to filter only for pods that belong to the this
 // victim. This is done using the identifier label
-func LabelFilterForPods(identifier string) (*metav1.ListOptions, error) {
+func labelFilterForPods(identifier string) (*metav1.ListOptions, error) {
 	req, err := labelRequirementForPods(identifier)
 	if err != nil {
 		return nil, err
@@ -86,4 +162,11 @@ func LabelFilterForPods(identifier string) (*metav1.ListOptions, error) {
 // Create a labels.Requirement that can be used to build a filter
 func labelRequirementForPods(identifier string) (*labels.Requirement, error) {
 	return labels.NewRequirement(config.IdentLabelKey, selection.Equals, sets.NewString(identifier).UnsortedList())
+}
+
+// Pick a random pod name from a list of Pods
+func RandomPodName(pods []v1.Pod) string {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randIndex := r.Intn(len(pods))
+	return pods[randIndex].Name
 }
