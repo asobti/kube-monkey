@@ -35,7 +35,7 @@ func (s *Schedule) String() string {
 		schedString = append(schedString, fmt.Sprint("\tk8 Api Kind\tKind Name\t\tTermination Time"))
 		schedString = append(schedString, fmt.Sprint("\t-----------\t---------\t\t----------------"))
 		for _, chaos := range s.entries {
-			schedString = append(schedString, fmt.Sprintf("\t%s\t%s\t\t%s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt()))
+			schedString = append(schedString, fmt.Sprintf("\t%s\t%s\t\t%s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format("01/02/2006 15:04:05 -0700 MST")))
 		}
 	}
 	schedString = append(schedString, fmt.Sprint("\t********** End of schedule **********"))
@@ -46,7 +46,7 @@ func (s *Schedule) String() string {
 func (s Schedule) Print() {
 	glog.V(4).Infof("Status Update: %v terminations scheduled today", len(s.entries))
 	for _, chaos := range s.entries {
-		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt())
+		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format("01/02/2006 15:04:05 -0700 MST"))
 	}
 }
 
@@ -73,13 +73,14 @@ func New() (*Schedule, error) {
 }
 
 func CalculateKillTime() time.Time {
+	loc := config.Timezone()
 	if config.DebugEnabled() && config.DebugScheduleImmediateKill() {
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		// calculate a second-offset in the next minute
 		secOffset := r.Intn(60)
-		return time.Now().Add(time.Duration(secOffset) * time.Second)
+		return time.Now().In(loc).Add(time.Duration(secOffset) * time.Second)
 	} else {
-		return calendar.RandomTimeInRange(config.StartHour(), config.EndHour(), config.Timezone())
+		return calendar.RandomTimeInRange(config.StartHour(), config.EndHour(), loc)
 	}
 }
 

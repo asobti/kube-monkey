@@ -13,14 +13,14 @@ import (
 	"github.com/asobti/kube-monkey/schedule"
 )
 
-func durationToNextRun(runhour int, location *time.Location) time.Duration {
+func durationToNextRun(runhour int, loc *time.Location) time.Duration {
 	if config.DebugEnabled() {
 		debugDelayDuration := config.DebugScheduleDelay()
 		glog.V(1).Infof("Debug mode detected!")
 		glog.V(1).Infof("Status Update: Generating next schedule in %.0f sec\n", debugDelayDuration.Seconds())
 		return debugDelayDuration
 	} else {
-		nextRun := calendar.NextRuntime(location, runhour)
+		nextRun := calendar.NextRuntime(loc, runhour)
 		glog.V(1).Infof("Status Update: Generating next schedule at %s\n", nextRun)
 		return nextRun.Sub(time.Now())
 	}
