@@ -1,9 +1,9 @@
 package calendar
 
 import (
-	"time"
 	"math/rand"
-	
+	"time"
+
 	"github.com/golang/glog"
 )
 
@@ -17,7 +17,7 @@ func isWeekday(t time.Time) bool {
 	}
 
 	glog.Fatalf("Unrecognized day of the week: %s", t.Weekday().String())
-	
+
 	panic("Explicit Panic to avoid compiler error: missing return at end of function")
 }
 

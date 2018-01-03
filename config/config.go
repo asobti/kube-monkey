@@ -2,13 +2,13 @@ package config
 
 import (
 	"time"
-	
+
+	"github.com/fsnotify/fsnotify"
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
-	"github.com/fsnotify/fsnotify"
-	
+
 	"github.com/asobti/kube-monkey/config/param"
-	
+
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
