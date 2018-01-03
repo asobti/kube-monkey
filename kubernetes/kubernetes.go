@@ -61,6 +61,11 @@ func NewInClusterClient() (*kube.Clientset, error) {
 		return nil, err
 	}
 
+	if apiserverHost, override := cfg.ClusterAPIServerHost(); override {
+		glog.V(4).Infof("API server host overriden to: %s\n", apiserverHost)
+		config.Host = apiserverHost
+	}
+
 	clientset, err := kube.NewForConfig(config)
 	if err != nil {
 		glog.Errorf("failed to create clientset in NewForConfig: %v", err)
