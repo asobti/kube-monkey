@@ -87,6 +87,11 @@ func (c *Chaos) verifyExecution(clientset *kube.Clientset) error {
 		return fmt.Errorf("%s %s is blacklisted. Skipping\n", c.Victim().Kind(), c.Victim().Name())
 	}
 
+	// Has the victim been removed from the whitelist since scheduling?
+	if !c.Victim().IsWhitelisted() {
+		return fmt.Errorf("%s %s is not whitelisted. Skipping\n", c.Victim().Kind(), c.Victim().Name())
+	}
+
 	// Send back valid for termination
 	return nil
 }

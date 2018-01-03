@@ -47,6 +47,7 @@ type VictimApiCalls interface {
 	DeletePod(*kube.Clientset, string) error
 	DeleteRandomPod(*kube.Clientset) error
 	IsBlacklisted() bool
+	IsWhitelisted() bool
 }
 
 type VictimBase struct {
@@ -142,8 +143,20 @@ func (v *VictimBase) DeleteRandomPod(clientset *kube.Clientset) error {
 
 // Check if this victim is blacklisted
 func (v *VictimBase) IsBlacklisted() bool {
-	blacklist := config.BlacklistedNamespaces()
-	return blacklist.Has(v.namespace)
+	if config.BlacklistEnabled() {
+		blacklist := config.BlacklistedNamespaces()
+		return blacklist.Has(v.namespace)
+	}
+	return false
+}
+
+// Check if this victim is whitelisted
+func (v *VictimBase) IsWhitelisted() bool {
+	if config.WhitelistEnabled() {
+		whitelist := config.WhitelistedNamespaces()
+		return whitelist.Has(v.namespace)
+	}
+	return true
 }
 
 // Create a label filter to filter only for pods that belong to the this
