@@ -22,10 +22,15 @@ Opt-in is done by setting the following labels on a Kubernetes k8 app:
 killed approximately every third weekday.  
 **`kube-monkey/identifier`**: A unique identifier for the k8 app (eg. the k8 app's name). This is used to identify the pods 
 that belong to a k8 app as Pods inherit labels from their k8 app.  
-**`kube-monkey/kill-all`**: Set this label's value to `"kill-all"` if you want kube-monkey to kill ALL of your pods. Default behavior in the absence of this label is to kill only ONE pod. **Use this label carefully.**
+**`kube-monkey/kill-mode`**: Set this label's value to  
+* `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status. Does not require kill-value. Default behavior in the absence of this label is to kill only ONE pod. **Use this label carefully.**
+* `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
+* `random-max-percent` to specify a maximum % with kill-value that can be killed. At the scheduled time, a uniform random specified % of the running pods will be terminated.
+**`kube-monkey/kill-value`**: Specify value for kill-mode
+* if `fixed`, provide an integer of pods to kill
+* if `random-max-percent`, provide a number from 0-100 to specify the max % of pods kube-monkey can kill
 
-
-#### Example of opted-in Deployment
+#### Example of opted-in Deployment killing one pod per purge
 
 ```yaml
 ---
@@ -41,6 +46,8 @@ spec:
         kube-monkey/enabled: enabled
         kube-monkey/identifier: monkey-victim-pods
         kube-monkey/mtbf: '2'
+        kube-monkey/kill-mode: "fixed"
+        kube-monkey/kill-value: 1
 [... omitted ...]
 ```
 
@@ -57,6 +64,8 @@ metadata:
     kube-monkey/enabled: enabled
     kube-monkey/identifier: monkey-victim
     kube-monkey/mtbf: '2'
+    kube-monkey/kill-mode: "fixed"
+    kube-monkey/kill-value: 1
 spec:
   template:
     metadata:
@@ -82,16 +91,16 @@ host="https://your-apiserver-url.com"
 #### Scheduling time
 Scheduling happens once a day on Weekdays - this is when a schedule for terminations for the current day is generated.   
 During scheduling, kube-monkey will:  
-1. Generate a list of eligible k8 apps (k8 apps that have opted-in and are not blacklisted)  
+1. Generate a list of eligible k8 apps (k8 apps that have opted-in and are not blacklisted, if specified, and are whitelisted, if specified)
 2. For each eligible k8 app, flip a biased coin (bias determined by `kube-monkey/mtbf`) to determine if a pod for that k8 app should be killed today  
 3. For each victim, calculate a random time when a pod will be killed
 
 #### Termination time
-This is the randomly generated time during the day when a victim k8 app will have a pod killed.   
-At termination time, kube-monkey will:  
-1. Check if the k8 app is still eligible (has not opted-out or been blacklisted since scheduling)  
-2. Get a list of running pods for the k8 app  
-3. Select one random pod and delete it  
+This is the randomly generated time during the day when a victim k8 app will have a pod killed.
+At termination time, kube-monkey will:
+1. Check if the k8 app is still eligible (has not opted-out or been blacklisted or removed from the whitelist since scheduling)
+2. Check if the k8 app has updated kill-mode and kill-value
+3. Depending on kill-mode and kill-value, execute pods
 
 ## Building
 
@@ -123,7 +132,7 @@ time_zone = "America/New_York"           # Set tzdata timezone example. Note the
 
 1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml` 
 
-> For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml`
+> For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml` or `kubectl apply -f km-config.yaml`
 
 2. Run kube-monkey as a k8 app within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
 
