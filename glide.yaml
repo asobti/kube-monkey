@@ -6,6 +6,7 @@ import:
 - package: k8s.io/api
   subpackages:
   - core/v1
+  - apps/v1beta1
   - extensions/v1beta1
 - package: k8s.io/apimachinery
   subpackages:
@@ -14,6 +15,7 @@ import:
   - pkg/selection
   - pkg/util/sets
 - package: k8s.io/client-go
+  version: v6.0.0
   subpackages:
   - kubernetes
   - rest
