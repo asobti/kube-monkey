@@ -156,6 +156,6 @@ versions of Kubernetes are compatible.
 - Add unit [tests](https://golang.org/pkg/testing/)
 - Support more k8 types
   - ~~deployments~~
-  - statefulsets
+  - ~~statefulsets~~
   - dameonsets
   - etc
