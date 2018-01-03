@@ -1,37 +1,60 @@
 package deployments
 
+//All these functions require api access specific to the version of the app
+
 import (
 	"github.com/golang/glog"
 
+	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/victims"
 
 	kube "k8s.io/client-go/kubernetes"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// Get all eligible deployments that opted in and are not in blacklisted nm
-func EligibleDeployments(clientset *kube.Clientset, filter *metav1.ListOptions, blacklist sets.String) (deployVictims []victims.Victim, err error) {
-	// Get all enrolled deployments, filtered by config EnabledLabel
-	enabledDeployments, err := clientset.ExtensionsV1beta1().Deployments(metav1.NamespaceAll).List(*filter)
+// Get all eligible deployments that opted in (filtered by config.EnabledLabel)
+func EligibleDeployments(clientset *kube.Clientset, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
+	enabledVictims, err := clientset.ExtensionsV1beta1().Deployments(metav1.NamespaceAll).List(*filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, dep := range enabledDeployments.Items {
-		deployment, err := New(&dep)
+	for _, vic := range enabledVictims.Items {
+		victim, err := New(&vic)
 		if err != nil {
-			glog.Warningf("Skipping eligible deployment %s because of error:\n%s\n", dep.Name, err.Error())
+			glog.Warningf("Skipping eligible %T %s because of error: %s", vic, vic.Name, err.Error())
 			continue
 		}
 
-		if deployment.IsBlacklisted(blacklist) {
+		if victim.IsBlacklisted() {
 			continue
 		}
 
-		deployVictims = append(deployVictims, deployment)
+		eligVictims = append(eligVictims, victim)
 	}
 
 	return
+}
+
+/* Below methods are used to verify the victim's attributes have not changed at the scheduled time of termination */
+
+// Checks if the deployment is currently enrolled in kube-monkey
+func (d *Deployment) IsEnrolled(clientset *kube.Clientset) (bool, error) {
+	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	if err != nil {
+		return false, nil
+	}
+	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
+}
+
+// Checks if the deployment is flagged for killall at this time
+func (d *Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
+	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	if err != nil {
+		// Ran into some error: return 'false' for killAll to be safe
+		return false, nil
+	}
+
+	return deployment.Labels[config.KillAllLabelKey] == config.KillAllLabelValue, nil
 }

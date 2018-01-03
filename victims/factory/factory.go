@@ -6,10 +6,13 @@ New types of kinds can be added easily
 package factory
 
 import (
+	"github.com/golang/glog"
+
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
 	"github.com/asobti/kube-monkey/victims"
 	"github.com/asobti/kube-monkey/victims/factory/deployments"
+	"github.com/asobti/kube-monkey/victims/factory/statefulsets"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -24,24 +27,35 @@ func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 		return nil, err
 	}
 
+	// Verify opt-in at scheduling time
 	filter, err := enrollmentFilter()
 	if err != nil {
 		return nil, err
 	}
 
-	blacklist := config.BlacklistedNamespaces()
-
 	// Fetch deployments
-	deployments, err := deployments.EligibleDeployments(clientset, filter, blacklist)
+	deployments, err := deployments.EligibleDeployments(clientset, filter)
 	if err != nil {
-		// Should probably be a warning, allow pass through to schedule other kinds
-		return nil, err
+		//allow pass through to schedule other kinds and namespaces
+		glog.Warningf("Failed to fetch eligible deployments for namespace %s due to error: %s", namespace, err.Error())
+		continue
 	}
 	eligibleVictims = append(eligibleVictims, deployments...)
+
+	// Fetch statefulsets
+	statefulsets, err := statefulsets.EligibleStatefulSets(clientset, filter)
+	if err != nil {
+		//allow pass through to schedule other kinds and namespaces
+		glog.Warningf("Failed to fetch eligible statefulsets for namespace %s due to error: %s", namespace, err.Error())
+		continue
+	}
+	eligibleVictims = append(eligibleVictims, statefulsets...)
+	}
 
 	return
 }
 
+// Verifies opt-in of victims
 func enrollmentFilter() (*metav1.ListOptions, error) {
 	req, err := enrollmentRequirement()
 	if err != nil {
