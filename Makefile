@@ -28,5 +28,8 @@ endif
 endif
 endif
 
+gofmt:
+	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % gofmt -s -w %
+
 clean:
 	rm -f kube-monkey

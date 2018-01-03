@@ -2,14 +2,15 @@ package config
 
 import (
 	"time"
-	
+
+	"github.com/fsnotify/fsnotify"
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
-	"github.com/fsnotify/fsnotify"
-	
+
 	"github.com/asobti/kube-monkey/config/param"
-	
-	"k8s.io/client-go/1.5/pkg/util/sets"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -26,8 +27,6 @@ const (
 	MtbfLabelKey      = "kube-monkey/mtbf"
 	KillAllLabelKey   = "kube-monkey/kill-all"
 	KillAllLabelValue = "kill-all"
-
-	KubeSystemNamespace = "kube-system"
 )
 
 func SetDefaults() {
@@ -37,7 +36,8 @@ func SetDefaults() {
 	viper.SetDefault(param.StartHour, 10)
 	viper.SetDefault(param.EndHour, 16)
 	viper.SetDefault(param.GracePeriodSec, 5)
-	viper.SetDefault(param.BlacklistedNamespaces, []string{KubeSystemNamespace})
+	viper.SetDefault(param.BlacklistedNamespaces, []string{metav1.NamespaceSystem})
+	viper.SetDefault(param.WhitelistedNamespaces, []string{metav1.NamespaceDefault})
 
 	viper.SetDefault(param.DebugEnabled, false)
 	viper.SetDefault(param.DebugScheduleDelay, 30)
@@ -49,7 +49,7 @@ func setupWatch() {
 	// TODO: This does not appear to be working
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		glog.V(2).Infoln("Config change detected")
+		glog.V(4).Info("Config change detected")
 		ValidateConfigs()
 	})
 }
@@ -68,7 +68,7 @@ func Init() error {
 		glog.Errorf("Failed to validate %v", err)
 		return err
 	} else {
-		glog.V(3).Info("Successfully validated configs")
+		glog.V(4).Info("Successfully validated configs")
 	}
 	setupWatch()
 	return nil
@@ -108,6 +108,20 @@ func BlacklistedNamespaces() sets.String {
 	// Return as set for O(1) membership checks
 	namespaces := viper.GetStringSlice(param.BlacklistedNamespaces)
 	return sets.NewString(namespaces...)
+}
+
+func WhitelistedNamespaces() sets.String {
+	// Return as set for O(1) membership checks
+	namespaces := viper.GetStringSlice(param.WhitelistedNamespaces)
+	return sets.NewString(namespaces...)
+}
+
+func BlacklistEnabled() bool {
+	return !BlacklistedNamespaces().Equal(sets.NewString(metav1.NamespaceNone))
+}
+
+func WhitelistEnabled() bool {
+	return !WhitelistedNamespaces().Equal(sets.NewString(metav1.NamespaceAll))
 }
 
 func ClusterAPIServerHost() (string, bool) {

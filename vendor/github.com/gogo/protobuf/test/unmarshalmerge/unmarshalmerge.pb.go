@@ -24,12 +24,10 @@ import _ "github.com/gogo/protobuf/gogoproto"
 import bytes "bytes"
 
 import strings "strings"
-import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
-import sort "sort"
-import strconv "strconv"
 import reflect "reflect"
 
 import io "io"
+import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -661,24 +659,6 @@ func valueToGoStringUnmarshalmerge(v interface{}, typ string) string {
 	}
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
-}
-func extensionToGoStringUnmarshalmerge(m github_com_gogo_protobuf_proto.Message) string {
-	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
-	if e == nil {
-		return "nil"
-	}
-	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
-	keys := make([]int, 0, len(e))
-	for k := range e {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	ss := []string{}
-	for _, k := range keys {
-		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
-	}
-	s += strings.Join(ss, ",") + "})"
-	return s
 }
 func NewPopulatedBig(r randyUnmarshalmerge, easy bool) *Big {
 	this := &Big{}
@@ -1663,7 +1643,7 @@ func init() { proto.RegisterFile("unmarshalmerge.proto", fileDescriptorUnmarshal
 
 var fileDescriptorUnmarshalmerge = []byte{
 	// 386 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xa4, 0xd0, 0xcd, 0x8a, 0x9b, 0x50,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0xd0, 0xcd, 0x8a, 0x9b, 0x50,
 	0x14, 0x07, 0xf0, 0x1c, 0x35, 0xc6, 0xdc, 0xd0, 0xaf, 0xdb, 0x52, 0x2e, 0x21, 0xdc, 0x5c, 0x02,
 	0x85, 0xdb, 0x45, 0x13, 0x50, 0x71, 0xd1, 0xa5, 0x8b, 0x42, 0x0a, 0x2d, 0x25, 0x92, 0x07, 0x88,
 	0xad, 0x31, 0x42, 0xd4, 0x62, 0x14, 0xba, 0xec, 0x23, 0xf4, 0x15, 0xba, 0x9b, 0x47, 0x98, 0x65,

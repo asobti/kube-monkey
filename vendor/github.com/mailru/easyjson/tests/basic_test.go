@@ -28,6 +28,7 @@ var testCases = []struct {
 	{&optsValue, optsString},
 	{&rawValue, rawString},
 	{&stdMarshalerValue, stdMarshalerString},
+	{&userMarshalerValue, userMarshalerString},
 	{&unexportedStructValue, unexportedStructString},
 	{&excludedFieldValue, excludedFieldString},
 	{&sliceValue, sliceString},
@@ -36,6 +37,7 @@ var testCases = []struct {
 	{&deepNestValue, deepNestString},
 	{&IntsValue, IntsString},
 	{&mapStringStringValue, mapStringStringString},
+	{&namedTypeValue, namedTypeValueString},
 }
 
 func TestMarshal(t *testing.T) {
@@ -182,4 +184,39 @@ func TestEncodingFlags(t *testing.T) {
 		}
 	}
 
+}
+
+func TestNestedEasyJsonMarshal(t *testing.T) {
+	n := map[string]*NestedEasyMarshaler{
+		"Value":  {},
+		"Slice1": {},
+		"Slice2": {},
+		"Map1":   {},
+		"Map2":   {},
+	}
+
+	ni := NestedInterfaces{
+		Value: n["Value"],
+		Slice: []interface{}{n["Slice1"], n["Slice2"]},
+		Map:   map[string]interface{}{"1": n["Map1"], "2": n["Map2"]},
+	}
+	easyjson.Marshal(ni)
+
+	for k, v := range n {
+		if !v.EasilyMarshaled {
+			t.Errorf("Nested interface %s wasn't easily marshaled", k)
+		}
+	}
+}
+
+func TestUnmarshalStructWithEmbeddedPtrStruct(t *testing.T) {
+	var s = StructWithInterface{Field2: &EmbeddedStruct{}}
+	var err error
+	err = easyjson.Unmarshal([]byte(structWithInterfaceString), &s)
+	if err != nil {
+		t.Errorf("easyjson.Unmarshal() error: %v", err)
+	}
+	if !reflect.DeepEqual(s, structWithInterfaceValueFilled) {
+		t.Errorf("easyjson.Unmarshal() = %#v; want %#v", s, structWithInterfaceValueFilled)
+	}
 }
