@@ -2,10 +2,12 @@ package chaos
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/golang/glog"
 
+	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
 	"github.com/asobti/kube-monkey/victims"
 
@@ -64,6 +66,7 @@ func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
 	err = c.terminate(clientset)
 	if err != nil {
 		resultchan <- c.NewResult(err)
+		return
 	}
 
 	// Send a success msg
@@ -96,51 +99,42 @@ func (c *Chaos) verifyExecution(clientset *kube.Clientset) error {
 	return nil
 }
 
-// The termination type and termination of pods happens here
+// The termination type and value is processed here
 func (c *Chaos) terminate(clientset *kube.Clientset) error {
-	// Do the termination
-	killAll, err := c.Victim().HasKillAll(clientset)
+	killType, err := c.Victim().KillType(clientset)
 	if err != nil {
-		glog.Errorf("Failed to check KillAll label for %s %s. Proceeding with termination of a single pod. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
+		glog.Errorf("Failed to check KillType label for %s %s. Proceeding with termination of a single pod. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
+		return c.terminatePod(clientset)
+	}
+	if killType == config.KillAllLabelValue {
+		return c.Victim().TerminateAllPods(clientset)
 	}
 
-	if killAll {
-		err = c.terminateAll(clientset)
-	} else {
-		err = c.terminatePod(clientset)
+	killValue, err := c.Victim().KillValue(clientset)
+	if err != nil {
+		glog.Errorf("Failed to check KillValue label for %s %s. Proceeding with termination of a single pod. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
+		return c.terminatePod(clientset)
+	}
+
+	// Validate killtype
+	switch killType {
+	case config.KillFixedLabelValue:
+		return c.Victim().DeleteRandomPods(clientset, killValue)
+	case config.KillRandomLabelValue:
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		return c.Victim().DeleteRandomPods(clientset, killValue*100/r.Intn(101))
+	default:
+		return fmt.Errorf("Failed to recognize KillValue label for %s %s. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 	}
 
 	// Send back termination success
 	return nil
 }
 
+// Redundant for DeleteRandomPods(clientset,1) but DeleteRandomPod is faster
 // Terminates one random pod
 func (c *Chaos) terminatePod(clientset *kube.Clientset) error {
 	return c.Victim().DeleteRandomPod(clientset)
-}
-
-// Terminates ALL pods for the victim
-// Not the default, or recommended, behavior
-func (c *Chaos) terminateAll(clientset *kube.Clientset) error {
-	glog.V(1).Infof("Terminating ALL pods for %s %s\n", c.Victim().Kind(), c.Victim().Name())
-
-	pods, err := c.Victim().Pods(clientset)
-	if err != nil {
-		return err
-	}
-
-	if len(pods) == 0 {
-		return fmt.Errorf("%s %s has no pods at the moment", c.Victim().Kind(), c.Victim().Name())
-	}
-
-	for _, pod := range pods {
-		// In case of error, log it and move on to next pod
-		if err = c.Victim().DeletePod(clientset, pod.Name); err != nil {
-			glog.Errorf("Failed to delete pod %s for %s %s", pod.Name, c.Victim().Kind(), c.Victim().Name())
-		}
-	}
-
-	return nil
 }
 
 // Create a ChaosResult instance

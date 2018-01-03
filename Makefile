@@ -5,7 +5,7 @@ TAG = v0.2.0
 
 .PHONY: all build container clean
 
-build: clean
+build: clean gofmt
 	$(ENVVAR) go build -o kube-monkey
 
 # Supressing docker build avoids printing the env variables

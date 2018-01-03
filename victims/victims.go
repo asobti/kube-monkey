@@ -36,8 +36,9 @@ type VictimBaseTemplate interface {
 
 type VictimSpecificApiCalls interface {
 	// Depends on which version i.e. apps/v1 or extensions/v1beta2
-	IsEnrolled(*kube.Clientset) (bool, error)
-	HasKillAll(*kube.Clientset) (bool, error)
+	IsEnrolled(*kube.Clientset) (bool, error) // Get updated enroll status
+	KillType(*kube.Clientset) (string, error) // Get updated kill config type
+	KillValue(*kube.Clientset) (int, error)   // Get updated kill config value
 }
 
 type VictimApiCalls interface {
@@ -45,7 +46,9 @@ type VictimApiCalls interface {
 	RunningPods(*kube.Clientset) ([]v1.Pod, error)
 	Pods(*kube.Clientset) ([]v1.Pod, error)
 	DeletePod(*kube.Clientset, string) error
-	DeleteRandomPod(*kube.Clientset) error
+	DeleteRandomPod(*kube.Clientset) error // Deprecated, but faster than DeleteRandomPods for single pod termination
+	DeleteRandomPods(*kube.Clientset, int) error
+	TerminateAllPods(*kube.Clientset) error
 	IsBlacklisted() bool
 	IsWhitelisted() bool
 }
@@ -123,6 +126,79 @@ func (v *VictimBase) DeletePod(clientset *kube.Clientset, podName string) error 
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteopts)
 }
 
+// Removes specified number of random pods for the victim
+func (v *VictimBase) DeleteRandomPods(clientset *kube.Clientset, killNum int) error {
+	// Pick a target pod to delete
+	pods, err := v.RunningPods(clientset)
+	if err != nil {
+		return err
+	}
+
+	numPods := len(pods)
+	switch {
+	case numPods == 0:
+		return fmt.Errorf("%s %s has no running pods at the moment", v.kind, v.name)
+	case numPods < killNum:
+		glog.Warningf("%s %s has only %d currently running pods, but %d terminations requested", v.kind, v.name, numPods, killNum)
+		fallthrough
+	case numPods == killNum:
+		glog.V(6).Infof("Killing ALL %d running pods for %s %s", numPods, v.kind, v.name)
+		break
+	case killNum == 0:
+		return fmt.Errorf("No terminations requested for %s %s", v.kind, v.name)
+	case killNum < 0:
+		return fmt.Errorf("Cannot request negative terminations %d for %s %s", numPods, v.kind, v.name)
+	case numPods > killNum:
+		glog.V(6).Infof("Killing %d running pods for %s %s", numPods, v.kind, v.name)
+		break
+	default:
+		return fmt.Errorf("unexpected behavior for terminating %s %s", v.kind, v.name)
+	}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	killCount := 0
+	for _, i := range r.Perm(numPods) {
+		if killCount == killNum {
+			// Report success
+			return nil
+		}
+		targetPod := pods[i].Name
+		glog.V(6).Infof("Terminating pod %s for %s %s\n", targetPod, v.kind, v.name)
+		err = v.DeletePod(clientset, targetPod)
+		if err != nil {
+			return err
+		}
+		killCount++
+	}
+
+	// Successful termination
+	return nil
+}
+
+// Terminate all pods for the victim, regardless of status
+func (v *VictimBase) TerminateAllPods(clientset *kube.Clientset) error {
+	glog.V(2).Infof("Terminating ALL pods for %s %s\n", v.kind, v.name)
+
+	pods, err := v.Pods(clientset)
+	if err != nil {
+		return err
+	}
+
+	if len(pods) == 0 {
+		return fmt.Errorf("%s %s has no pods at the moment", v.kind, v.name)
+	}
+
+	for _, pod := range pods {
+		// In case of error, log it and move on to next pod
+		if err = v.DeletePod(clientset, pod.Name); err != nil {
+			glog.Errorf("Failed to delete pod %s for %s %s", pod.Name, v.kind, v.name)
+		}
+	}
+
+	return nil
+}
+
+// Deprecated for DeleteRandomPods(clientset, 1)
 // Remove a random pod for the victim
 func (v *VictimBase) DeleteRandomPod(clientset *kube.Clientset) error {
 	// Pick a target pod to delete
@@ -137,7 +213,7 @@ func (v *VictimBase) DeleteRandomPod(clientset *kube.Clientset) error {
 
 	targetPod := RandomPodName(pods)
 
-	glog.Errorf("Terminating pod %s for %s %s\n", targetPod, v.kind, v.name)
+	glog.V(6).Infof("Terminating pod %s for %s %s\n", targetPod, v.kind, v.name)
 	return v.DeletePod(clientset, targetPod)
 }
 

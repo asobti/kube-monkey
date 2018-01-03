@@ -24,7 +24,7 @@ func New(dep *v1beta1.Deployment) (*Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-	kind := fmt.Sprintf("%T", dep)
+	kind := fmt.Sprintf("%T", *dep)
 
 	return &Deployment{victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
 }
