@@ -1,5 +1,5 @@
-hash: af19a9db4cb20bf860750e193f4bc05cd3c368ae62aee442bf34dd355988663c
-updated: 2017-12-27T15:30:24.767919174-05:00
+hash: 8f6eea14f44df28dad0d35030a04678d42f3682f663e943024e6f025ff7a5a88
+updated: 2018-01-03T09:57:39.359666643-05:00
 imports:
 - name: github.com/emicklei/go-restful
   version: ff4f55a206334ef123e4f79bbf348980da81ca46
@@ -23,7 +23,7 @@ imports:
   - proto
   - sortkeys
 - name: github.com/golang/glog
-  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
+  version: 44145f04b68cf362d9c4df2182967c2275eaefed
 - name: github.com/golang/protobuf
   version: 1643683e1b54a9e88ad26d98f81400c8c9d9f4f9
   subpackages:
@@ -59,7 +59,7 @@ imports:
   - json/scanner
   - json/token
 - name: github.com/json-iterator/go
-  version: 13f86432b882000a51c6e610c620974462691a97
+  version: 36b14963da70d11297d313183d7e6388c8510e1e
 - name: github.com/juju/ratelimit
   version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
 - name: github.com/magiconair/properties
@@ -81,7 +81,7 @@ imports:
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
 - name: github.com/spf13/afero
-  version: 8d919cbe7e2627e417f3e45c3c0e489a5b7e2536
+  version: 57afd63c68602b63ed976de00dd066ccb3c319db
   subpackages:
   - mem
 - name: github.com/spf13/cast
@@ -95,6 +95,8 @@ imports:
 - name: golang.org/x/net
   version: 1c05540f6879653db88113bc4a2b70aec4bd491f
   subpackages:
+  - context
+  - context/ctxhttp
   - http2
   - http2/hpack
   - idna
@@ -123,7 +125,7 @@ imports:
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/api
-  version: d19b0bad6fd13374f9b4568c3fdfe5af633ecbff
+  version: 11147472b7c934c474a2c484af3c0c5210b7a3af
   subpackages:
   - admissionregistration/v1alpha1
   - admissionregistration/v1beta1
@@ -154,7 +156,7 @@ imports:
   - storage/v1alpha1
   - storage/v1beta1
 - name: k8s.io/apimachinery
-  version: bc1325710437b54535daa5d6877ca62df7bd76db
+  version: 180eddb345a5be3a157cea1c624700ad5bd27b8f
   subpackages:
   - pkg/api/errors
   - pkg/api/meta
@@ -192,7 +194,7 @@ imports:
   - pkg/watch
   - third_party/forked/golang/reflect
 - name: k8s.io/client-go
-  version: d79b7d1f8bc2b1a2393aa7d79f4365413fd39a8c
+  version: 78700dec6369ba22221b72770783300f143df150
   subpackages:
   - discovery
   - kubernetes
@@ -239,4 +241,5 @@ imports:
   version: 39a7bf85c140f972372c2a0d1ee40adbf0c8bfe1
   subpackages:
   - pkg/common
+  - pkg/util/proto
 testImports: []
