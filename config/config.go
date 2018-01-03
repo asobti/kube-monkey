@@ -9,7 +9,7 @@ import (
 	
 	"github.com/asobti/kube-monkey/config/param"
 	
-	"k8s.io/client-go/1.5/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (

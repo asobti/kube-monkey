@@ -399,6 +399,7 @@ var E_ReplyExtensions_Time = &proto.ExtensionDesc{
 	Field:         101,
 	Name:          "my.test.ReplyExtensions.time",
 	Tag:           "fixed64,101,opt,name=time",
+	Filename:      "my_test/test.proto",
 }
 
 var E_ReplyExtensions_Carrot = &proto.ExtensionDesc{
@@ -407,6 +408,7 @@ var E_ReplyExtensions_Carrot = &proto.ExtensionDesc{
 	Field:         105,
 	Name:          "my.test.ReplyExtensions.carrot",
 	Tag:           "bytes,105,opt,name=carrot",
+	Filename:      "my_test/test.proto",
 }
 
 var E_ReplyExtensions_Donut = &proto.ExtensionDesc{
@@ -415,6 +417,7 @@ var E_ReplyExtensions_Donut = &proto.ExtensionDesc{
 	Field:         101,
 	Name:          "my.test.ReplyExtensions.donut",
 	Tag:           "bytes,101,opt,name=donut",
+	Filename:      "my_test/test.proto",
 }
 
 type OtherReplyExtensions struct {
@@ -847,6 +850,7 @@ var E_Tag = &proto.ExtensionDesc{
 	Field:         103,
 	Name:          "my.test.tag",
 	Tag:           "bytes,103,opt,name=tag",
+	Filename:      "my_test/test.proto",
 }
 
 var E_Donut = &proto.ExtensionDesc{
@@ -855,6 +859,7 @@ var E_Donut = &proto.ExtensionDesc{
 	Field:         106,
 	Name:          "my.test.donut",
 	Tag:           "bytes,106,opt,name=donut",
+	Filename:      "my_test/test.proto",
 }
 
 func init() {
@@ -884,7 +889,7 @@ func init() { proto.RegisterFile("my_test/test.proto", fileDescriptorTest) }
 
 var fileDescriptorTest = []byte{
 	// 988 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x7c, 0x54, 0xdd, 0x6e, 0xe3, 0x44,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x54, 0xdd, 0x6e, 0xe3, 0x44,
 	0x14, 0xce, 0xd8, 0x71, 0x7e, 0x4e, 0xb2, 0xad, 0x19, 0x55, 0xad, 0x15, 0xb4, 0x5b, 0x13, 0x28,
 	0x32, 0x15, 0xca, 0x6a, 0x0d, 0x12, 0xab, 0x48, 0x20, 0x9a, 0x9f, 0x36, 0xd5, 0x36, 0x89, 0x34,
 	0x6d, 0x2f, 0xe0, 0xc6, 0x9a, 0x8d, 0xa7, 0x8e, 0x69, 0xc6, 0xce, 0xda, 0x63, 0x84, 0xef, 0xfa,

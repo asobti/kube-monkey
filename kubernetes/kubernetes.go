@@ -8,9 +8,8 @@ import (
 	
 	cfg "github.com/asobti/kube-monkey/config"
 	
-	kube "k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/rest"
-	"k8s.io/client-go/1.5/tools/clientcmd"
+	kube "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // Check if running in a cluster with service accounts

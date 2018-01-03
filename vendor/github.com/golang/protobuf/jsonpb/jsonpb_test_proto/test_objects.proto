@@ -31,6 +31,7 @@
 
 syntax = "proto2";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
@@ -51,6 +52,16 @@ message Simple {
   optional double o_double = 9;
   optional string o_string = 10;
   optional bytes o_bytes = 11;
+}
+
+// Test message for holding special non-finites primitives.
+message NonFinites {
+    optional float f_nan = 1;
+    optional float f_pinf = 2;
+    optional float f_ninf = 3;
+    optional double d_nan = 4;
+    optional double d_pinf = 5;
+    optional double d_ninf = 6;
 }
 
 // Test message for holding repeated primitives.
@@ -95,6 +106,7 @@ message MsgWithOneof {
     string title = 1;
     int64 salary = 2;
     string Country = 3;
+    string home_address = 4;
   }
 }
 
@@ -116,9 +128,12 @@ message Complex {
 }
 
 message KnownTypes {
+  optional google.protobuf.Any an = 14;
   optional google.protobuf.Duration dur = 1;
   optional google.protobuf.Struct st = 12;
   optional google.protobuf.Timestamp ts = 2;
+  optional google.protobuf.ListValue lv = 15;
+  optional google.protobuf.Value val = 16;
 
   optional google.protobuf.DoubleValue dbl = 3;
   optional google.protobuf.FloatValue flt = 4;

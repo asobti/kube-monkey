@@ -4,8 +4,6 @@
 
 //go:generate go run gen.go gen_trieval.go gen_common.go
 
-// http://www.unicode.org/reports/tr46
-
 // Package idna implements IDNA2008 using the compatibility processing
 // defined by UTS (Unicode Technical Standard) #46, which defines a standard to
 // deal with the transition from IDNA2003.
@@ -41,28 +39,157 @@ import (
 //    error in the future.
 // I think Option 1 is best, but it is quite opinionated.
 
-// ToASCII converts a domain or domain label to its ASCII form. For example,
-// ToASCII("bücher.example.com") is "xn--bcher-kva.example.com", and
-// ToASCII("golang") is "golang". If an error is encountered it will return
-// an error and a (partially) processed result.
+// ToASCII is a wrapper for Punycode.ToASCII.
 func ToASCII(s string) (string, error) {
-	return Resolve.process(s, true)
+	return Punycode.process(s, true)
 }
 
-// ToUnicode converts a domain or domain label to its Unicode form. For example,
-// ToUnicode("xn--bcher-kva.example.com") is "bücher.example.com", and
-// ToUnicode("golang") is "golang". If an error is encountered it will return
-// an error and a (partially) processed result.
+// ToUnicode is a wrapper for Punycode.ToUnicode.
 func ToUnicode(s string) (string, error) {
-	return NonTransitional.process(s, false)
+	return Punycode.process(s, false)
+}
+
+// An Option configures a Profile at creation time.
+type Option func(*options)
+
+// Transitional sets a Profile to use the Transitional mapping as defined in UTS
+// #46. This will cause, for example, "ß" to be mapped to "ss". Using the
+// transitional mapping provides a compromise between IDNA2003 and IDNA2008
+// compatibility. It is used by most browsers when resolving domain names. This
+// option is only meaningful if combined with MapForLookup.
+func Transitional(transitional bool) Option {
+	return func(o *options) { o.transitional = true }
+}
+
+// VerifyDNSLength sets whether a Profile should fail if any of the IDN parts
+// are longer than allowed by the RFC.
+func VerifyDNSLength(verify bool) Option {
+	return func(o *options) { o.verifyDNSLength = verify }
+}
+
+// RemoveLeadingDots removes leading label separators. Leading runes that map to
+// dots, such as U+3002 IDEOGRAPHIC FULL STOP, are removed as well.
+//
+// This is the behavior suggested by the UTS #46 and is adopted by some
+// browsers.
+func RemoveLeadingDots(remove bool) Option {
+	return func(o *options) { o.removeLeadingDots = remove }
+}
+
+// ValidateLabels sets whether to check the mandatory label validation criteria
+// as defined in Section 5.4 of RFC 5891. This includes testing for correct use
+// of hyphens ('-'), normalization, validity of runes, and the context rules.
+func ValidateLabels(enable bool) Option {
+	return func(o *options) {
+		// Don't override existing mappings, but set one that at least checks
+		// normalization if it is not set.
+		if o.mapping == nil && enable {
+			o.mapping = normalize
+		}
+		o.trie = trie
+		o.validateLabels = enable
+		o.fromPuny = validateFromPunycode
+	}
+}
+
+// StrictDomainName limits the set of permissible ASCII characters to those
+// allowed in domain names as defined in RFC 1034 (A-Z, a-z, 0-9 and the
+// hyphen). This is set by default for MapForLookup and ValidateForRegistration.
+//
+// This option is useful, for instance, for browsers that allow characters
+// outside this range, for example a '_' (U+005F LOW LINE). See
+// http://www.rfc-editor.org/std/std3.txt for more details This option
+// corresponds to the UseSTD3ASCIIRules option in UTS #46.
+func StrictDomainName(use bool) Option {
+	return func(o *options) {
+		o.trie = trie
+		o.useSTD3Rules = use
+		o.fromPuny = validateFromPunycode
+	}
+}
+
+// NOTE: the following options pull in tables. The tables should not be linked
+// in as long as the options are not used.
+
+// BidiRule enables the Bidi rule as defined in RFC 5893. Any application
+// that relies on proper validation of labels should include this rule.
+func BidiRule() Option {
+	return func(o *options) { o.bidirule = bidirule.ValidString }
+}
+
+// ValidateForRegistration sets validation options to verify that a given IDN is
+// properly formatted for registration as defined by Section 4 of RFC 5891.
+func ValidateForRegistration() Option {
+	return func(o *options) {
+		o.mapping = validateRegistration
+		StrictDomainName(true)(o)
+		ValidateLabels(true)(o)
+		VerifyDNSLength(true)(o)
+		BidiRule()(o)
+	}
+}
+
+// MapForLookup sets validation and mapping options such that a given IDN is
+// transformed for domain name lookup according to the requirements set out in
+// Section 5 of RFC 5891. The mappings follow the recommendations of RFC 5894,
+// RFC 5895 and UTS 46. It does not add the Bidi Rule. Use the BidiRule option
+// to add this check.
+//
+// The mappings include normalization and mapping case, width and other
+// compatibility mappings.
+func MapForLookup() Option {
+	return func(o *options) {
+		o.mapping = validateAndMap
+		StrictDomainName(true)(o)
+		ValidateLabels(true)(o)
+		RemoveLeadingDots(true)(o)
+	}
+}
+
+type options struct {
+	transitional      bool
+	useSTD3Rules      bool
+	validateLabels    bool
+	verifyDNSLength   bool
+	removeLeadingDots bool
+
+	trie *idnaTrie
+
+	// fromPuny calls validation rules when converting A-labels to U-labels.
+	fromPuny func(p *Profile, s string) error
+
+	// mapping implements a validation and mapping step as defined in RFC 5895
+	// or UTS 46, tailored to, for example, domain registration or lookup.
+	mapping func(p *Profile, s string) (string, error)
+
+	// bidirule, if specified, checks whether s conforms to the Bidi Rule
+	// defined in RFC 5893.
+	bidirule func(s string) bool
 }
 
 // A Profile defines the configuration of a IDNA mapper.
 type Profile struct {
-	Transitional    bool
-	IgnoreSTD3Rules bool
-	VerifyDNSLength bool
-	// ErrHandler      func(error)
+	options
+}
+
+func apply(o *options, opts []Option) {
+	for _, f := range opts {
+		f(o)
+	}
+}
+
+// New creates a new Profile.
+//
+// With no options, the returned Profile is the most permissive and equals the
+// Punycode Profile. Options can be passed to further restrict the Profile. The
+// MapForLookup and ValidateForRegistration options set a collection of options,
+// for lookup and registration purposes respectively, which can be tailored by
+// adding more fine-grained options, where later options override earlier
+// options.
+func New(o ...Option) *Profile {
+	p := &Profile{}
+	apply(&p.options, o)
+	return p
 }
 
 // ToASCII converts a domain or domain label to its ASCII form. For example,
@@ -79,7 +206,7 @@ func (p *Profile) ToASCII(s string) (string, error) {
 // an error and a (partially) processed result.
 func (p *Profile) ToUnicode(s string) (string, error) {
 	pp := *p
-	pp.Transitional = false
+	pp.transitional = false
 	return pp.process(s, false)
 }
 
@@ -87,43 +214,74 @@ func (p *Profile) ToUnicode(s string) (string, error) {
 // purposes. The string format may change with different versions.
 func (p *Profile) String() string {
 	s := ""
-	if p.Transitional {
+	if p.transitional {
 		s = "Transitional"
 	} else {
 		s = "NonTransitional"
 	}
-	if p.IgnoreSTD3Rules {
-		s += ":NoSTD3Rules"
+	if p.useSTD3Rules {
+		s += ":UseSTD3Rules"
+	}
+	if p.validateLabels {
+		s += ":ValidateLabels"
+	}
+	if p.verifyDNSLength {
+		s += ":VerifyDNSLength"
 	}
 	return s
 }
 
 var (
-	// Resolve is the recommended profile for resolving domain names.
-	// The configuration of this profile may change over time.
-	Resolve = resolve
+	// Punycode is a Profile that does raw punycode processing with a minimum
+	// of validation.
+	Punycode *Profile = punycode
+
+	// Lookup is the recommended profile for looking up domain names, according
+	// to Section 5 of RFC 5891. The exact configuration of this profile may
+	// change over time.
+	Lookup *Profile = lookup
 
 	// Display is the recommended profile for displaying domain names.
 	// The configuration of this profile may change over time.
-	Display = display
+	Display *Profile = display
 
-	// Transitional defines a profile that implements the Transitional mapping
-	// as defined in UTS #46 with no additional constraints.
-	Transitional = transitional
+	// Registration is the recommended profile for checking whether a given
+	// IDN is valid for registration, according to Section 4 of RFC 5891.
+	Registration *Profile = registration
 
-	// NonTransitional defines a profile that implements the Transitional
-	// mapping as defined in UTS #46 with no additional constraints.
-	NonTransitional = nonTransitional
-
-	resolve         = &Profile{Transitional: true}
-	display         = &Profile{}
-	transitional    = &Profile{Transitional: true}
-	nonTransitional = &Profile{}
+	punycode = &Profile{}
+	lookup   = &Profile{options{
+		transitional:      true,
+		useSTD3Rules:      true,
+		validateLabels:    true,
+		removeLeadingDots: true,
+		trie:              trie,
+		fromPuny:          validateFromPunycode,
+		mapping:           validateAndMap,
+		bidirule:          bidirule.ValidString,
+	}}
+	display = &Profile{options{
+		useSTD3Rules:      true,
+		validateLabels:    true,
+		removeLeadingDots: true,
+		trie:              trie,
+		fromPuny:          validateFromPunycode,
+		mapping:           validateAndMap,
+		bidirule:          bidirule.ValidString,
+	}}
+	registration = &Profile{options{
+		useSTD3Rules:    true,
+		validateLabels:  true,
+		verifyDNSLength: true,
+		trie:            trie,
+		fromPuny:        validateFromPunycode,
+		mapping:         validateRegistration,
+		bidirule:        bidirule.ValidString,
+	}}
 
 	// TODO: profiles
-	// V2008: strict IDNA2008
-	// Register: recommended for approving domain names: nontransitional, but
-	// bundle or block deviation characters.
+	// Register: recommended for approving domain names: don't do any mappings
+	// but rather reject on invalid input. Bundle or block deviation characters.
 )
 
 type labelError struct{ label, code_ string }
@@ -137,18 +295,122 @@ type runeError rune
 
 func (e runeError) code() string { return "P1" }
 func (e runeError) Error() string {
-	return fmt.Sprintf("idna: disallowed rune %r", e)
+	return fmt.Sprintf("idna: disallowed rune %U", e)
 }
 
 // process implements the algorithm described in section 4 of UTS #46,
 // see http://www.unicode.org/reports/tr46.
 func (p *Profile) process(s string, toASCII bool) (string, error) {
+	var err error
+	if p.mapping != nil {
+		s, err = p.mapping(p, s)
+	}
+	// Remove leading empty labels.
+	if p.removeLeadingDots {
+		for ; len(s) > 0 && s[0] == '.'; s = s[1:] {
+		}
+	}
+	// It seems like we should only create this error on ToASCII, but the
+	// UTS 46 conformance tests suggests we should always check this.
+	if err == nil && p.verifyDNSLength && s == "" {
+		err = &labelError{s, "A4"}
+	}
+	labels := labelIter{orig: s}
+	for ; !labels.done(); labels.next() {
+		label := labels.label()
+		if label == "" {
+			// Empty labels are not okay. The label iterator skips the last
+			// label if it is empty.
+			if err == nil && p.verifyDNSLength {
+				err = &labelError{s, "A4"}
+			}
+			continue
+		}
+		if strings.HasPrefix(label, acePrefix) {
+			u, err2 := decode(label[len(acePrefix):])
+			if err2 != nil {
+				if err == nil {
+					err = err2
+				}
+				// Spec says keep the old label.
+				continue
+			}
+			labels.set(u)
+			if err == nil && p.validateLabels {
+				err = p.fromPuny(p, u)
+			}
+			if err == nil {
+				// This should be called on NonTransitional, according to the
+				// spec, but that currently does not have any effect. Use the
+				// original profile to preserve options.
+				err = p.validateLabel(u)
+			}
+		} else if err == nil {
+			err = p.validateLabel(label)
+		}
+	}
+	if toASCII {
+		for labels.reset(); !labels.done(); labels.next() {
+			label := labels.label()
+			if !ascii(label) {
+				a, err2 := encode(acePrefix, label)
+				if err == nil {
+					err = err2
+				}
+				label = a
+				labels.set(a)
+			}
+			n := len(label)
+			if p.verifyDNSLength && err == nil && (n == 0 || n > 63) {
+				err = &labelError{label, "A4"}
+			}
+		}
+	}
+	s = labels.result()
+	if toASCII && p.verifyDNSLength && err == nil {
+		// Compute the length of the domain name minus the root label and its dot.
+		n := len(s)
+		if n > 0 && s[n-1] == '.' {
+			n--
+		}
+		if len(s) < 1 || n > 253 {
+			err = &labelError{s, "A4"}
+		}
+	}
+	return s, err
+}
+
+func normalize(p *Profile, s string) (string, error) {
+	return norm.NFC.String(s), nil
+}
+
+func validateRegistration(p *Profile, s string) (string, error) {
+	if !norm.NFC.IsNormalString(s) {
+		return s, &labelError{s, "V1"}
+	}
+	for i := 0; i < len(s); {
+		v, sz := trie.lookupString(s[i:])
+		// Copy bytes not copied so far.
+		switch p.simplify(info(v).category()) {
+		// TODO: handle the NV8 defined in the Unicode idna data set to allow
+		// for strict conformance to IDNA2008.
+		case valid, deviation:
+		case disallowed, mapped, unknown, ignored:
+			r, _ := utf8.DecodeRuneInString(s[i:])
+			return s, runeError(r)
+		}
+		i += sz
+	}
+	return s, nil
+}
+
+func validateAndMap(p *Profile, s string) (string, error) {
 	var (
-		b    []byte
-		err  error
-		k, i int
+		err error
+		b   []byte
+		k   int
 	)
-	for i < len(s) {
+	for i := 0; i < len(s); {
 		v, sz := trie.lookupString(s[i:])
 		start := i
 		i += sz
@@ -158,7 +420,7 @@ func (p *Profile) process(s string, toASCII bool) (string, error) {
 			continue
 		case disallowed:
 			if err == nil {
-				r, _ := utf8.DecodeRuneInString(s[i:])
+				r, _ := utf8.DecodeRuneInString(s[start:])
 				err = runeError(r)
 			}
 			continue
@@ -184,71 +446,6 @@ func (p *Profile) process(s string, toASCII bool) (string, error) {
 		}
 		// TODO: the punycode converters require strings as input.
 		s = string(b)
-	}
-	// Remove leading empty labels
-	for ; len(s) > 0 && s[0] == '.'; s = s[1:] {
-	}
-	if s == "" {
-		return "", &labelError{s, "A4"}
-	}
-	labels := labelIter{orig: s}
-	for ; !labels.done(); labels.next() {
-		label := labels.label()
-		if label == "" {
-			// Empty labels are not okay. The label iterator skips the last
-			// label if it is empty.
-			if err == nil {
-				err = &labelError{s, "A4"}
-			}
-			continue
-		}
-		if strings.HasPrefix(label, acePrefix) {
-			u, err2 := decode(label[len(acePrefix):])
-			if err2 != nil {
-				if err == nil {
-					err = err2
-				}
-				// Spec says keep the old label.
-				continue
-			}
-			labels.set(u)
-			if err == nil {
-				err = p.validateFromPunycode(u)
-			}
-			if err == nil {
-				err = NonTransitional.validate(u)
-			}
-		} else if err == nil {
-			err = p.validate(label)
-		}
-	}
-	if toASCII {
-		for labels.reset(); !labels.done(); labels.next() {
-			label := labels.label()
-			if !ascii(label) {
-				a, err2 := encode(acePrefix, label)
-				if err == nil {
-					err = err2
-				}
-				label = a
-				labels.set(a)
-			}
-			n := len(label)
-			if p.VerifyDNSLength && err == nil && (n == 0 || n > 63) {
-				err = &labelError{label, "A4"}
-			}
-		}
-	}
-	s = labels.result()
-	if toASCII && p.VerifyDNSLength && err == nil {
-		// Compute the length of the domain name minus the root label and its dot.
-		n := len(s)
-		if n > 0 && s[n-1] == '.' {
-			n--
-		}
-		if len(s) < 1 || n > 253 {
-			err = &labelError{s, "A4"}
-		}
 	}
 	return s, err
 }
@@ -319,19 +516,19 @@ const acePrefix = "xn--"
 func (p *Profile) simplify(cat category) category {
 	switch cat {
 	case disallowedSTD3Mapped:
-		if !p.IgnoreSTD3Rules {
+		if p.useSTD3Rules {
 			cat = disallowed
 		} else {
 			cat = mapped
 		}
 	case disallowedSTD3Valid:
-		if !p.IgnoreSTD3Rules {
+		if p.useSTD3Rules {
 			cat = disallowed
 		} else {
 			cat = valid
 		}
 	case deviation:
-		if !p.Transitional {
+		if !p.transitional {
 			cat = valid
 		}
 	case validNV8, validXV8:
@@ -341,7 +538,7 @@ func (p *Profile) simplify(cat category) category {
 	return cat
 }
 
-func (p *Profile) validateFromPunycode(s string) error {
+func validateFromPunycode(p *Profile, s string) error {
 	if !norm.NFC.IsNormalString(s) {
 		return &labelError{s, "V1"}
 	}
@@ -417,9 +614,22 @@ var joinStates = [][numJoinTypes]joinState{
 	},
 }
 
-// validate validates the criteria from Section 4.1. Item 1, 4, and 6 are
+// validateLabel validates the criteria from Section 4.1. Item 1, 4, and 6 are
 // already implicitly satisfied by the overall implementation.
-func (p *Profile) validate(s string) error {
+func (p *Profile) validateLabel(s string) error {
+	if s == "" {
+		if p.verifyDNSLength {
+			return &labelError{s, "A4"}
+		}
+		return nil
+	}
+	if p.bidirule != nil && !p.bidirule(s) {
+		return &labelError{s, "B"}
+	}
+	if !p.validateLabels {
+		return nil
+	}
+	trie := p.trie // p.validateLabels is only set if trie is set.
 	if len(s) > 4 && s[2] == '-' && s[3] == '-' {
 		return &labelError{s, "V2"}
 	}
@@ -431,9 +641,6 @@ func (p *Profile) validate(s string) error {
 	x := info(v)
 	if x.isModifier() {
 		return &labelError{s, "V5"}
-	}
-	if !bidirule.ValidString(s) {
-		return &labelError{s, "B"}
 	}
 	// Quickly return in the absence of zero-width (non) joiners.
 	if strings.Index(s, zwj) == -1 && strings.Index(s, zwnj) == -1 {

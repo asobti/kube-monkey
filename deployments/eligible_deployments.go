@@ -6,11 +6,11 @@ import (
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
 	
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.5/pkg/labels"
-	"k8s.io/client-go/1.5/pkg/selection"
-	"k8s.io/client-go/1.5/pkg/util/sets"
+	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/sets"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func EligibleDeployments() ([]*Deployment, error) {
@@ -40,7 +40,7 @@ func EligibleDeployments() ([]*Deployment, error) {
 }
 
 func EnrolledDeployments() ([]v1beta1.Deployment, error) {
-	client, err := kubernetes.NewInClusterClient()
+	clientset, err := kubernetes.NewInClusterClient()
 	if err != nil {
 		return nil, err
 	}
@@ -50,23 +50,23 @@ func EnrolledDeployments() ([]v1beta1.Deployment, error) {
 		return nil, err
 	}
 
-	deployments, err := client.Extensions().Deployments(api.NamespaceAll).List(*filter)
+	deployments, err := clientset.ExtensionsV1beta1().Deployments(meta_v1.NamespaceAll).List(*filter)
 	if err != nil {
 		return nil, err
 	}
 	return deployments.Items, nil
 }
 
-func EnrollmentFilter() (*api.ListOptions, error) {
+func EnrollmentFilter() (*meta_v1.ListOptions, error) {
 	req, err := EnrollmentRequirement()
 	if err != nil {
 		return nil, err
 	}
-	return &api.ListOptions{
-		LabelSelector: labels.NewSelector().Add(*req),
+	return &meta_v1.ListOptions{
+		LabelSelector: labels.NewSelector().Add(*req).String(),
 	}, nil
 }
 
 func EnrollmentRequirement() (*labels.Requirement, error) {
-	return labels.NewRequirement(config.EnabledLabelKey, selection.Equals, sets.NewString(config.EnabledLabelValue))
+	return labels.NewRequirement(config.EnabledLabelKey, selection.Equals, sets.NewString(config.EnabledLabelValue).UnsortedList())
 }

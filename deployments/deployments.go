@@ -6,13 +6,14 @@ import (
 	
 	"github.com/asobti/kube-monkey/config"
 	
-	kube "k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.5/pkg/labels"
-	"k8s.io/client-go/1.5/pkg/selection"
-	"k8s.io/client-go/1.5/pkg/util/sets"
+	kube "k8s.io/client-go/kubernetes"
+
+	"k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/sets"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Deployment struct {
@@ -87,10 +88,10 @@ func (d *Deployment) Mtbf() int {
 }
 
 // Returns a list of running pods for the deployment
-func (d *Deployment) RunningPods(client *kube.Clientset) ([]v1.Pod, error) {
+func (d *Deployment) RunningPods(clientset *kube.Clientset) ([]v1.Pod, error) {
 	runningPods := []v1.Pod{}
 
-	pods, err := d.Pods(client)
+	pods, err := d.Pods(clientset)
 	if err != nil {
 		return nil, err
 	}
@@ -105,56 +106,56 @@ func (d *Deployment) RunningPods(client *kube.Clientset) ([]v1.Pod, error) {
 }
 
 // Returns a list of pods under the Deployment
-func (d *Deployment) Pods(client *kube.Clientset) ([]v1.Pod, error) {
+func (d *Deployment) Pods(clientset *kube.Clientset) ([]v1.Pod, error) {
 	labelSelector, err := d.LabelFilterForPods()
 	if err != nil {
 		return nil, err
 	}
 
-	podlist, err := client.Core().Pods(d.namespace).List(*labelSelector)
+	podlist, err := clientset.Core().Pods(d.namespace).List(*labelSelector)
 	if err != nil {
 		return nil, err
 	}
 	return podlist.Items, nil
 }
 
-func (d *Deployment) DeletePod(client *kube.Clientset, podName string) error {
-	deleteopts := &api.DeleteOptions{
+func (d *Deployment) DeletePod(clientset *kube.Clientset, podName string) error {
+	deleteopts := &meta_v1.DeleteOptions{
 		GracePeriodSeconds: config.GracePeriodSeconds(),
 	}
 
-	return client.Core().Pods(d.namespace).Delete(podName, deleteopts)
+	return clientset.Core().Pods(d.namespace).Delete(podName, deleteopts)
 }
 
 // Create a label filter to filter only for pods that belong to the this
 // deployment. This is done using the identifier label
-func (d *Deployment) LabelFilterForPods() (*api.ListOptions, error) {
+func (d *Deployment) LabelFilterForPods() (*meta_v1.ListOptions, error) {
 	req, err := d.LabelRequirementForPods()
 	if err != nil {
 		return nil, err
 	}
-	labelFilter := &api.ListOptions{
-		LabelSelector: labels.NewSelector().Add(*req),
+	labelFilter := &meta_v1.ListOptions{
+		LabelSelector: labels.NewSelector().Add(*req).String(),
 	}
 	return labelFilter, nil
 }
 
 // Create a labels.Requirement that can be used to build a filter
 func (d *Deployment) LabelRequirementForPods() (*labels.Requirement, error) {
-	return labels.NewRequirement(config.IdentLabelKey, selection.Equals, sets.NewString(d.identifier))
+	return labels.NewRequirement(config.IdentLabelKey, selection.Equals, sets.NewString(d.identifier).UnsortedList())
 }
 
 // Checks if the deployment is enrolled in kube-monkey
-func (d *Deployment) IsEnrolled(client *kube.Clientset) (bool, error) {
-	deployment, err := client.Extensions().Deployments(d.namespace).Get(d.name)
+func (d *Deployment) IsEnrolled(clientset *kube.Clientset) (bool, error) {
+	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.namespace).Get(d.name, meta_v1.GetOptions{})
 	if err != nil {
 		return false, nil
 	}
 	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-func (d * Deployment) HasKillAll(client *kube.Clientset) (bool, error) {
-	deployment, err := client.Extensions().Deployments(d.namespace).Get(d.name)
+func (d * Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
+	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.namespace).Get(d.name, meta_v1.GetOptions{})
 	if err != nil {
 		// Ran into some error: return 'false' for killAll to be safe
 		return false, nil

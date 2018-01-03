@@ -12,11 +12,6 @@ import (
 	"github.com/asobti/kube-monkey/schedule"
 )
 
-func verifyKubeClient() error {
-	_, err := chaos.CreateClient()
-	return err
-}
-
 func durationToNextRun(runhour int, location *time.Location) time.Duration {
 	if config.DebugEnabled() {
 		debugDelayDuration := config.DebugScheduleDelay()
@@ -33,7 +28,7 @@ func durationToNextRun(runhour int, location *time.Location) time.Duration {
 func Run() error {
 	// Verify kubernetes client can be created and works before
 	// we enter execution loop
-	if err := verifyKubeClient(); err != nil {
+	if _, err := chaos.CreateClient(); err != nil {
 		return err
 	}
 

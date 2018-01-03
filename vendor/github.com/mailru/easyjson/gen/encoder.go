@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -92,6 +93,12 @@ func (g *Generator) genTypeEncoder(t reflect.Type, in string, tags fieldTags, in
 	marshalerIface = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	if reflect.PtrTo(t).Implements(marshalerIface) {
 		fmt.Fprintln(g.out, ws+"out.Raw( ("+in+").MarshalJSON() )")
+		return nil
+	}
+
+	marshalerIface = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
+	if reflect.PtrTo(t).Implements(marshalerIface) {
+		fmt.Fprintln(g.out, ws+"out.RawText( ("+in+").MarshalText() )")
 		return nil
 	}
 
@@ -199,7 +206,9 @@ func (g *Generator) genTypeEncoderNoCheck(t reflect.Type, in string, tags fieldT
 		if t.NumMethod() != 0 {
 			return fmt.Errorf("interface type %v not supported: only interface{} is allowed", t)
 		}
-		fmt.Fprintln(g.out, ws+"if m, ok := "+in+".(json.Marshaler); ok {")
+		fmt.Fprintln(g.out, ws+"if m, ok := "+in+".(easyjson.Marshaler); ok {")
+		fmt.Fprintln(g.out, ws+"  m.MarshalEasyJSON(out)")
+		fmt.Fprintln(g.out, ws+"} else if m, ok := "+in+".(json.Marshaler); ok {")
 		fmt.Fprintln(g.out, ws+"  out.Raw(m.MarshalJSON())")
 		fmt.Fprintln(g.out, ws+"} else {")
 		fmt.Fprintln(g.out, ws+"  out.Raw(json.Marshal("+in+"))")
@@ -321,7 +330,7 @@ func (g *Generator) genStructEncoder(t reflect.Type) error {
 	return nil
 }
 
-func (g *Generator) genStructMarshaller(t reflect.Type) error {
+func (g *Generator) genStructMarshaler(t reflect.Type) error {
 	switch t.Kind() {
 	case reflect.Slice, reflect.Array, reflect.Map, reflect.Struct:
 	default:
