@@ -49,7 +49,7 @@ func setupWatch() {
 	// TODO: This does not appear to be working
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		glog.V(2).Infoln("Config change detected")
+		glog.V(4).Info("Config change detected")
 		ValidateConfigs()
 	})
 }
@@ -68,7 +68,7 @@ func Init() error {
 		glog.Errorf("Failed to validate %v", err)
 		return err
 	} else {
-		glog.V(3).Info("Successfully validated configs")
+		glog.V(4).Info("Successfully validated configs")
 	}
 	setupWatch()
 	return nil

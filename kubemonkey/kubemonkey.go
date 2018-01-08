@@ -1,6 +1,7 @@
 package kubemonkey
 
 import (
+	"fmt"
 	"time"
 	
 	"github.com/golang/glog"
@@ -19,11 +20,12 @@ func verifyKubeClient() error {
 func durationToNextRun(runhour int, location *time.Location) time.Duration {
 	if config.DebugEnabled() {
 		debugDelayDuration := config.DebugScheduleDelay()
-		glog.V(2).Infof("Debug mode detected! Generating next schedule in %.0f sec\n", debugDelayDuration.Seconds())
+		glog.V(1).Infof("Debug mode detected!")
+		glog.V(1).Infof("Status Update: Generating next schedule in %.0f sec\n", debugDelayDuration.Seconds())
 		return debugDelayDuration
 	} else {
 		nextRun := calendar.NextRuntime(location, runhour)
-		glog.V(2).Infof("Generating next schedule at %s\n", nextRun)
+		glog.V(1).Infof("Status Update: Generating next schedule at %s\n", nextRun)
 		return nextRun.Sub(time.Now())
 	}
 }
@@ -45,6 +47,7 @@ func Run() error {
 			glog.Fatal(err.Error())
 		}
 		schedule.Print()
+		fmt.Println(schedule)
 		ScheduleTerminations(schedule.Entries())
 	}
 }
@@ -61,7 +64,7 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 	completedCount := 0
 	var result *chaos.ChaosResult
 
-	glog.V(3).Infof("Waiting for terminations to run")
+	glog.V(3).Infof("Status Update: Waiting to run scheduled terminations.")
 
 	// Gather results
 	for completedCount < len(entries) {
@@ -72,7 +75,8 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 			glog.V(2).Infof("Termination successfully executed for deployment %s\n", result.Deployment().Name())
 		}
 		completedCount++
+		glog.V(4).Info("Status Update: ", len(entries) - completedCount, " scheduled terminations left.")
 	}
 
-	glog.V(3).Info("All terminations done")
+	glog.V(3).Info("Status Update: All terminations done.")
 }
