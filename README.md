@@ -67,9 +67,9 @@ At termination time, kube-monkey will:
 Clone the repository and build the container.
 
 ```
-go get github.com/asobti/kube-monkey
-cd $GOPATH/src/github.com/asobti/kube-monkey
-make container
+$ go get github.com/asobti/kube-monkey
+$ cd $GOPATH/src/github.com/asobti/kube-monkey
+$ make container
 ```
 
 ## Configuring
