@@ -1,5 +1,5 @@
 hash: 12ed8cf4ac1c72ba280bd9e0b627a83f24682d574bd6bdc71cc49e114384c99f
-updated: 2018-01-08T14:16:45.411994162-08:00
+updated: 2016-11-19T04:21:42.230841496-08:00
 imports:
 - name: github.com/blang/semver
   version: 60ec3488bfea7cca02b021d106d9911120d25fe9
@@ -67,10 +67,6 @@ imports:
   - json/parser
   - json/scanner
   - json/token
-- name: github.com/howeyc/gopass
-  version: bf9dde6d0d2c004a008c27aaee91170c786f6db8
-- name: github.com/imdario/mergo
-  version: 52b70e0a0d219897288ffa5675d8ca49fac20f81
 - name: github.com/jonboulle/clockwork
   version: bcac9884e7502bb2b474c0339d889cb981a2f27f
 - name: github.com/juju/ratelimit
@@ -111,10 +107,6 @@ imports:
   version: faddd6128c66c4708f45fdc007f575f75e592a3c
   subpackages:
   - codec
-- name: golang.org/x/crypto
-  version: 0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8
-  subpackages:
-  - ssh/terminal
 - name: golang.org/x/net
   version: 4876518f9e71663000c348837735820161a42df7
   subpackages:
@@ -133,7 +125,6 @@ imports:
   version: 9a2e24c3733eddc63871eda99f253e2db29bd3b9
   subpackages:
   - unix
-  - windows
 - name: golang.org/x/text
   version: a8b38433e35b65ba247bb267317037dee1b70cea
   subpackages:
@@ -252,7 +243,6 @@ imports:
   - 1.5/pkg/util/errors
   - 1.5/pkg/util/flowcontrol
   - 1.5/pkg/util/framer
-  - 1.5/pkg/util/homedir
   - 1.5/pkg/util/integer
   - 1.5/pkg/util/intstr
   - 1.5/pkg/util/json
@@ -274,11 +264,7 @@ imports:
   - 1.5/plugin/pkg/client/auth/gcp
   - 1.5/plugin/pkg/client/auth/oidc
   - 1.5/rest
-  - 1.5/tools/auth
-  - 1.5/tools/clientcmd
   - 1.5/tools/clientcmd/api
-  - 1.5/tools/clientcmd/api/latest
-  - 1.5/tools/clientcmd/api/v1
   - 1.5/tools/metrics
   - 1.5/transport
 testImports: []
