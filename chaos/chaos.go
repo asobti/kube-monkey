@@ -3,34 +3,31 @@ package chaos
 import (
 	"fmt"
 	"time"
-	"math/rand"
-	
+
 	"github.com/golang/glog"
-	
-	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/deployments"
+
 	"github.com/asobti/kube-monkey/kubernetes"
-	
-	kube "k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/pkg/api/v1"
+	"github.com/asobti/kube-monkey/victims"
+
+	kube "k8s.io/client-go/kubernetes"
 )
 
 type Chaos struct {
-	killAt        time.Time
-	deployment    *deployments.Deployment
+	killAt time.Time
+	victim victims.Victim
 }
 
 // Create a new Chaos instance
-func New(killtime time.Time, dep *deployments.Deployment) *Chaos {
+func New(killtime time.Time, victim victims.Victim) *Chaos {
 	// TargetPodName will be populated at time of termination
 	return &Chaos{
-		killAt:     killtime,
-		deployment: dep,
+		killAt: killtime,
+		victim: victim,
 	}
 }
 
-func (c *Chaos) Deployment() *deployments.Deployment {
-	return c.deployment
+func (c *Chaos) Victim() victims.Victim {
+	return c.victim
 }
 
 func (c *Chaos) KillAt() time.Time {
@@ -48,104 +45,102 @@ func (c *Chaos) DurationToKillTime() time.Duration {
 	return c.killAt.Sub(time.Now())
 }
 
-// Does the actual execution of the chaos, i.e.
-// termination of pods
+// Exposed function that calls the actual execution of the chaos, i.e. termination of pods
 // The result is sent back over the channel provided
 func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
-	// Create kubernetes client
-	client, err := CreateClient()
+	// Create kubernetes clientset
+	clientset, err := kubernetes.CreateClient()
 	if err != nil {
 		resultchan <- c.NewResult(err)
 		return
 	}
 
-	// Is deployment still enrolled in kube-monkey
-	enrolled, err := c.deployment.IsEnrolled(client)
+	err = c.verifyExecution(clientset)
 	if err != nil {
 		resultchan <- c.NewResult(err)
 		return
 	}
+
+	err = c.terminate(clientset)
+	if err != nil {
+		resultchan <- c.NewResult(err)
+	}
+
+	// Send a success msg
+	resultchan <- c.NewResult(nil)
+}
+
+// Verify if the victim has opted out since scheduling
+func (c *Chaos) verifyExecution(clientset *kube.Clientset) error {
+	// Is victim still enrolled in kube-monkey
+	enrolled, err := c.Victim().IsEnrolled(clientset)
+	if err != nil {
+		return err
+	}
+
 	if !enrolled {
-		resultchan <- c.NewResult(fmt.Errorf("Skipping deployment %s; reason=no longer enrolled", c.deployment.Name()))
-		return
+		return fmt.Errorf("%s %s is no longer enrolled in kube-monkey. Skipping\n", c.Victim().Kind(), c.Victim().Name())
 	}
 
-	// Has deployment been blacklisted since scheduling?
-	if c.deployment.IsBlacklisted(config.BlacklistedNamespaces()) {
-		resultchan <- c.NewResult(fmt.Errorf("Skipping deployment %s; reason=blacklisted", c.deployment.Name()))
-		return
+	// Has the victim been blacklisted since scheduling?
+	if c.Victim().IsBlacklisted() {
+		return fmt.Errorf("%s %s is blacklisted. Skipping\n", c.Victim().Kind(), c.Victim().Name())
 	}
 
+	// Has the victim been removed from the whitelist since scheduling?
+	if !c.Victim().IsWhitelisted() {
+		return fmt.Errorf("%s %s is not whitelisted. Skipping\n", c.Victim().Kind(), c.Victim().Name())
+	}
+
+	// Send back valid for termination
+	return nil
+}
+
+// The termination type and termination of pods happens here
+func (c *Chaos) terminate(clientset *kube.Clientset) error {
 	// Do the termination
-	killAll, err := c.deployment.HasKillAll(client)
+	killAll, err := c.Victim().HasKillAll(clientset)
 	if err != nil {
-		glog.Errorf("Failed to check KillAll label for deployment %s. Proceeding with termination of a single pod. Error: %v", c.deployment.Name(), err.Error())
+		glog.Errorf("Failed to check KillAll label for %s %s. Proceeding with termination of a single pod. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 	}
 
 	if killAll {
-		err = c.TerminateAll(client)
+		err = c.terminateAll(clientset)
 	} else {
-		err = c.Terminate(client)
+		err = c.terminatePod(clientset)
 	}
 
-	if err != nil {
-		resultchan <- c.NewResult(err)
-	} else {
-		// Send a success msg
-		resultchan <- c.NewResult(nil)
-	}
+	// Send back termination success
+	return nil
 }
 
-// Runs the actual pod-termination logic
-func (c *Chaos) Terminate(client *kube.Clientset) error {
-	// Pick a target pod to delete
-	pods, err := c.deployment.RunningPods(client)
-	if err != nil {
-		return err
-	}
-
-	if len(pods) == 0 {
-		return fmt.Errorf("Deployment %s has no running pods at the moment", c.deployment.Name())
-	}
-
-	targetPod := RandomPodName(pods)
-
-	glog.V(2).Infof("Terminating pod %s for deployment %s", targetPod, c.deployment.Name())
-	return c.DeletePod(client, targetPod)
+// Terminates one random pod
+func (c *Chaos) terminatePod(clientset *kube.Clientset) error {
+	return c.Victim().DeleteRandomPod(clientset)
 }
 
-// Terminates ALL pods for the deployment
+// Terminates ALL pods for the victim
 // Not the default, or recommended, behavior
-func (c *Chaos) TerminateAll(client *kube.Clientset) error {
-	glog.V(2).Infof("Terminating ALL pods for deployment %s", c.deployment.Name())
+func (c *Chaos) terminateAll(clientset *kube.Clientset) error {
+	glog.V(1).Infof("Terminating ALL pods for %s %s\n", c.Victim().Kind(), c.Victim().Name())
 
-	pods, err := c.deployment.Pods(client)
+	pods, err := c.Victim().Pods(clientset)
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("Deployment %s has no pods at the moment", c.deployment.Name())
+		return fmt.Errorf("%s %s has no pods at the moment", c.Victim().Kind(), c.Victim().Name())
 	}
 
 	for _, pod := range pods {
 		// In case of error, log it and move on to next pod
-		if err = c.DeletePod(client, pod.Name); err != nil {
-			glog.Errorf("Failed to delete pod %s for deployment %s", pod.Name, c.deployment.Name())
+		if err = c.Victim().DeletePod(clientset, pod.Name); err != nil {
+			glog.Errorf("Failed to delete pod %s for %s %s", pod.Name, c.Victim().Kind(), c.Victim().Name())
 		}
 	}
 
 	return nil
-}
-
-// Deletes a pod for a deployment
-func (c *Chaos) DeletePod(client *kube.Clientset, podName string) error {
-	if config.DryRun() {
-		glog.V(2).Infof("[DryRun Mode] Terminated pod %s for deployment %s", podName, c.deployment.Name())
-		return nil
-	} else {
-		return c.deployment.DeletePod(client, podName)
-	}
 }
 
 // Create a ChaosResult instance
@@ -154,25 +149,4 @@ func (c *Chaos) NewResult(e error) *ChaosResult {
 		chaos: c,
 		err:   e,
 	}
-}
-
-// Create, verify and return an instance of kubernetes.Clientset
-func CreateClient() (*kube.Clientset, error) {
-	client, err := kubernetes.NewInClusterClient()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to generate NewInClusterClient: %v", err)
-	}
-
-	if kubernetes.VerifyClient(client) {
-		return client, nil
-	} else {
-		return nil, fmt.Errorf("Unable to verify client connectivity to Kubernetes apiserver")
-	}
-}
-
-// Pick a random pod name from a list of Pods
-func RandomPodName(pods []v1.Pod) string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	randIndex := r.Intn(len(pods))
-	return pods[randIndex].Name
 }

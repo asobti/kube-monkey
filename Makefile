@@ -1,7 +1,7 @@
 all: build
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-TAG = v0.1.0
+TAG = v0.2.0
 
 .PHONY: all build container clean
 
@@ -27,6 +27,9 @@ else
 endif
 endif
 endif
+
+gofmt:
+	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % gofmt -s -w %
 
 clean:
 	rm -f kube-monkey

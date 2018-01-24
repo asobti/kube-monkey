@@ -42,8 +42,17 @@ const (
 	// Default: 5
 	GracePeriodSec = "kubemonkey.graceperiod_sec"
 
+	// A list of namespaces where terminations are valid
+	// Default is defined by metav1.NamespaceDefault
+	// To allow all namespaces use metav1.NamespaceAll
+	// Type: list
+	// Default: [ "default" ]
+	WhitelistedNamespaces = "kubemonkey.whitelisted_namespaces"
+
 	// A list of namespaces for which terminations should never
 	// be carried out.
+	// Default is defined by metav1.NamespaceSystem
+	// To block no namespaces use metav1.NamespaceNone
 	// Type: list
 	// Default: [ "kube-system" ]
 	BlacklistedNamespaces = "kubemonkey.blacklisted_namespaces"

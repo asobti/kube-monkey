@@ -1,15 +1,21 @@
 package: github.com/asobti/kube-monkey
 import:
 - package: github.com/fsnotify/fsnotify
+- package: github.com/golang/glog
 - package: github.com/spf13/viper
-- package: k8s.io/client-go
-  version: "1.5"
+- package: k8s.io/api
   subpackages:
-  - 1.5/kubernetes
-  - 1.5/pkg/api
-  - 1.5/pkg/api/v1
-  - 1.5/pkg/apis/extensions/v1beta1
-  - 1.5/pkg/labels
-  - 1.5/pkg/selection
-  - 1.5/pkg/util/sets
-  - 1.5/rest
+  - core/v1
+  - apps/v1beta1
+  - extensions/v1beta1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/apis/meta/v1
+  - pkg/labels
+  - pkg/selection
+  - pkg/util/sets
+- package: k8s.io/client-go
+  version: v6.0.0
+  subpackages:
+  - kubernetes
+  - rest

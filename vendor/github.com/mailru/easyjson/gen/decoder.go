@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -65,6 +66,14 @@ func (g *Generator) genTypeDecoder(t reflect.Type, out string, tags fieldTags, i
 		return nil
 	}
 
+	unmarshalerIface = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
+	if reflect.PtrTo(t).Implements(unmarshalerIface) {
+		fmt.Fprintln(g.out, ws+"if data := in.UnsafeBytes(); in.Ok() {")
+		fmt.Fprintln(g.out, ws+"  in.AddError( ("+out+").UnmarshalText(data) )")
+		fmt.Fprintln(g.out, ws+"}")
+		return nil
+	}
+
 	err := g.genTypeDecoderNoCheck(t, out, tags, indent)
 	return err
 }
@@ -106,10 +115,14 @@ func (g *Generator) genTypeDecoderNoCheck(t reflect.Type, out string, tags field
 			fmt.Fprintln(g.out, ws+"  "+out+" = nil")
 			fmt.Fprintln(g.out, ws+"} else {")
 			fmt.Fprintln(g.out, ws+"  in.Delim('[')")
-			fmt.Fprintln(g.out, ws+"  if !in.IsDelim(']') {")
-			fmt.Fprintln(g.out, ws+"    "+out+" = make("+g.getType(t)+", 0, "+fmt.Sprint(capacity)+")")
-			fmt.Fprintln(g.out, ws+"  } else {")
-			fmt.Fprintln(g.out, ws+"    "+out+" = "+g.getType(t)+"{}")
+			fmt.Fprintln(g.out, ws+"  if "+out+" == nil {")
+			fmt.Fprintln(g.out, ws+"    if !in.IsDelim(']') {")
+			fmt.Fprintln(g.out, ws+"      "+out+" = make("+g.getType(t)+", 0, "+fmt.Sprint(capacity)+")")
+			fmt.Fprintln(g.out, ws+"    } else {")
+			fmt.Fprintln(g.out, ws+"      "+out+" = "+g.getType(t)+"{}")
+			fmt.Fprintln(g.out, ws+"    }")
+			fmt.Fprintln(g.out, ws+"  } else { ")
+			fmt.Fprintln(g.out, ws+"    "+out+" = ("+out+")[:0]")
 			fmt.Fprintln(g.out, ws+"  }")
 			fmt.Fprintln(g.out, ws+"  for !in.IsDelim(']') {")
 			fmt.Fprintln(g.out, ws+"    var "+tmpVar+" "+g.getType(elem))
@@ -212,8 +225,13 @@ func (g *Generator) genTypeDecoderNoCheck(t reflect.Type, out string, tags field
 		if t.NumMethod() != 0 {
 			return fmt.Errorf("interface type %v not supported: only interface{} is allowed", t)
 		}
-		fmt.Fprintln(g.out, ws+out+" = in.Interface()")
-
+		fmt.Fprintln(g.out, ws+"if m, ok := "+out+".(easyjson.Unmarshaler); ok {")
+		fmt.Fprintln(g.out, ws+"m.UnmarshalEasyJSON(in)")
+		fmt.Fprintln(g.out, ws+"} else if m, ok := "+out+".(json.Unmarshaler); ok {")
+		fmt.Fprintln(g.out, ws+"_ = m.UnmarshalJSON(in.Raw())")
+		fmt.Fprintln(g.out, ws+"} else {")
+		fmt.Fprintln(g.out, ws+"  "+out+" = in.Interface()")
+		fmt.Fprintln(g.out, ws+"}")
 	default:
 		return fmt.Errorf("don't know how to decode %v", t)
 	}
@@ -425,7 +443,7 @@ func (g *Generator) genStructDecoder(t reflect.Type) error {
 	return nil
 }
 
-func (g *Generator) genStructUnmarshaller(t reflect.Type) error {
+func (g *Generator) genStructUnmarshaler(t reflect.Type) error {
 	switch t.Kind() {
 	case reflect.Slice, reflect.Array, reflect.Map, reflect.Struct:
 	default:

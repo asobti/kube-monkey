@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/afero"
 	"github.com/spf13/cast"
 
 	"github.com/spf13/pflag"
@@ -262,7 +263,7 @@ func TestDefault(t *testing.T) {
 	assert.Equal(t, "leather", Get("clothing.jacket"))
 }
 
-func TestUnmarshalling(t *testing.T) {
+func TestUnmarshaling(t *testing.T) {
 	SetConfigType("yaml")
 	r := bytes.NewReader(yamlExample)
 
@@ -417,7 +418,7 @@ func TestAutoEnvWithPrefix(t *testing.T) {
 	assert.Equal(t, "13", Get("bar"))
 }
 
-func TestSetEnvReplacer(t *testing.T) {
+func TestSetEnvKeyReplacer(t *testing.T) {
 	Reset()
 
 	AutomaticEnv()
@@ -536,6 +537,44 @@ func TestBindPFlags(t *testing.T) {
 		assert.Equal(t, expected, v.Get(name))
 	}
 
+}
+
+func TestBindPFlagsStringSlice(t *testing.T) {
+	for _, testValue := range []struct {
+		Expected []string
+		Value    string
+	}{
+		{[]string{}, ""},
+		{[]string{"jeden"}, "jeden"},
+		{[]string{"dwa", "trzy"}, "dwa,trzy"},
+		{[]string{"cztery", "piec , szesc"}, "cztery,\"piec , szesc\""}} {
+
+		for _, changed := range []bool{true, false} {
+			v := New() // create independent Viper object
+			flagSet := pflag.NewFlagSet("test", pflag.ContinueOnError)
+			flagSet.StringSlice("stringslice", testValue.Expected, "test")
+			flagSet.Visit(func(f *pflag.Flag) {
+				if len(testValue.Value) > 0 {
+					f.Value.Set(testValue.Value)
+					f.Changed = changed
+				}
+			})
+
+			err := v.BindPFlags(flagSet)
+			if err != nil {
+				t.Fatalf("error binding flag set, %v", err)
+			}
+
+			type TestStr struct {
+				StringSlice []string
+			}
+			val := &TestStr{}
+			if err := v.Unmarshal(val); err != nil {
+				t.Fatalf("%+#v cannot unmarshal: %s", testValue.Value, err)
+			}
+			assert.Equal(t, testValue.Expected, val.StringSlice)
+		}
+	}
 }
 
 func TestBindPFlag(t *testing.T) {
@@ -771,6 +810,26 @@ func TestWrongDirsSearchNotFound(t *testing.T) {
 	assert.Equal(t, `default`, v.GetString(`key`))
 }
 
+func TestWrongDirsSearchNotFoundForMerge(t *testing.T) {
+
+	_, config, cleanup := initDirs(t)
+	defer cleanup()
+
+	v := New()
+	v.SetConfigName(config)
+	v.SetDefault(`key`, `default`)
+
+	v.AddConfigPath(`whattayoutalkingbout`)
+	v.AddConfigPath(`thispathaintthere`)
+
+	err := v.MergeInConfig()
+	assert.Equal(t, reflect.TypeOf(ConfigFileNotFoundError{"", ""}), reflect.TypeOf(err))
+
+	// Even though config did not load and the error might have
+	// been ignored by the client, the default still loads
+	assert.Equal(t, `default`, v.GetString(`key`))
+}
+
 func TestSub(t *testing.T) {
 	v := New()
 	v.SetConfigType("yaml")
@@ -787,6 +846,190 @@ func TestSub(t *testing.T) {
 
 	subv = v.Sub("missing.key")
 	assert.Equal(t, (*Viper)(nil), subv)
+}
+
+var hclWriteExpected = []byte(`"foos" = {
+  "foo" = {
+    "key" = 1
+  }
+
+  "foo" = {
+    "key" = 2
+  }
+
+  "foo" = {
+    "key" = 3
+  }
+
+  "foo" = {
+    "key" = 4
+  }
+}
+
+"id" = "0001"
+
+"name" = "Cake"
+
+"ppu" = 0.55
+
+"type" = "donut"`)
+
+func TestWriteConfigHCL(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("hcl")
+	err := v.ReadConfig(bytes.NewBuffer(hclExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.hcl"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.hcl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, hclWriteExpected, read)
+}
+
+var jsonWriteExpected = []byte(`{
+  "batters": {
+    "batter": [
+      {
+        "type": "Regular"
+      },
+      {
+        "type": "Chocolate"
+      },
+      {
+        "type": "Blueberry"
+      },
+      {
+        "type": "Devil's Food"
+      }
+    ]
+  },
+  "id": "0001",
+  "name": "Cake",
+  "ppu": 0.55,
+  "type": "donut"
+}`)
+
+func TestWriteConfigJson(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("json")
+	err := v.ReadConfig(bytes.NewBuffer(jsonExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.json"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, jsonWriteExpected, read)
+}
+
+var propertiesWriteExpected = []byte(`p_id = 0001
+p_type = donut
+p_name = Cake
+p_ppu = 0.55
+p_batters.batter.type = Regular
+`)
+
+func TestWriteConfigProperties(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("properties")
+	err := v.ReadConfig(bytes.NewBuffer(propertiesExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.properties"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.properties")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, propertiesWriteExpected, read)
+}
+
+func TestWriteConfigTOML(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	v := New()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("toml")
+	err := v.ReadConfig(bytes.NewBuffer(tomlExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.toml"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The TOML String method does not order the contents.
+	// Therefore, we must read the generated file and compare the data.
+	v2 := New()
+	v2.SetFs(fs)
+	v2.SetConfigName("c")
+	v2.SetConfigType("toml")
+	v2.SetConfigFile("c.toml")
+	err = v2.ReadInConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, v.GetString("title"), v2.GetString("title"))
+	assert.Equal(t, v.GetString("owner.bio"), v2.GetString("owner.bio"))
+	assert.Equal(t, v.GetString("owner.dob"), v2.GetString("owner.dob"))
+	assert.Equal(t, v.GetString("owner.organization"), v2.GetString("owner.organization"))
+}
+
+var yamlWriteExpected = []byte(`age: 35
+beard: true
+clothing:
+  jacket: leather
+  pants:
+    size: large
+  trousers: denim
+eyes: brown
+hacker: true
+hobbies:
+- skateboarding
+- snowboarding
+- go
+name: steve
+`)
+
+func TestWriteConfigYAML(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("yaml")
+	err := v.ReadConfig(bytes.NewBuffer(yamlExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.yaml"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, yamlWriteExpected, read)
 }
 
 var yamlMergeExampleTgt = []byte(`
@@ -1080,6 +1323,35 @@ func TestCaseInsensitiveSet(t *testing.T) {
 	if _, ok := m1["Foo"]; !ok {
 		t.Fatal("Input map changed")
 	}
+}
+
+func TestParseNested(t *testing.T) {
+	type duration struct {
+		Delay time.Duration
+	}
+
+	type item struct {
+		Name   string
+		Delay  time.Duration
+		Nested duration
+	}
+
+	config := `[[parent]]
+	delay="100ms"
+	[parent.nested]
+	delay="200ms"
+`
+	initConfig("toml", config)
+
+	var items []item
+	err := v.UnmarshalKey("parent", &items)
+	if err != nil {
+		t.Fatalf("unable to decode into struct, %v", err)
+	}
+
+	assert.Equal(t, 1, len(items))
+	assert.Equal(t, 100*time.Millisecond, items[0].Delay)
+	assert.Equal(t, 200*time.Millisecond, items[0].Nested.Delay)
 }
 
 func doTestCaseInsensitive(t *testing.T, typ, config string) {

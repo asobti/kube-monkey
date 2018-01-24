@@ -59,12 +59,12 @@ func TestListType(t *testing.T) {
 			[]token.Type{token.NUMBER, token.STRING},
 		},
 		{
-			`foo = []`,
-			[]token.Type{},
+			`foo = [false]`,
+			[]token.Type{token.BOOL},
 		},
 		{
-			`foo = ["123", 123]`,
-			[]token.Type{token.STRING, token.NUMBER},
+			`foo = []`,
+			[]token.Type{},
 		},
 		{
 			`foo = [1,
@@ -393,6 +393,7 @@ func TestCommentGroup(t *testing.T) {
 		groups int
 	}{
 		{"# Hello\n# World", 1},
+		{"# Hello\r\n# Windows", 1},
 	}
 
 	for _, tc := range cases {
@@ -422,6 +423,10 @@ func TestParse(t *testing.T) {
 		},
 		{
 			"comment.hcl",
+			false,
+		},
+		{
+			"comment_crlf.hcl",
 			false,
 		},
 		{
@@ -462,6 +467,10 @@ func TestParse(t *testing.T) {
 		},
 		{
 			"complex.hcl",
+			false,
+		},
+		{
+			"complex_crlf.hcl",
 			false,
 		},
 		{
@@ -506,6 +515,10 @@ func TestParse(t *testing.T) {
 		},
 		{
 			"object_key_assign_without_value3.hcl",
+			true,
+		},
+		{
+			"git_crypt.hcl",
 			true,
 		},
 	}

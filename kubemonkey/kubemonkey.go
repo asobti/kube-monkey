@@ -3,28 +3,24 @@ package kubemonkey
 import (
 	"fmt"
 	"time"
-	
+
 	"github.com/golang/glog"
-	
+
+	"github.com/asobti/kube-monkey/calendar"
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/calendar"
+	"github.com/asobti/kube-monkey/kubernetes"
 	"github.com/asobti/kube-monkey/schedule"
 )
 
-func verifyKubeClient() error {
-	_, err := chaos.CreateClient()
-	return err
-}
-
-func durationToNextRun(runhour int, location *time.Location) time.Duration {
+func durationToNextRun(runhour int, loc *time.Location) time.Duration {
 	if config.DebugEnabled() {
 		debugDelayDuration := config.DebugScheduleDelay()
 		glog.V(1).Infof("Debug mode detected!")
 		glog.V(1).Infof("Status Update: Generating next schedule in %.0f sec\n", debugDelayDuration.Seconds())
 		return debugDelayDuration
 	} else {
-		nextRun := calendar.NextRuntime(location, runhour)
+		nextRun := calendar.NextRuntime(loc, runhour)
 		glog.V(1).Infof("Status Update: Generating next schedule at %s\n", nextRun)
 		return nextRun.Sub(time.Now())
 	}
@@ -33,7 +29,7 @@ func durationToNextRun(runhour int, location *time.Location) time.Duration {
 func Run() error {
 	// Verify kubernetes client can be created and works before
 	// we enter execution loop
-	if err := verifyKubeClient(); err != nil {
+	if _, err := kubernetes.CreateClient(); err != nil {
 		return err
 	}
 
@@ -70,12 +66,12 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 	for completedCount < len(entries) {
 		result = <-resultchan
 		if result.Error() != nil {
-			glog.Errorf("Failed to execute termination for deployment %s. Error: %v", result.Deployment().Name(), result.Error().Error())
+			glog.Errorf("Failed to execute termination for %s %s. Error: %v", result.Victim().Kind(), result.Victim().Name(), result.Error().Error())
 		} else {
-			glog.V(2).Infof("Termination successfully executed for deployment %s\n", result.Deployment().Name())
+			glog.V(2).Infof("Termination successfully executed for %s %s\n", result.Victim().Kind(), result.Victim().Name())
 		}
 		completedCount++
-		glog.V(4).Info("Status Update: ", len(entries) - completedCount, " scheduled terminations left.")
+		glog.V(4).Info("Status Update: ", len(entries)-completedCount, " scheduled terminations left.")
 	}
 
 	glog.V(3).Info("Status Update: All terminations done.")
