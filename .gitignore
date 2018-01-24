@@ -2,3 +2,4 @@
 .idea/
 build/
 RPMS/
+kube-monkey
