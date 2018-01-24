@@ -124,13 +124,15 @@ func (c *Chaos) terminatePod(clientset *kube.Clientset) error {
 func (c *Chaos) terminateAll(clientset *kube.Clientset) error {
 	glog.V(1).Infof("Terminating ALL pods for %s %s\n", c.Victim().Kind(), c.Victim().Name())
 
-	pods, err := c.Victim().Pods(clientset)
+	pods, err := c.Victim().RunningPods(clientset)
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
 		return fmt.Errorf("%s %s has no pods at the moment", c.Victim().Kind(), c.Victim().Name())
+	} else {
+		glog.V(3).Infof("Killing %d pods for %s %s", len(pods), c.Victim().Kind(), c.Victim().Name())
 	}
 
 	for _, pod := range pods {
