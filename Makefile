@@ -1,11 +1,11 @@
 all: build
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-TAG = v0.2.0
+TAG = v0.2.1
 
 .PHONY: all build container clean
 
-build: clean
+build: clean gofmt
 	$(ENVVAR) go build -o kube-monkey
 
 # Supressing docker build avoids printing the env variables

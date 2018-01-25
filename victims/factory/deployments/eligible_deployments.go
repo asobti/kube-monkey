@@ -3,6 +3,9 @@ package deployments
 //All these functions require api access specific to the version of the app
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/golang/glog"
 
 	"github.com/asobti/kube-monkey/config"
@@ -51,13 +54,37 @@ func (d *Deployment) IsEnrolled(clientset *kube.Clientset) (bool, error) {
 	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-// Checks if the deployment is flagged for killall at this time
-func (d *Deployment) HasKillAll(clientset *kube.Clientset) (bool, error) {
+// Returns current killtype config label for update
+func (d *Deployment) KillType(clientset *kube.Clientset) (string, error) {
 	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
-		// Ran into some error: return 'false' for killAll to be safe
-		return false, nil
+		return "", err
 	}
 
-	return deployment.Labels[config.KillAllLabelKey] == config.KillAllLabelValue, nil
+	killType, ok := deployment.Labels[config.KillTypeLabelKey]
+	if !ok {
+		return "", fmt.Errorf("%s %s does not have %s label", d.Kind(), d.Name(), config.KillTypeLabelKey)
+	}
+
+	return killType, nil
+}
+
+// Returns current killvalue config label for update
+func (d *Deployment) KillValue(clientset *kube.Clientset) (int, error) {
+	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	if err != nil {
+		return -1, err
+	}
+
+	killMode, ok := deployment.Labels[config.KillValueLabelKey]
+	if !ok {
+		return -1, fmt.Errorf("%s %s does not have %s label", d.Kind(), d.Name(), config.KillValueLabelKey)
+	}
+
+	killModeInt, err := strconv.Atoi(killMode)
+	if !(killModeInt > 0) {
+		return -1, fmt.Errorf("Invalid value for label %s: %d", config.KillValueLabelKey, killModeInt)
+	}
+
+	return killModeInt, nil
 }

@@ -3,6 +3,9 @@ package statefulsets
 //All these functions require api access specific to the version of the app
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/golang/glog"
 
 	"github.com/asobti/kube-monkey/config"
@@ -15,7 +18,7 @@ import (
 
 // Get all eligible statefulsets that opted in (filtered by config.EnabledLabel)
 func EligibleStatefulSets(clientset *kube.Clientset, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
-        enabledVictims, err := clientset.AppsV1beta1().StatefulSets(namespace).List(*filter)
+	enabledVictims, err := clientset.AppsV1beta1().StatefulSets(namespace).List(*filter)
 	if err != nil {
 		return nil, err
 	}
@@ -27,9 +30,9 @@ func EligibleStatefulSets(clientset *kube.Clientset, namespace string, filter *m
 			continue
 		}
 
-                // TODO: After generating whitelisting ns list, this will move to factory.
-                // IsBlacklisted will change to something like IsAllowedNamespace
-                // and will only be used to verify at time of scheduled execution
+		// TODO: After generating whitelisting ns list, this will move to factory.
+		// IsBlacklisted will change to something like IsAllowedNamespace
+		// and will only be used to verify at time of scheduled execution
 		if victim.IsBlacklisted() {
 			continue
 		}
@@ -51,13 +54,37 @@ func (ss *StatefulSet) IsEnrolled(clientset *kube.Clientset) (bool, error) {
 	return statefulset.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-// Checks if the statefulset is flagged for killall at this time
-func (ss *StatefulSet) HasKillAll(clientset *kube.Clientset) (bool, error) {
+// Returns current killtype config label for update
+func (ss *StatefulSet) KillType(clientset *kube.Clientset) (string, error) {
 	statefulset, err := clientset.AppsV1beta1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
-		// Ran into some error: return 'false' for killAll to be safe
-		return false, nil
+		return "", err
 	}
 
-	return statefulset.Labels[config.KillAllLabelKey] == config.KillAllLabelValue, nil
+	killType, ok := statefulset.Labels[config.KillTypeLabelKey]
+	if !ok {
+		return "", fmt.Errorf("%s %s does not have %s label", ss.Kind(), ss.Name(), config.KillTypeLabelKey)
+	}
+
+	return killType, nil
+}
+
+// Returns current killvalue config label for update
+func (ss *StatefulSet) KillValue(clientset *kube.Clientset) (int, error) {
+	statefulset, err := clientset.AppsV1beta1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	if err != nil {
+		return -1, err
+	}
+
+	killMode, ok := statefulset.Labels[config.KillValueLabelKey]
+	if !ok {
+		return -1, fmt.Errorf("%s %s does not have %s label", ss.Kind(), ss.Name(), config.KillValueLabelKey)
+	}
+
+	killModeInt, err := strconv.Atoi(killMode)
+	if !(killModeInt > 0) {
+		return -1, fmt.Errorf("Invalid value for label %s: %d", config.KillValueLabelKey, killModeInt)
+	}
+
+	return killModeInt, nil
 }

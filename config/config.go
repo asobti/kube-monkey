@@ -21,12 +21,15 @@ const (
 	// Currently, there does not appear to be
 	// any value in making these configurable
 	// so defining them as consts
-	IdentLabelKey     = "kube-monkey/identifier"
-	EnabledLabelKey   = "kube-monkey/enabled"
-	EnabledLabelValue = "enabled"
-	MtbfLabelKey      = "kube-monkey/mtbf"
-	KillAllLabelKey   = "kube-monkey/kill-all"
-	KillAllLabelValue = "kill-all"
+	IdentLabelKey        = "kube-monkey/identifier"
+	EnabledLabelKey      = "kube-monkey/enabled"
+	EnabledLabelValue    = "enabled"
+	MtbfLabelKey         = "kube-monkey/mtbf"
+	KillTypeLabelKey     = "kube-monkey/kill-mode"
+	KillValueLabelKey    = "kube-monkey/kill-value"
+	KillRandomLabelValue = "random-max-percent"
+	KillFixedLabelValue  = "fixed"
+	KillAllLabelValue    = "kill-all"
 )
 
 func SetDefaults() {

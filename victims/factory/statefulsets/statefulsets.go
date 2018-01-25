@@ -24,7 +24,7 @@ func New(ss *v1beta1.StatefulSet) (*StatefulSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	kind := fmt.Sprintf("%T", ss)
+	kind := fmt.Sprintf("%T", *ss)
 
 	return &StatefulSet{victims.New(kind, ss.Name, ss.Namespace, ident, mtbf)}, nil
 }
