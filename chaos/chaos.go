@@ -122,7 +122,7 @@ func (c *Chaos) terminate(clientset *kube.Clientset) error {
 		return c.Victim().DeleteRandomPods(clientset, killValue)
 	case config.KillRandomLabelValue:
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		return c.Victim().DeleteRandomPods(clientset, killValue*100/r.Intn(101))
+		return c.Victim().DeleteRandomPods(clientset, killValue*100/r.Intn(100)+1)
 	default:
 		return fmt.Errorf("Failed to recognize KillValue label for %s %s. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 	}
