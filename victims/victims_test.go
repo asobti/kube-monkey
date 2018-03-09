@@ -75,6 +75,10 @@ func TestRunningPods(t *testing.T) {
 	if len(podList) != 1 {
 		t.Errorf("Expected 1 item in podList, got %d", len(podList))
 	}
+
+	if name := podList[0].GetName(); name != "app1" {
+		t.Errorf("Unexpected pod name, got %s", name)
+	}
 }
 
 func TestPods(t *testing.T) {
@@ -135,6 +139,8 @@ func TestDeleteRandomPods(t *testing.T) {
 
 	if podList := getPodList(client); len(podList.Items) != 1 {
 		t.Errorf("Expected 1 items in podList, got %d", len(podList.Items))
+	} else if name := podList.Items[0].GetName(); name != "app2" {
+		t.Error("Expected not running pods not be deleted")
 	}
 
 	if e := v.DeleteRandomPods(client, 2); e == nil {
