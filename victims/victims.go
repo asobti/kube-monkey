@@ -36,9 +36,9 @@ type VictimBaseTemplate interface {
 
 type VictimSpecificApiCalls interface {
 	// Depends on which version i.e. apps/v1 or extensions/v1beta2
-	IsEnrolled(*kube.Clientset) (bool, error) // Get updated enroll status
-	KillType(*kube.Clientset) (string, error) // Get updated kill config type
-	KillValue(*kube.Clientset) (int, error)   // Get updated kill config value
+	IsEnrolled(kube.Interface) (bool, error) // Get updated enroll status
+	KillType(kube.Interface) (string, error) // Get updated kill config type
+	KillValue(kube.Interface) (int, error)   // Get updated kill config value
 }
 
 type VictimApiCalls interface {
