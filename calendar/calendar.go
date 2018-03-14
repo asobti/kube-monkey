@@ -16,7 +16,7 @@ func isWeekday(t time.Time) bool {
 		return false
 	}
 
-	glog.Fatalf("Unrecognized day of the week: %s", t.Weekday().String())
+  	    glog.Fatalf("Unrecognized day of the week: %s", t.Weekday().String())
 
 	panic("Explicit Panic to avoid compiler error: missing return at end of function")
 }
