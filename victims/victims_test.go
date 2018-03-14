@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/asobti/kube-monkey/config"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kube "k8s.io/client-go/kubernetes"
@@ -50,25 +51,11 @@ func TestVictimBaseTemplateGetters(t *testing.T) {
 
 	v := newVictimBase()
 
-	if v.Kind() != "Pod" {
-		t.Errorf("Unexpected victim Kind, got %s", v.Kind())
-	}
-
-	if v.Name() != "name" {
-		t.Errorf("Unexpected victim Name, got %s", v.Name())
-	}
-
-	if v.Namespace() != NAMESPACE {
-		t.Errorf("Unexpected victim Namespace, got %s", v.Namespace())
-	}
-
-	if v.Identifier() != IDENTIFIER {
-		t.Errorf("Unexpected victim Identifier, got %s", v.Identifier())
-	}
-
-	if v.Mtbf() != 1 {
-		t.Errorf("Unexpected victim Mtbf, got %d", v.Mtbf())
-	}
+	assert.Equal(t, "Pod", v.Kind())
+	assert.Equal(t, "name", v.Name())
+	assert.Equal(t, NAMESPACE, v.Namespace())
+	assert.Equal(t, IDENTIFIER, v.Identifier())
+	assert.Equal(t, 1, v.Mtbf())
 }
 
 func TestRunningPods(t *testing.T) {
