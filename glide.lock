@@ -242,4 +242,6 @@ imports:
   subpackages:
   - pkg/common
   - pkg/util/proto
-testImports: []
+testImports:
+- name: github.com/stretchr/testify
+  version: 1.2.1

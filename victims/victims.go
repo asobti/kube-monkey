@@ -43,12 +43,12 @@ type VictimSpecificApiCalls interface {
 
 type VictimApiCalls interface {
 	// Exposed Api Calls
-	RunningPods(*kube.Clientset) ([]v1.Pod, error)
-	Pods(*kube.Clientset) ([]v1.Pod, error)
-	DeletePod(*kube.Clientset, string) error
-	DeleteRandomPod(*kube.Clientset) error // Deprecated, but faster than DeleteRandomPods for single pod termination
-	DeleteRandomPods(*kube.Clientset, int) error
-	TerminateAllPods(*kube.Clientset) error
+	RunningPods(kube.Interface) ([]v1.Pod, error)
+	Pods(kube.Interface) ([]v1.Pod, error)
+	DeletePod(kube.Interface, string) error
+	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
+	DeleteRandomPods(kube.Interface, int) error
+	TerminateAllPods(kube.Interface) error
 	IsBlacklisted() bool
 	IsWhitelisted() bool
 }
@@ -88,7 +88,7 @@ func (v *VictimBase) Mtbf() int {
 }
 
 // Returns a list of running pods for the victim
-func (v *VictimBase) RunningPods(clientset *kube.Clientset) (runningPods []v1.Pod, err error) {
+func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []v1.Pod, err error) {
 	pods, err := v.Pods(clientset)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (v *VictimBase) RunningPods(clientset *kube.Clientset) (runningPods []v1.Po
 }
 
 // Returns a list of pods under the victim
-func (v *VictimBase) Pods(clientset *kube.Clientset) ([]v1.Pod, error) {
+func (v *VictimBase) Pods(clientset kube.Interface) ([]v1.Pod, error) {
 	labelSelector, err := labelFilterForPods(v.identifier)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (v *VictimBase) Pods(clientset *kube.Clientset) ([]v1.Pod, error) {
 }
 
 // Removes specified pod for victim
-func (v *VictimBase) DeletePod(clientset *kube.Clientset, podName string) error {
+func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	deleteopts := &metav1.DeleteOptions{
 		GracePeriodSeconds: config.GracePeriodSeconds(),
 	}
@@ -127,7 +127,7 @@ func (v *VictimBase) DeletePod(clientset *kube.Clientset, podName string) error 
 }
 
 // Removes specified number of random pods for the victim
-func (v *VictimBase) DeleteRandomPods(clientset *kube.Clientset, killNum int) error {
+func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) error {
 	// Pick a target pod to delete
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
@@ -176,7 +176,7 @@ func (v *VictimBase) DeleteRandomPods(clientset *kube.Clientset, killNum int) er
 }
 
 // Terminate all pods for the victim, regardless of status
-func (v *VictimBase) TerminateAllPods(clientset *kube.Clientset) error {
+func (v *VictimBase) TerminateAllPods(clientset kube.Interface) error {
 	glog.V(2).Infof("Terminating ALL pods for %s %s\n", v.kind, v.name)
 
 	pods, err := v.Pods(clientset)
@@ -200,7 +200,7 @@ func (v *VictimBase) TerminateAllPods(clientset *kube.Clientset) error {
 
 // Deprecated for DeleteRandomPods(clientset, 1)
 // Remove a random pod for the victim
-func (v *VictimBase) DeleteRandomPod(clientset *kube.Clientset) error {
+func (v *VictimBase) DeleteRandomPod(clientset kube.Interface) error {
 	// Pick a target pod to delete
 	pods, err := v.RunningPods(clientset)
 	if err != nil {

@@ -19,3 +19,4 @@ import:
   subpackages:
   - kubernetes
   - rest
+- package: github.com/stretchr/testify

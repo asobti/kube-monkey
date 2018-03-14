@@ -1,0 +1,5 @@
+language: go
+
+script:
+- make
+- .travis/check_workspace.sh
