@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/asobti/kube-monkey/config"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -20,9 +21,7 @@ func TestEligibleDeployments(t *testing.T) {
 	client := fake.NewSimpleClientset(&v1deplepl)
 	victims, _ := EligibleDeployments(client, NAMESPACE, &metav1.ListOptions{})
 
-	if l := len(victims); l != 1 {
-		t.Errorf("Expected 1 items in victins, got %d", l)
-	}
+	assert.Len(t, victims, 1)
 }
 
 func TestIsEnrolled(t *testing.T) {
@@ -41,9 +40,7 @@ func TestIsEnrolled(t *testing.T) {
 
 	b, _ := depl.IsEnrolled(client)
 
-	if b != true {
-		t.Error("Expected deployment to be enrolled")
-	}
+	assert.Equal(t, b, true, "Expected deployment to be enrolled")
 }
 
 func TestIsNotEnrolled(t *testing.T) {
@@ -62,18 +59,20 @@ func TestIsNotEnrolled(t *testing.T) {
 
 	b, _ := depl.IsEnrolled(client)
 
-	if b != false {
-		t.Error("Expected deployment to not be enrolled")
-	}
+	assert.Equal(t, b, false, "Expected deployment to not be enrolled")
 }
 
 func TestKillType(t *testing.T) {
 
+	ident := "1"
+	mtbf := "1"
+	killMode := "kill-mode"
+
 	v1depl := newDeployment(
 		NAME,
 		map[string]string{
-			config.IdentLabelKey: "1",
-			config.MtbfLabelKey:  "1",
+			config.IdentLabelKey: ident,
+			config.MtbfLabelKey:  mtbf,
 		},
 	)
 
@@ -83,16 +82,14 @@ func TestKillType(t *testing.T) {
 
 	_, err := depl.KillType(client)
 
-	if err == nil {
-		t.Error("Expected an error if kill mode label is not present")
-	}
+	assert.EqualError(t, err, depl.Kind()+" "+depl.Name()+" does not have "+config.KillTypeLabelKey+" label")
 
 	v1depl = newDeployment(
 		NAME,
 		map[string]string{
-			config.IdentLabelKey:    "1",
-			config.MtbfLabelKey:     "1",
-			config.KillTypeLabelKey: "kill-mode",
+			config.IdentLabelKey:    ident,
+			config.MtbfLabelKey:     mtbf,
+			config.KillTypeLabelKey: killMode,
 		},
 	)
 
@@ -100,18 +97,20 @@ func TestKillType(t *testing.T) {
 
 	kill, _ := depl.KillType(client)
 
-	if kill != "kill-mode" {
-		t.Errorf("Unexpected a kill mode, got %s", kill)
-	}
+	assert.Equal(t, kill, killMode, "Unexpected kill value, got %d", kill)
 }
 
 func TestKillValue(t *testing.T) {
 
+	ident := "1"
+	mtbf := "1"
+	killValue := "0"
+
 	v1depl := newDeployment(
 		NAME,
 		map[string]string{
-			config.IdentLabelKey: "1",
-			config.MtbfLabelKey:  "1",
+			config.IdentLabelKey: ident,
+			config.MtbfLabelKey:  mtbf,
 		},
 	)
 
@@ -121,16 +120,14 @@ func TestKillValue(t *testing.T) {
 
 	_, err := depl.KillValue(client)
 
-	if err == nil {
-		t.Error("Expected an error if kill value label is not present")
-	}
+	assert.EqualError(t, err, depl.Kind()+" "+depl.Name()+" does not have "+config.KillValueLabelKey+" label")
 
 	v1depl = newDeployment(
 		NAME,
 		map[string]string{
-			config.IdentLabelKey:     "1",
-			config.MtbfLabelKey:      "1",
-			config.KillValueLabelKey: "0",
+			config.IdentLabelKey:     ident,
+			config.MtbfLabelKey:      mtbf,
+			config.KillValueLabelKey: killValue,
 		},
 	)
 
@@ -138,16 +135,16 @@ func TestKillValue(t *testing.T) {
 
 	_, err = depl.KillValue(client)
 
-	if err == nil {
-		t.Error("Expected an error if kill value label is less than 1")
-	}
+	assert.EqualError(t, err, "Invalid value for label "+config.KillValueLabelKey+": "+killValue)
+
+	killValue = "1"
 
 	v1depl = newDeployment(
 		NAME,
 		map[string]string{
-			config.IdentLabelKey:     "1",
-			config.MtbfLabelKey:      "1",
-			config.KillValueLabelKey: "1",
+			config.IdentLabelKey:     ident,
+			config.MtbfLabelKey:      mtbf,
+			config.KillValueLabelKey: killValue,
 		},
 	)
 
@@ -155,7 +152,5 @@ func TestKillValue(t *testing.T) {
 
 	kill, _ := depl.KillValue(client)
 
-	if kill != 1 {
-		t.Errorf("Unexpected a kill value, got %d", kill)
-	}
+	assert.Equalf(t, kill, 1, "Unexpected a kill value, got %d", kill)
 }
