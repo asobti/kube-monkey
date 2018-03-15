@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/asobti/kube-monkey/config"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,30 +37,12 @@ func TestNew(t *testing.T) {
 	)
 	depl, err := New(&v1depl)
 
-	if err != nil {
-		t.Error(err)
-	}
-
-	if ns := depl.Namespace(); ns != NAMESPACE {
-		t.Errorf("Unexpected deployment Namespace, got %s", ns)
-	}
-
-	if k := depl.Kind(); k != "v1beta1.Deployment" {
-		t.Errorf("Unexpected deployment Kindepl, got %s", k)
-	}
-
-	if n := depl.Name(); n != NAME {
-		t.Errorf("Unexpected deployment Name, got %s", n)
-	}
-
-	if i := depl.Identifier(); i != IDENTIFIER {
-		t.Errorf("Unexpected deployment Identifier, got %s", i)
-	}
-
-	if m := depl.Mtbf(); m != 1 {
-		t.Errorf("Unexpected deployment Mtbf, got %d", m)
-	}
-
+	assert.NoError(t, err)
+	assert.Equal(t, "v1beta1.Deployment", depl.Kind())
+	assert.Equal(t, NAME, depl.Name())
+	assert.Equal(t, NAMESPACE, depl.Namespace())
+	assert.Equal(t, IDENTIFIER, depl.Identifier())
+	assert.Equal(t, 1, depl.Mtbf())
 }
 
 func TestInvalidIdentifier(t *testing.T) {
@@ -71,9 +54,7 @@ func TestInvalidIdentifier(t *testing.T) {
 	)
 	_, err := New(&v1depl)
 
-	if err == nil {
-		t.Error("Expected an error if config.IdentLabelKey label doesn't exist")
-	}
+	assert.Errorf(t, err, "Expected an error if "+config.IdentLabelKey+" label doesn't exist")
 }
 
 func TestInvalidMtbf(t *testing.T) {
@@ -85,9 +66,7 @@ func TestInvalidMtbf(t *testing.T) {
 	)
 	_, err := New(&v1depl)
 
-	if err == nil {
-		t.Error("Expected an error if config.MtbfLabelKey label doesn't exist")
-	}
+	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label doesn't exist")
 
 	v1depl = newDeployment(
 		NAME,
@@ -98,9 +77,8 @@ func TestInvalidMtbf(t *testing.T) {
 	)
 	_, err = New(&v1depl)
 
-	if err == nil {
-		t.Error("Expected an error if config.MtbfLabelKey label can't be converted a Int type")
-	}
+	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label can't be converted a Int type")
+
 	v1depl = newDeployment(
 		NAME,
 		map[string]string{
@@ -110,7 +88,5 @@ func TestInvalidMtbf(t *testing.T) {
 	)
 	_, err = New(&v1depl)
 
-	if err == nil {
-		t.Error("Expected an error if config.MtbfLabelKey label is lower than 1")
-	}
+	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label is lower than 1")
 }
