@@ -15,6 +15,8 @@ import (
 const (
 	NAMESPACE  = metav1.NamespaceDefault
 	IDENTIFIER = "kube-monkey-id"
+	KIND       = "Pod"
+	NAME       = "name"
 )
 
 func newPod(name string, status v1.PodPhase) v1.Pod {
@@ -39,7 +41,7 @@ func newPod(name string, status v1.PodPhase) v1.Pod {
 }
 
 func newVictimBase() *VictimBase {
-	return New("Pod", "name", NAMESPACE, IDENTIFIER, 1)
+	return New(KIND, NAME, NAMESPACE, IDENTIFIER, 1)
 }
 
 func getPodList(client kube.Interface) *v1.PodList {
@@ -66,19 +68,13 @@ func TestRunningPods(t *testing.T) {
 
 	client := fake.NewSimpleClientset(&pod1, &pod2)
 
-	podList, e := v.RunningPods(client)
+	podList, err := v.RunningPods(client)
 
-	if e != nil {
-		t.Errorf("Unexpected error %s while getting running pod", e)
-	}
+	assert.NoError(t, err)
+	assert.Lenf(t, podList, 1, "Expected 1 item in podList, got %d", len(podList))
 
-	if len(podList) != 1 {
-		t.Errorf("Expected 1 item in podList, got %d", len(podList))
-	}
-
-	if name := podList[0].GetName(); name != "app1" {
-		t.Errorf("Unexpected pod name, got %s", name)
-	}
+	name := podList[0].GetName()
+	assert.Equal(t, name, "app1", "Unexpected pod name, got %s", name)
 }
 
 func TestPods(t *testing.T) {
@@ -91,9 +87,7 @@ func TestPods(t *testing.T) {
 
 	podList, _ := v.Pods(client)
 
-	if len(podList) != 2 {
-		t.Errorf("Expected 2 item in podList, got %d", len(podList))
-	}
+	assert.Lenf(t, podList, 2, "Expected 2 items in podList, got %d", len(podList))
 }
 
 func TestDeletePod(t *testing.T) {
@@ -103,13 +97,11 @@ func TestDeletePod(t *testing.T) {
 
 	client := fake.NewSimpleClientset(&pod)
 
-	if e := v.DeletePod(client, "app"); e != nil {
-		t.Errorf("Unexpected error %s while deleting pod", e)
-	}
+	err := v.DeletePod(client, "app")
+	assert.NoError(t, err)
 
-	if podList := getPodList(client); len(podList.Items) != 0 {
-		t.Errorf("Expected 0 items in podList, got %d", len(podList.Items))
-	}
+	podList := getPodList(client).Items
+	assert.Lenf(t, podList, 0, "Expected 0 items in podList, got %d", len(podList))
 }
 
 func TestDeleteRandomPods(t *testing.T) {
@@ -120,32 +112,26 @@ func TestDeleteRandomPods(t *testing.T) {
 	pod3 := newPod("app3", v1.PodRunning)
 
 	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3)
+	podList := getPodList(client).Items
 
-	if e := v.DeleteRandomPods(client, 0); e == nil {
-		t.Error("Expected an error if no termination was requested")
-	}
+	err := v.DeleteRandomPods(client, 0)
+	assert.EqualError(t, err, "No terminations requested for Pod name")
 
-	if e := v.DeleteRandomPods(client, -1); e == nil {
-		t.Error("Expected an error if negative termination was requested")
-	}
+	err = v.DeleteRandomPods(client, -1)
+	assert.EqualError(t, err, "Cannot request negative terminations 2 for Pod name")
 
 	_ = v.DeleteRandomPods(client, 1)
-
-	if podList := getPodList(client); len(podList.Items) != 2 {
-		t.Errorf("Expected 2 items in podList, got %d", len(podList.Items))
-	}
+	podList = getPodList(client).Items
+	assert.Lenf(t, podList, 2, "Expected 2 items in podList, got %d", len(podList))
 
 	_ = v.DeleteRandomPods(client, 2)
+	podList = getPodList(client).Items
+	assert.Lenf(t, podList, 1, "Expected 1 item in podList, got %d", len(podList))
+	name := podList[0].GetName()
+	assert.Equalf(t, name, "app2", "Expected not running pods not be deleted")
 
-	if podList := getPodList(client); len(podList.Items) != 1 {
-		t.Errorf("Expected 1 items in podList, got %d", len(podList.Items))
-	} else if name := podList.Items[0].GetName(); name != "app2" {
-		t.Error("Expected not running pods not be deleted")
-	}
-
-	if e := v.DeleteRandomPods(client, 2); e == nil {
-		t.Error("Expected an error if no pods")
-	}
+	err = v.DeleteRandomPods(client, 2)
+	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 
 func TestTerminateAllPods(t *testing.T) {
@@ -159,14 +145,11 @@ func TestTerminateAllPods(t *testing.T) {
 
 	_ = v.TerminateAllPods(client)
 
-	if podList := getPodList(client); len(podList.Items) != 0 {
-		t.Errorf("Expected 0 items in podList, got %d", len(podList.Items))
-	}
+	podList := getPodList(client).Items
+	assert.Len(t, podList, 0)
 
-	if e := v.TerminateAllPods(client); e == nil {
-		t.Error("Expected an error if no pods")
-	}
-
+	err := v.TerminateAllPods(client)
+	assert.EqualError(t, err, KIND+" "+NAME+" has no pods at the moment")
 }
 
 func TestDeleteRandomPod(t *testing.T) {
@@ -178,14 +161,11 @@ func TestDeleteRandomPod(t *testing.T) {
 	client := fake.NewSimpleClientset(&pod1, &pod2)
 
 	_ = v.DeleteRandomPod(client)
+	podList := getPodList(client).Items
+	assert.Len(t, podList, 1)
 
-	if podList := getPodList(client); len(podList.Items) != 1 {
-		t.Errorf("Expected 1 items in podList, got %d", len(podList.Items))
-	}
-
-	if e := v.DeleteRandomPods(client, 2); e == nil {
-		t.Error("Expected an error if no pods")
-	}
+	err := v.DeleteRandomPods(client, 2)
+	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 
 func TestIsBlacklisted(t *testing.T) {
@@ -194,15 +174,12 @@ func TestIsBlacklisted(t *testing.T) {
 
 	config.SetDefaults()
 
-	if e := v.IsBlacklisted(); e != false {
-		t.Errorf("%s namespace should not be blacklisted", NAMESPACE)
-	}
+	b := v.IsBlacklisted()
+	assert.False(t, b, "%s namespace should not be blacklisted", NAMESPACE)
 
 	v = New("Pod", "name", metav1.NamespaceSystem, IDENTIFIER, 1)
-
-	if e := v.IsBlacklisted(); e != true {
-		t.Errorf("%s namespace should be blacklisted", metav1.NamespaceSystem)
-	}
+	b = v.IsBlacklisted()
+	assert.True(t, b, "%s namespace should be blacklisted", metav1.NamespaceSystem)
 
 }
 
@@ -212,9 +189,8 @@ func TestIsWhitelisted(t *testing.T) {
 
 	config.SetDefaults()
 
-	if e := v.IsWhitelisted(); e != true {
-		t.Errorf("%s namespace should be whitelisted", NAMESPACE)
-	}
+	b := v.IsWhitelisted()
+	assert.True(t, b, "%s namespace should be whitelisted", NAMESPACE)
 }
 
 func TestRandomPodName(t *testing.T) {
@@ -222,8 +198,6 @@ func TestRandomPodName(t *testing.T) {
 	pod1 := newPod("app1", v1.PodRunning)
 	pod2 := newPod("app2", v1.PodPending)
 
-	if name := RandomPodName([]v1.Pod{pod1, pod2}); strings.HasPrefix(name, "pod") {
-		t.Errorf("Pod name %s should start with 'app'", name)
-	}
-
+	name := RandomPodName([]v1.Pod{pod1, pod2})
+	assert.Truef(t, strings.HasPrefix(name, "app"), "Pod name %s should start with 'app'", name)
 }
