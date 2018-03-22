@@ -17,7 +17,7 @@ import (
 )
 
 // Get all eligible statefulsets that opted in (filtered by config.EnabledLabel)
-func EligibleStatefulSets(clientset *kube.Clientset, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
+func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
 	enabledVictims, err := clientset.AppsV1beta1().StatefulSets(namespace).List(*filter)
 	if err != nil {
 		return nil, err
