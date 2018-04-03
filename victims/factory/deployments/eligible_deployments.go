@@ -18,7 +18,7 @@ import (
 
 // Get all eligible deployments that opted in (filtered by config.EnabledLabel)
 func EligibleDeployments(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
-	enabledVictims, err := clientset.ExtensionsV1beta1().Deployments(namespace).List(*filter)
+	enabledVictims, err := clientset.AppsV1().Deployments(namespace).List(*filter)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func EligibleDeployments(clientset kube.Interface, namespace string, filter *met
 
 // Checks if the deployment is currently enrolled in kube-monkey
 func (d *Deployment) IsEnrolled(clientset kube.Interface) (bool, error) {
-	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
 		return false, nil
 	}
@@ -56,7 +56,7 @@ func (d *Deployment) IsEnrolled(clientset kube.Interface) (bool, error) {
 
 // Returns current killtype config label for update
 func (d *Deployment) KillType(clientset kube.Interface) (string, error) {
-	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func (d *Deployment) KillType(clientset kube.Interface) (string, error) {
 
 // Returns current killvalue config label for update
 func (d *Deployment) KillValue(clientset kube.Interface) (int, error) {
-	deployment, err := clientset.ExtensionsV1beta1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
 		return -1, err
 	}
