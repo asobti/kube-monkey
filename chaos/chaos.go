@@ -74,7 +74,7 @@ func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
 }
 
 // Verify if the victim has opted out since scheduling
-func (c *Chaos) verifyExecution(clientset *kube.Clientset) error {
+func (c *Chaos) verifyExecution(clientset kube.Interface) error {
 	// Is victim still enrolled in kube-monkey
 	enrolled, err := c.Victim().IsEnrolled(clientset)
 	if err != nil {
@@ -100,7 +100,7 @@ func (c *Chaos) verifyExecution(clientset *kube.Clientset) error {
 }
 
 // The termination type and value is processed here
-func (c *Chaos) terminate(clientset *kube.Clientset) error {
+func (c *Chaos) terminate(clientset kube.Interface) error {
 	killType, err := c.Victim().KillType(clientset)
 	if err != nil {
 		glog.Errorf("Failed to check KillType label for %s %s. Proceeding with termination of a single pod. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
@@ -133,7 +133,7 @@ func (c *Chaos) terminate(clientset *kube.Clientset) error {
 
 // Redundant for DeleteRandomPods(clientset,1) but DeleteRandomPod is faster
 // Terminates one random pod
-func (c *Chaos) terminatePod(clientset *kube.Clientset) error {
+func (c *Chaos) terminatePod(clientset kube.Interface) error {
 	return c.Victim().DeleteRandomPod(clientset)
 }
 
