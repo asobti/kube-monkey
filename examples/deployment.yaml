@@ -16,7 +16,7 @@
              command:
                - "/kube-monkey"
              args: ["-v=5", "-log_dir=/var/log/kube-monkey"]
-             image: kube-monkey:v0.1.0
+             image: kube-monkey:v0.2.2
              volumeMounts:
                - name: config-volume
                  mountPath: "/etc/kube-monkey"
