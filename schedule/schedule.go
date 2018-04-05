@@ -14,6 +14,16 @@ import (
 	"github.com/asobti/kube-monkey/victims/factory"
 )
 
+const (
+	TODAY          = "\t********** Today's schedule **********"
+	NO_TERMINATION = "No terminations scheduled"
+	HEADER_ROW     = "\tk8 Api Kind\tKind Name\t\tTermination Time"
+	SEP_ROW        = "\t-----------\t---------\t\t----------------"
+	ROW_FORMAT     = "\t%s\t%s\t\t%s"
+	DATE_FORMAT    = "01/02/2006 15:04:05 -0700 MST"
+	END            = "\t********** End of schedule **********"
+)
+
 type Schedule struct {
 	entries []*chaos.Chaos
 }
@@ -28,17 +38,17 @@ func (s *Schedule) Add(entry *chaos.Chaos) {
 
 func (s *Schedule) String() string {
 	schedString := []string{}
-	schedString = append(schedString, fmt.Sprint("\t********** Today's schedule **********"))
+	schedString = append(schedString, fmt.Sprint(TODAY))
 	if len(s.entries) == 0 {
-		schedString = append(schedString, fmt.Sprint("No terminations scheduled"))
+		schedString = append(schedString, fmt.Sprint(NO_TERMINATION))
 	} else {
-		schedString = append(schedString, fmt.Sprint("\tk8 Api Kind\tKind Name\t\tTermination Time"))
-		schedString = append(schedString, fmt.Sprint("\t-----------\t---------\t\t----------------"))
+		schedString = append(schedString, fmt.Sprint(HEADER_ROW))
+		schedString = append(schedString, fmt.Sprint(SEP_ROW))
 		for _, chaos := range s.entries {
-			schedString = append(schedString, fmt.Sprintf("\t%s\t%s\t\t%s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format("01/02/2006 15:04:05 -0700 MST")))
+			schedString = append(schedString, fmt.Sprintf(ROW_FORMAT, chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DATE_FORMAT)))
 		}
 	}
-	schedString = append(schedString, fmt.Sprint("\t********** End of schedule **********"))
+	schedString = append(schedString, fmt.Sprint(END))
 
 	return strings.Join(schedString, "\n")
 }
@@ -46,7 +56,7 @@ func (s *Schedule) String() string {
 func (s Schedule) Print() {
 	glog.V(4).Infof("Status Update: %v terminations scheduled today", len(s.entries))
 	for _, chaos := range s.entries {
-		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format("01/02/2006 15:04:05 -0700 MST"))
+		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DATE_FORMAT))
 	}
 }
 
