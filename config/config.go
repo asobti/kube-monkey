@@ -5,7 +5,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/golang/glog"
-	"github.com/spf13/viper"
+	"github.com/huanwei/viper"
 
 	"github.com/asobti/kube-monkey/config/param"
 
