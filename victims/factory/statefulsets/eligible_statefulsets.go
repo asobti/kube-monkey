@@ -18,7 +18,7 @@ import (
 
 // Get all eligible statefulsets that opted in (filtered by config.EnabledLabel)
 func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
-	enabledVictims, err := clientset.AppsV1beta1().StatefulSets(namespace).List(*filter)
+	enabledVictims, err := clientset.AppsV1().StatefulSets(namespace).List(*filter)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *me
 
 // Checks if the statefulset is currently enrolled in kube-monkey
 func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
-	statefulset, err := clientset.AppsV1beta1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
 		return false, nil
 	}
@@ -56,7 +56,7 @@ func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 
 // Returns current killtype config label for update
 func (ss *StatefulSet) KillType(clientset kube.Interface) (string, error) {
-	statefulset, err := clientset.AppsV1beta1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func (ss *StatefulSet) KillType(clientset kube.Interface) (string, error) {
 
 // Returns current killvalue config label for update
 func (ss *StatefulSet) KillValue(clientset kube.Interface) (int, error) {
-	statefulset, err := clientset.AppsV1beta1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
 		return -1, err
 	}

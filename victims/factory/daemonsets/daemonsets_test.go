@@ -1,4 +1,4 @@
-package statefulsets
+package daemonsets
 
 import (
 	"testing"
@@ -11,13 +11,13 @@ import (
 
 const (
 	IDENTIFIER = "kube-monkey-id"
-	NAME       = "statefulset_name"
+	NAME       = "daemonset_name"
 	NAMESPACE  = metav1.NamespaceDefault
 )
 
-func newStatefulSet(name string, labels map[string]string) v1.StatefulSet {
+func newDaemonSet(name string, labels map[string]string) v1.DaemonSet {
 
-	return v1.StatefulSet{
+	return v1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: NAMESPACE,
@@ -28,65 +28,65 @@ func newStatefulSet(name string, labels map[string]string) v1.StatefulSet {
 
 func TestNew(t *testing.T) {
 
-	v1stfs := newStatefulSet(
+	v1ds := newDaemonSet(
 		NAME,
 		map[string]string{
 			config.IdentLabelKey: IDENTIFIER,
 			config.MtbfLabelKey:  "1",
 		},
 	)
-	stfs, err := New(&v1stfs)
+	ds, err := New(&v1ds)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "v1.StatefulSet", stfs.Kind())
-	assert.Equal(t, NAME, stfs.Name())
-	assert.Equal(t, NAMESPACE, stfs.Namespace())
-	assert.Equal(t, IDENTIFIER, stfs.Identifier())
-	assert.Equal(t, 1, stfs.Mtbf())
+	assert.Equal(t, "v1.DaemonSet", ds.Kind())
+	assert.Equal(t, NAME, ds.Name())
+	assert.Equal(t, NAMESPACE, ds.Namespace())
+	assert.Equal(t, IDENTIFIER, ds.Identifier())
+	assert.Equal(t, 1, ds.Mtbf())
 }
 
 func TestInvalidIdentifier(t *testing.T) {
-	v1stfs := newStatefulSet(
+	v1ds := newDaemonSet(
 		NAME,
 		map[string]string{
 			config.MtbfLabelKey: "1",
 		},
 	)
-	_, err := New(&v1stfs)
+	_, err := New(&v1ds)
 
 	assert.Errorf(t, err, "Expected an error if "+config.IdentLabelKey+" label doesn't exist")
 }
 
 func TestInvalidMtbf(t *testing.T) {
-	v1stfs := newStatefulSet(
+	v1ds := newDaemonSet(
 		NAME,
 		map[string]string{
 			config.IdentLabelKey: IDENTIFIER,
 		},
 	)
-	_, err := New(&v1stfs)
+	_, err := New(&v1ds)
 
 	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label doesn't exist")
 
-	v1stfs = newStatefulSet(
+	v1ds = newDaemonSet(
 		NAME,
 		map[string]string{
 			config.IdentLabelKey: IDENTIFIER,
 			config.MtbfLabelKey:  "string",
 		},
 	)
-	_, err = New(&v1stfs)
+	_, err = New(&v1ds)
 
 	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label can't be converted a Int type")
 
-	v1stfs = newStatefulSet(
+	v1ds = newDaemonSet(
 		NAME,
 		map[string]string{
 			config.IdentLabelKey: IDENTIFIER,
 			config.MtbfLabelKey:  "0",
 		},
 	)
-	_, err = New(&v1stfs)
+	_, err = New(&v1ds)
 
 	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label is lower than 1")
 }

@@ -6,3 +6,7 @@ RUN if (dpkg -l | grep -cq tzdata); then \
         apt-get update && apt-get install tzdata -y --no-install-recommends apt-utils; \
     fi
 COPY kube-monkey /kube-monkey
+
+# timezone
+RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+  && echo 'Asia/Shanghai' > /etc/timezone

@@ -276,7 +276,7 @@ func NewProxierWithNoProxyCIDR(delegate func(req *http.Request) (*url.URL, error
 	}
 
 	return func(req *http.Request) (*url.URL, error) {
-		ip := net.ParseIP(req.URL.Hostname())
+		ip := net.ParseIP(req.URL.Host)
 		if ip == nil {
 			return delegate(req)
 		}

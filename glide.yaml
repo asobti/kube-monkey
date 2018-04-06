@@ -2,12 +2,11 @@ package: github.com/asobti/kube-monkey
 import:
 - package: github.com/fsnotify/fsnotify
 - package: github.com/golang/glog
-- package: github.com/spf13/viper
+- package: github.com/huanwei/viper
 - package: k8s.io/api
   subpackages:
   - core/v1
-  - apps/v1beta1
-  - extensions/v1beta1
+  - apps/v1
 - package: k8s.io/apimachinery
   subpackages:
   - pkg/apis/meta/v1

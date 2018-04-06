@@ -1,4 +1,4 @@
-package deployments
+package daemonsets
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	"k8s.io/api/apps/v1"
 )
 
-type Deployment struct {
+type DaemonSet struct {
 	*victims.VictimBase
 }
 
-// Create a new instance of Deployment
-func New(dep *v1.Deployment) (*Deployment, error) {
+// Create a new instance of DaemonSet
+func New(dep *v1.DaemonSet) (*DaemonSet, error) {
 	ident, err := identifier(dep)
 	if err != nil {
 		return nil, err
@@ -26,15 +26,15 @@ func New(dep *v1.Deployment) (*Deployment, error) {
 	}
 	kind := fmt.Sprintf("%T", *dep)
 
-	return &Deployment{victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
+	return &DaemonSet{victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey
-// from the deployment labels
-// This label should be unique to a deployment, and is used to
-// identify the pods that belong to this deployment, as pods
-// inherit labels from the Deployment
-func identifier(kubekind *v1.Deployment) (string, error) {
+// from the DaemonSet labels
+// This label should be unique to a DaemonSet, and is used to
+// identify the pods that belong to this DaemonSet, as pods
+// inherit labels from the DaemonSet
+func identifier(kubekind *v1.DaemonSet) (string, error) {
 	identifier, ok := kubekind.Labels[config.IdentLabelKey]
 	if !ok {
 		return "", fmt.Errorf("%T %s does not have %s label", kubekind, kubekind.Name, config.IdentLabelKey)
@@ -42,9 +42,9 @@ func identifier(kubekind *v1.Deployment) (string, error) {
 	return identifier, nil
 }
 
-// Read the mean-time-between-failures value defined by the Deployment
+// Read the mean-time-between-failures value defined by the DaemonSet
 // in the label defined by config.MtbfLabelKey
-func meanTimeBetweenFailures(kubekind *v1.Deployment) (int, error) {
+func meanTimeBetweenFailures(kubekind *v1.DaemonSet) (int, error) {
 	mtbf, ok := kubekind.Labels[config.MtbfLabelKey]
 	if !ok {
 		return -1, fmt.Errorf("%T %s does not have %s label", kubekind, kubekind.Name, config.MtbfLabelKey)

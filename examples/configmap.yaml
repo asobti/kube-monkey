@@ -11,4 +11,4 @@
       start_hour = 10
       end_hour = 16
       blacklisted_namespaces = ["kube-system"]
-      whitelisted_namespaces = [""]
+      whitelisted_namespaces = ["chaos-test"]
