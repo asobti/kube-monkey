@@ -11,9 +11,9 @@ import (
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
 	"github.com/asobti/kube-monkey/victims"
+	"github.com/asobti/kube-monkey/victims/factory/daemonsets"
 	"github.com/asobti/kube-monkey/victims/factory/deployments"
 	"github.com/asobti/kube-monkey/victims/factory/statefulsets"
-	"github.com/asobti/kube-monkey/victims/factory/daemonsets"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
