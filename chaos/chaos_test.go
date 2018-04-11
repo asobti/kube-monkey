@@ -113,6 +113,6 @@ func (s *ChaosTestSuite) TestDurationToKillTime() {
 	s.WithinDuration(s.chaos.KillAt(), time.Now(), t+time.Millisecond)
 }
 
-func TestExampleTestSuite(t *testing.T) {
+func TestSuite(t *testing.T) {
 	suite.Run(t, new(ChaosTestSuite))
 }
