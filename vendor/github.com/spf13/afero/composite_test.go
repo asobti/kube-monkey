@@ -51,6 +51,7 @@ func CleanupTempDirs(t *testing.T) {
 func TestUnionCreateExisting(t *testing.T) {
 	base := &MemMapFs{}
 	roBase := &ReadOnlyFs{source: base}
+
 	ufs := NewCopyOnWriteFs(roBase, &MemMapFs{})
 
 	base.MkdirAll("/home/test", 0777)

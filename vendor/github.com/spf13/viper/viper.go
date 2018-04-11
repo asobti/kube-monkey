@@ -1720,14 +1720,18 @@ func (v *Viper) getConfigType() string {
 }
 
 func (v *Viper) getConfigFile() (string, error) {
-	if v.configFile == "" {
-		cf, err := v.findConfigFile()
-		if err != nil {
-			return "", err
-		}
-		v.configFile = cf
+	// if explicitly set, then use it
+	if v.configFile != "" {
+		return v.configFile, nil
 	}
-	return v.configFile, nil
+
+	cf, err := v.findConfigFile()
+	if err != nil {
+		return "", err
+	}
+
+	v.configFile = cf
+	return v.getConfigFile()
 }
 
 func (v *Viper) searchInPath(in string) (filename string) {

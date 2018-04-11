@@ -20,4 +20,3 @@ import:
   - kubernetes
   - rest
 - package: github.com/stretchr/testify
-- package: github.com/bouk/monkey
