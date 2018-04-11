@@ -54,9 +54,9 @@ func tomlValueStringRepresentation(v interface{}, indent string, arraysOneElemen
 		// Ensure a round float does contain a decimal point. Otherwise feeding
 		// the output back to the parser would convert to an integer.
 		if math.Trunc(value) == value {
-			return strconv.FormatFloat(value, 'f', 1, 32), nil
+			return strings.ToLower(strconv.FormatFloat(value, 'f', 1, 32)), nil
 		}
-		return strconv.FormatFloat(value, 'f', -1, 32), nil
+		return strings.ToLower(strconv.FormatFloat(value, 'f', -1, 32)), nil
 	case string:
 		return "\"" + encodeTomlString(value) + "\"", nil
 	case []byte:
@@ -91,12 +91,10 @@ func tomlValueStringRepresentation(v interface{}, indent string, arraysOneElemen
 
 			stringBuffer.WriteString("[\n")
 
-			for i, value := range values {
+			for _, value := range values {
 				stringBuffer.WriteString(valueIndent)
 				stringBuffer.WriteString(value)
-				if i != len(values)-1 {
-					stringBuffer.WriteString(`,`)
-				}
+				stringBuffer.WriteString(`,`)
 				stringBuffer.WriteString("\n")
 			}
 
