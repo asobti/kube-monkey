@@ -8,10 +8,12 @@ package kubernetes
 
 import (
 	"fmt"
+
 	"github.com/golang/glog"
 
 	cfg "github.com/asobti/kube-monkey/config"
 
+	"k8s.io/client-go/discovery"
 	kube "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -51,7 +53,7 @@ func NewInClusterClient() (*kube.Clientset, error) {
 	return clientset, nil
 }
 
-func VerifyClient(client *kube.Clientset) bool {
+func VerifyClient(client discovery.DiscoveryInterface) bool {
 	_, err := client.ServerVersion()
 	return err == nil
 }
