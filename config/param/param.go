@@ -44,7 +44,7 @@ const (
 
 	// A list of namespaces where terminations are valid
 	// Default is defined by metav1.NamespaceDefault
-	// To allow all namespaces use metav1.NamespaceAll
+	// To allow all namespaces use [""]
 	// Type: list
 	// Default: [ "default" ]
 	WhitelistedNamespaces = "kubemonkey.whitelisted_namespaces"
@@ -52,7 +52,7 @@ const (
 	// A list of namespaces for which terminations should never
 	// be carried out.
 	// Default is defined by metav1.NamespaceSystem
-	// To block no namespaces use metav1.NamespaceNone
+	// To block no namespaces use [""]
 	// Type: list
 	// Default: [ "kube-system" ]
 	BlacklistedNamespaces = "kubemonkey.blacklisted_namespaces"
