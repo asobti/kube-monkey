@@ -10,7 +10,11 @@ Pod death sometime during the same day. The time-range during the day when the r
 kube-monkey can be configured with a list of namespaces 
 * to blacklist (any deployments within a blacklisted namespace will not be touched) 
 * to whitelist (only deployments within a whitelisted namespace that are not blacklisted will be scheduled)
-The blacklist overrides the whitelist. The config will be populated with default behavior (blacklist `kube-system` and whitelist `default`). To disable either the blacklist or whitelist provide `[""]` to the respective config.param
+The blacklist overrides the whitelist. The config will be populated with default
+behavior (blacklist `kube-system` and whitelist `default`).
+
+To disable either the blacklist or whitelist provide `[""]` to the respective
+config.param. Disabling the whitelist causes kube-monkey to target _all_ namespaces.
 
 ## Opting-In to Chaos
 
