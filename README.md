@@ -136,7 +136,7 @@ time_zone = "America/New_York"           # Set tzdata timezone example. Note the
 
 ## Deploying
 
-Manually:
+**Manually**
 1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml` 
 
 > For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml` or `kubectl apply -f km-config.yaml`
@@ -145,7 +145,7 @@ Manually:
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
-Helm Chart
+**Helm Chart**  
 A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit $PROJECT/helm/kubemonkey/values.yaml and update the value of image.repository to point at the location of your container.
 
 Helm can then be executed using
