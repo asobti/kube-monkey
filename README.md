@@ -181,9 +181,5 @@ versions of Kubernetes are compatible.
 
 ## Ways to contribute
 
-- Add unit [tests](https://golang.org/pkg/testing/)
-- Support more k8 types
-  - ~~deployments~~
-  - ~~statefulsets~~
-  - dameonsets
-  - etc
+See [How to Contribute](https://github.com/asobti/kube-monkey/blob/master/CONTRIBUTING.md)
+
