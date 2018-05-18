@@ -41,16 +41,16 @@ func translate(tomlData interface{}) interface{} {
 			typed[k] = translate(v)
 		}
 		return typed
-	case *toml.Tree:
+	case *toml.TomlTree:
 		return translate(*orig)
-	case toml.Tree:
+	case toml.TomlTree:
 		keys := orig.Keys()
 		typed := make(map[string]interface{}, len(keys))
 		for _, k := range keys {
 			typed[k] = translate(orig.GetPath([]string{k}))
 		}
 		return typed
-	case []*toml.Tree:
+	case []*toml.TomlTree:
 		typed := make([]map[string]interface{}, len(orig))
 		for i, v := range orig {
 			typed[i] = translate(v).(map[string]interface{})

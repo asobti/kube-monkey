@@ -5,7 +5,6 @@ package toml
 import (
 	"errors"
 	"fmt"
-	"math"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -14,9 +13,9 @@ import (
 )
 
 type tomlParser struct {
-	flowIdx       int
-	flow          []token
-	tree          *Tree
+	flow          chan token
+	tree          *TomlTree
+	tokensBuffer  []token
 	currentTable  []string
 	seenTableKeys []string
 }
@@ -35,10 +34,16 @@ func (p *tomlParser) run() {
 }
 
 func (p *tomlParser) peek() *token {
-	if p.flowIdx >= len(p.flow) {
+	if len(p.tokensBuffer) != 0 {
+		return &(p.tokensBuffer[0])
+	}
+
+	tok, ok := <-p.flow
+	if !ok {
 		return nil
 	}
-	return &p.flow[p.flowIdx]
+	p.tokensBuffer = append(p.tokensBuffer, tok)
+	return &tok
 }
 
 func (p *tomlParser) assume(typ tokenType) {
@@ -52,12 +57,16 @@ func (p *tomlParser) assume(typ tokenType) {
 }
 
 func (p *tomlParser) getToken() *token {
-	tok := p.peek()
-	if tok == nil {
+	if len(p.tokensBuffer) != 0 {
+		tok := p.tokensBuffer[0]
+		p.tokensBuffer = p.tokensBuffer[1:]
+		return &tok
+	}
+	tok, ok := <-p.flow
+	if !ok {
 		return nil
 	}
-	p.flowIdx++
-	return tok
+	return &tok
 }
 
 func (p *tomlParser) parseStart() tomlParserStateFn {
@@ -97,18 +106,18 @@ func (p *tomlParser) parseGroupArray() tomlParserStateFn {
 	}
 	p.tree.createSubTree(keys[:len(keys)-1], startToken.Position) // create parent entries
 	destTree := p.tree.GetPath(keys)
-	var array []*Tree
+	var array []*TomlTree
 	if destTree == nil {
-		array = make([]*Tree, 0)
-	} else if target, ok := destTree.([]*Tree); ok && target != nil {
-		array = destTree.([]*Tree)
+		array = make([]*TomlTree, 0)
+	} else if target, ok := destTree.([]*TomlTree); ok && target != nil {
+		array = destTree.([]*TomlTree)
 	} else {
 		p.raiseError(key, "key %s is already assigned and not of type table array", key)
 	}
 	p.currentTable = keys
 
 	// add a new tree to the end of the table array
-	newTree := newTree()
+	newTree := newTomlTree()
 	newTree.position = startToken.Position
 	array = append(array, newTree)
 	p.tree.SetPath(p.currentTable, array)
@@ -174,11 +183,11 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 	}
 
 	// find the table to assign, looking out for arrays of tables
-	var targetNode *Tree
+	var targetNode *TomlTree
 	switch node := p.tree.GetPath(tableKey).(type) {
-	case []*Tree:
+	case []*TomlTree:
 		targetNode = node[len(node)-1]
-	case *Tree:
+	case *TomlTree:
 		targetNode = node
 	default:
 		p.raiseError(key, "Unknown table type for path: %s",
@@ -186,7 +195,10 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 	}
 
 	// assign value to the found table
-	keyVals := []string{key.val}
+	keyVals, err := parseKey(key.val)
+	if err != nil {
+		p.raiseError(key, "%s", err)
+	}
 	if len(keyVals) != 1 {
 		p.raiseError(key, "Invalid key")
 	}
@@ -200,35 +212,23 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 	var toInsert interface{}
 
 	switch value.(type) {
-	case *Tree, []*Tree:
+	case *TomlTree, []*TomlTree:
 		toInsert = value
 	default:
-		toInsert = &tomlValue{value: value, position: key.Position}
+		toInsert = &tomlValue{value, key.Position}
 	}
 	targetNode.values[keyVal] = toInsert
 	return p.parseStart
 }
 
 var numberUnderscoreInvalidRegexp *regexp.Regexp
-var hexNumberUnderscoreInvalidRegexp *regexp.Regexp
 
-func numberContainsInvalidUnderscore(value string) error {
+func cleanupNumberToken(value string) (string, error) {
 	if numberUnderscoreInvalidRegexp.MatchString(value) {
-		return errors.New("invalid use of _ in number")
+		return "", errors.New("invalid use of _ in number")
 	}
-	return nil
-}
-
-func hexNumberContainsInvalidUnderscore(value string) error {
-	if hexNumberUnderscoreInvalidRegexp.MatchString(value) {
-		return errors.New("invalid use of _ in hex number")
-	}
-	return nil
-}
-
-func cleanupNumberToken(value string) string {
 	cleanedVal := strings.Replace(value, "_", "", -1)
-	return cleanedVal
+	return cleanedVal, nil
 }
 
 func (p *tomlParser) parseRvalue() interface{} {
@@ -244,57 +244,21 @@ func (p *tomlParser) parseRvalue() interface{} {
 		return true
 	case tokenFalse:
 		return false
-	case tokenInf:
-		if tok.val[0] == '-' {
-			return math.Inf(-1)
-		}
-		return math.Inf(1)
-	case tokenNan:
-		return math.NaN()
 	case tokenInteger:
-		cleanedVal := cleanupNumberToken(tok.val)
-		var err error
-		var val int64
-		if len(cleanedVal) >= 3 && cleanedVal[0] == '0' {
-			switch cleanedVal[1] {
-			case 'x':
-				err = hexNumberContainsInvalidUnderscore(tok.val)
-				if err != nil {
-					p.raiseError(tok, "%s", err)
-				}
-				val, err = strconv.ParseInt(cleanedVal[2:], 16, 64)
-			case 'o':
-				err = numberContainsInvalidUnderscore(tok.val)
-				if err != nil {
-					p.raiseError(tok, "%s", err)
-				}
-				val, err = strconv.ParseInt(cleanedVal[2:], 8, 64)
-			case 'b':
-				err = numberContainsInvalidUnderscore(tok.val)
-				if err != nil {
-					p.raiseError(tok, "%s", err)
-				}
-				val, err = strconv.ParseInt(cleanedVal[2:], 2, 64)
-			default:
-				panic("invalid base") // the lexer should catch this first
-			}
-		} else {
-			err = numberContainsInvalidUnderscore(tok.val)
-			if err != nil {
-				p.raiseError(tok, "%s", err)
-			}
-			val, err = strconv.ParseInt(cleanedVal, 10, 64)
+		cleanedVal, err := cleanupNumberToken(tok.val)
+		if err != nil {
+			p.raiseError(tok, "%s", err)
 		}
+		val, err := strconv.ParseInt(cleanedVal, 10, 64)
 		if err != nil {
 			p.raiseError(tok, "%s", err)
 		}
 		return val
 	case tokenFloat:
-		err := numberContainsInvalidUnderscore(tok.val)
+		cleanedVal, err := cleanupNumberToken(tok.val)
 		if err != nil {
 			p.raiseError(tok, "%s", err)
 		}
-		cleanedVal := cleanupNumberToken(tok.val)
 		val, err := strconv.ParseFloat(cleanedVal, 64)
 		if err != nil {
 			p.raiseError(tok, "%s", err)
@@ -325,8 +289,8 @@ func tokenIsComma(t *token) bool {
 	return t != nil && t.typ == tokenComma
 }
 
-func (p *tomlParser) parseInlineTable() *Tree {
-	tree := newTree()
+func (p *tomlParser) parseInlineTable() *TomlTree {
+	tree := newTomlTree()
 	var previous *token
 Loop:
 	for {
@@ -355,7 +319,7 @@ Loop:
 			}
 			p.getToken()
 		default:
-			p.raiseError(follow, "unexpected token type in inline table: %s", follow.String())
+			p.raiseError(follow, "unexpected token type in inline table: %s", follow.typ.String())
 		}
 		previous = follow
 	}
@@ -396,27 +360,27 @@ func (p *tomlParser) parseArray() interface{} {
 			p.getToken()
 		}
 	}
-	// An array of Trees is actually an array of inline
+	// An array of TomlTrees is actually an array of inline
 	// tables, which is a shorthand for a table array. If the
-	// array was not converted from []interface{} to []*Tree,
+	// array was not converted from []interface{} to []*TomlTree,
 	// the two notations would not be equivalent.
-	if arrayType == reflect.TypeOf(newTree()) {
-		tomlArray := make([]*Tree, len(array))
+	if arrayType == reflect.TypeOf(newTomlTree()) {
+		tomlArray := make([]*TomlTree, len(array))
 		for i, v := range array {
-			tomlArray[i] = v.(*Tree)
+			tomlArray[i] = v.(*TomlTree)
 		}
 		return tomlArray
 	}
 	return array
 }
 
-func parseToml(flow []token) *Tree {
-	result := newTree()
+func parseToml(flow chan token) *TomlTree {
+	result := newTomlTree()
 	result.position = Position{1, 1}
 	parser := &tomlParser{
-		flowIdx:       0,
 		flow:          flow,
 		tree:          result,
+		tokensBuffer:  make([]token, 0),
 		currentTable:  make([]string, 0),
 		seenTableKeys: make([]string, 0),
 	}
@@ -425,6 +389,5 @@ func parseToml(flow []token) *Tree {
 }
 
 func init() {
-	numberUnderscoreInvalidRegexp = regexp.MustCompile(`([^\d]_|_[^\d])|_$|^_`)
-	hexNumberUnderscoreInvalidRegexp = regexp.MustCompile(`(^0x_)|([^\da-f]_|_[^\da-f])|_$|^_`)
+	numberUnderscoreInvalidRegexp = regexp.MustCompile(`([^\d]_|_[^\d]|_$|^_)`)
 }
