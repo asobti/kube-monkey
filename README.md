@@ -83,13 +83,13 @@ spec:
 
 ### Overriding the apiserver
 #### Use cases:
-* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L336) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver. 
-* If you are running an unauthenticated system, you may need to force the http apiserver enpoint. 
+* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L331) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver. 
+* If you are running an unauthenticated system, you may need to force the http apiserver endpoint. 
 
 #### To override the apiserver specify in the config.toml file
 ```toml
 [kubernetes]
-host="https://your-apiserver-url.com"
+host="https://your-apiserver-url.com:apiport"
 ```
 
 ## How kube-monkey works
@@ -146,7 +146,7 @@ time_zone = "America/New_York"           # Set tzdata timezone example. Note the
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
 **Helm Chart**  
-A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit $PROJECT/helm/kubemonkey/values.yaml and update the value of image.repository to point at the location of your container.
+A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit `$PROJECT/helm/kubemonkey/values.yaml` and update the value of `image.repository` to point at the location of your container.
 
 Helm can then be executed using
 ```bash
