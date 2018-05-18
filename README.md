@@ -28,7 +28,7 @@ killed approximately every third weekday.
 **`kube-monkey/identifier`**: A unique identifier for the k8 app (eg. the k8 app's name). This is used to identify the pods 
 that belong to a k8 app as Pods inherit labels from their k8 app.  
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
-* `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status. Does not require kill-value. **Use this label carefully.**
+* `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
 * `random-max-percent` to specify a maximum % with kill-value that can be killed. At the scheduled time, a uniform random specified % of the running pods will be terminated.
 
