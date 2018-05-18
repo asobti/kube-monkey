@@ -23,8 +23,6 @@ const (
 	tokenTrue
 	tokenFalse
 	tokenFloat
-	tokenInf
-	tokenNan
 	tokenEqual
 	tokenLeftBracket
 	tokenRightBracket
@@ -57,8 +55,6 @@ var tokenTypeNames = []string{
 	"True",
 	"False",
 	"Float",
-	"Inf",
-	"NaN",
 	"=",
 	"[",
 	"]",
@@ -139,6 +135,5 @@ func isDigit(r rune) bool {
 
 func isHexDigit(r rune) bool {
 	return isDigit(r) ||
-		(r >= 'a' && r <= 'f') ||
-		(r >= 'A' && r <= 'F')
+		r == 'A' || r == 'B' || r == 'C' || r == 'D' || r == 'E' || r == 'F'
 }

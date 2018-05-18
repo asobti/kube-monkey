@@ -86,16 +86,6 @@ func StdoutThreshold() Threshold {
 	return defaultNotepad.stdoutThreshold
 }
 
-// GetStdoutThreshold returns the defined Treshold for the log logger.
-func GetLogThreshold() Threshold {
-	return defaultNotepad.GetLogThreshold()
-}
-
-// GetStdoutThreshold returns the Treshold for the stdout logger.
-func GetStdoutThreshold() Threshold {
-	return defaultNotepad.GetStdoutThreshold()
-}
-
 // LogCountForLevel returns the number of log invocations for a given threshold.
 func LogCountForLevel(l Threshold) uint64 {
 	return defaultNotepad.LogCountForLevel(l)

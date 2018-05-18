@@ -6,12 +6,14 @@
 package toml
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/pelletier/go-buffruneio"
 )
 
 var dateRegexp *regexp.Regexp
@@ -21,29 +23,29 @@ type tomlLexStateFn func() tomlLexStateFn
 
 // Define lexer
 type tomlLexer struct {
-	inputIdx          int
-	input             []rune // Textual source
-	currentTokenStart int
-	currentTokenStop  int
-	tokens            []token
-	depth             int
-	line              int
-	col               int
-	endbufferLine     int
-	endbufferCol      int
+	input         *buffruneio.Reader // Textual source
+	buffer        []rune             // Runes composing the current token
+	tokens        chan token
+	depth         int
+	line          int
+	col           int
+	endbufferLine int
+	endbufferCol  int
 }
 
 // Basic read operations on input
 
 func (l *tomlLexer) read() rune {
-	r := l.peek()
+	r, err := l.input.ReadRune()
+	if err != nil {
+		panic(err)
+	}
 	if r == '\n' {
 		l.endbufferLine++
 		l.endbufferCol = 1
 	} else {
 		l.endbufferCol++
 	}
-	l.inputIdx++
 	return r
 }
 
@@ -51,13 +53,13 @@ func (l *tomlLexer) next() rune {
 	r := l.read()
 
 	if r != eof {
-		l.currentTokenStop++
+		l.buffer = append(l.buffer, r)
 	}
 	return r
 }
 
 func (l *tomlLexer) ignore() {
-	l.currentTokenStart = l.currentTokenStop
+	l.buffer = make([]rune, 0)
 	l.line = l.endbufferLine
 	l.col = l.endbufferCol
 }
@@ -74,46 +76,49 @@ func (l *tomlLexer) fastForward(n int) {
 }
 
 func (l *tomlLexer) emitWithValue(t tokenType, value string) {
-	l.tokens = append(l.tokens, token{
+	l.tokens <- token{
 		Position: Position{l.line, l.col},
 		typ:      t,
 		val:      value,
-	})
+	}
 	l.ignore()
 }
 
 func (l *tomlLexer) emit(t tokenType) {
-	l.emitWithValue(t, string(l.input[l.currentTokenStart:l.currentTokenStop]))
+	l.emitWithValue(t, string(l.buffer))
 }
 
 func (l *tomlLexer) peek() rune {
-	if l.inputIdx >= len(l.input) {
-		return eof
+	r, err := l.input.ReadRune()
+	if err != nil {
+		panic(err)
 	}
-	return l.input[l.inputIdx]
-}
-
-func (l *tomlLexer) peekString(size int) string {
-	maxIdx := len(l.input)
-	upperIdx := l.inputIdx + size // FIXME: potential overflow
-	if upperIdx > maxIdx {
-		upperIdx = maxIdx
-	}
-	return string(l.input[l.inputIdx:upperIdx])
+	l.input.UnreadRune()
+	return r
 }
 
 func (l *tomlLexer) follow(next string) bool {
-	return next == l.peekString(len(next))
+	for _, expectedRune := range next {
+		r, err := l.input.ReadRune()
+		defer l.input.UnreadRune()
+		if err != nil {
+			panic(err)
+		}
+		if expectedRune != r {
+			return false
+		}
+	}
+	return true
 }
 
 // Error management
 
 func (l *tomlLexer) errorf(format string, args ...interface{}) tomlLexStateFn {
-	l.tokens = append(l.tokens, token{
+	l.tokens <- token{
 		Position: Position{l.line, l.col},
 		typ:      tokenError,
 		val:      fmt.Sprintf(format, args...),
-	})
+	}
 	return nil
 }
 
@@ -204,14 +209,6 @@ func (l *tomlLexer) lexRvalue() tomlLexStateFn {
 			return l.lexFalse
 		}
 
-		if l.follow("inf") {
-			return l.lexInf
-		}
-
-		if l.follow("nan") {
-			return l.lexNan
-		}
-
 		if isSpace(next) {
 			l.skip()
 			continue
@@ -222,7 +219,7 @@ func (l *tomlLexer) lexRvalue() tomlLexStateFn {
 			break
 		}
 
-		possibleDate := l.peekString(35)
+		possibleDate := string(l.input.Peek(35))
 		dateMatch := dateRegexp.FindString(possibleDate)
 		if dateMatch != "" {
 			l.fastForward(len(dateMatch))
@@ -273,18 +270,6 @@ func (l *tomlLexer) lexFalse() tomlLexStateFn {
 	return l.lexRvalue
 }
 
-func (l *tomlLexer) lexInf() tomlLexStateFn {
-	l.fastForward(3)
-	l.emit(tokenInf)
-	return l.lexRvalue
-}
-
-func (l *tomlLexer) lexNan() tomlLexStateFn {
-	l.fastForward(3)
-	l.emit(tokenNan)
-	return l.lexRvalue
-}
-
 func (l *tomlLexer) lexEqual() tomlLexStateFn {
 	l.next()
 	l.emit(tokenEqual)
@@ -297,8 +282,6 @@ func (l *tomlLexer) lexComma() tomlLexStateFn {
 	return l.lexRvalue
 }
 
-// Parse the key and emits its value without escape sequences.
-// bare keys, basic string keys and literal string keys are supported.
 func (l *tomlLexer) lexKey() tomlLexStateFn {
 	growingString := ""
 
@@ -309,16 +292,7 @@ func (l *tomlLexer) lexKey() tomlLexStateFn {
 			if err != nil {
 				return l.errorf(err.Error())
 			}
-			growingString += str
-			l.next()
-			continue
-		} else if r == '\'' {
-			l.next()
-			str, err := l.lexLiteralStringAsString(`'`, false)
-			if err != nil {
-				return l.errorf(err.Error())
-			}
-			growingString += str
+			growingString += `"` + str + `"`
 			l.next()
 			continue
 		} else if r == '\n' {
@@ -558,12 +532,11 @@ func (l *tomlLexer) lexTableKey() tomlLexStateFn {
 	return l.lexInsideTableKey
 }
 
-// Parse the key till "]]", but only bare keys are supported
 func (l *tomlLexer) lexInsideTableArrayKey() tomlLexStateFn {
 	for r := l.peek(); r != eof; r = l.peek() {
 		switch r {
 		case ']':
-			if l.currentTokenStop > l.currentTokenStart {
+			if len(l.buffer) > 0 {
 				l.emit(tokenKeyGroupArray)
 			}
 			l.next()
@@ -582,12 +555,11 @@ func (l *tomlLexer) lexInsideTableArrayKey() tomlLexStateFn {
 	return l.errorf("unclosed table array key")
 }
 
-// Parse the key till "]" but only bare keys are supported
 func (l *tomlLexer) lexInsideTableKey() tomlLexStateFn {
 	for r := l.peek(); r != eof; r = l.peek() {
 		switch r {
 		case ']':
-			if l.currentTokenStop > l.currentTokenStart {
+			if len(l.buffer) > 0 {
 				l.emit(tokenKeyGroup)
 			}
 			l.next()
@@ -608,77 +580,11 @@ func (l *tomlLexer) lexRightBracket() tomlLexStateFn {
 	return l.lexRvalue
 }
 
-type validRuneFn func(r rune) bool
-
-func isValidHexRune(r rune) bool {
-	return r >= 'a' && r <= 'f' ||
-		r >= 'A' && r <= 'F' ||
-		r >= '0' && r <= '9' ||
-		r == '_'
-}
-
-func isValidOctalRune(r rune) bool {
-	return r >= '0' && r <= '7' || r == '_'
-}
-
-func isValidBinaryRune(r rune) bool {
-	return r == '0' || r == '1' || r == '_'
-}
-
 func (l *tomlLexer) lexNumber() tomlLexStateFn {
 	r := l.peek()
-
-	if r == '0' {
-		follow := l.peekString(2)
-		if len(follow) == 2 {
-			var isValidRune validRuneFn
-			switch follow[1] {
-			case 'x':
-				isValidRune = isValidHexRune
-			case 'o':
-				isValidRune = isValidOctalRune
-			case 'b':
-				isValidRune = isValidBinaryRune
-			default:
-				if follow[1] >= 'a' && follow[1] <= 'z' || follow[1] >= 'A' && follow[1] <= 'Z' {
-					return l.errorf("unknown number base: %s. possible options are x (hex) o (octal) b (binary)", string(follow[1]))
-				}
-			}
-
-			if isValidRune != nil {
-				l.next()
-				l.next()
-				digitSeen := false
-				for {
-					next := l.peek()
-					if !isValidRune(next) {
-						break
-					}
-					digitSeen = true
-					l.next()
-				}
-
-				if !digitSeen {
-					return l.errorf("number needs at least one digit")
-				}
-
-				l.emit(tokenInteger)
-
-				return l.lexRvalue
-			}
-		}
-	}
-
 	if r == '+' || r == '-' {
 		l.next()
-		if l.follow("inf") {
-			return l.lexInf
-		}
-		if l.follow("nan") {
-			return l.lexNan
-		}
 	}
-
 	pointSeen := false
 	expSeen := false
 	digitSeen := false
@@ -728,6 +634,7 @@ func (l *tomlLexer) run() {
 	for state := l.lexVoid; state != nil; {
 		state = state()
 	}
+	close(l.tokens)
 }
 
 func init() {
@@ -735,16 +642,16 @@ func init() {
 }
 
 // Entry point
-func lexToml(inputBytes []byte) []token {
-	runes := bytes.Runes(inputBytes)
+func lexToml(input io.Reader) chan token {
+	bufferedInput := buffruneio.NewReader(input)
 	l := &tomlLexer{
-		input:         runes,
-		tokens:        make([]token, 0, 256),
+		input:         bufferedInput,
+		tokens:        make(chan token),
 		line:          1,
 		col:           1,
 		endbufferLine: 1,
 		endbufferCol:  1,
 	}
-	l.run()
+	go l.run()
 	return l.tokens
 }
