@@ -3,11 +3,13 @@ import:
 - package: github.com/fsnotify/fsnotify
 - package: github.com/golang/glog
 - package: github.com/spf13/viper
+- package: github.com/stretchr/testify
+  subpackages:
+  - mock
 - package: k8s.io/api
   subpackages:
+  - apps/v1
   - core/v1
-  - apps/v1beta1
-  - extensions/v1beta1
 - package: k8s.io/apimachinery
   subpackages:
   - pkg/apis/meta/v1
@@ -17,8 +19,8 @@ import:
 - package: k8s.io/client-go
   version: v6.0.0
   subpackages:
+  - discovery
   - kubernetes
   - rest
-- package: github.com/stretchr/testify
 testImport:
 - package: github.com/bouk/monkey

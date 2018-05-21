@@ -13,12 +13,10 @@ import (
 )
 
 func TestNotepad(t *testing.T) {
+
 	var logHandle, outHandle bytes.Buffer
 
 	n := NewNotepad(LevelCritical, LevelError, &outHandle, &logHandle, "TestNotePad", 0)
-
-	require.Equal(t, LevelCritical, n.GetStdoutThreshold())
-	require.Equal(t, LevelError, n.GetLogThreshold())
 
 	n.DEBUG.Println("Some debug")
 	n.ERROR.Println("Some error")
@@ -37,14 +35,4 @@ func TestNotepad(t *testing.T) {
 func TestThresholdString(t *testing.T) {
 	require.Equal(t, LevelError.String(), "ERROR")
 	require.Equal(t, LevelTrace.String(), "TRACE")
-}
-
-func BenchmarkLogPrintOnlyToCounter(b *testing.B) {
-	var logHandle, outHandle bytes.Buffer
-	n := NewNotepad(LevelCritical, LevelCritical, &outHandle, &logHandle, "TestNotePad", 0)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		n.INFO.Print("Test")
-	}
 }

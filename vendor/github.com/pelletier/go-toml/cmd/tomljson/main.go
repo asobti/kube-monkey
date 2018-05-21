@@ -1,8 +1,3 @@
-// Tomljson reads TOML and converts to JSON.
-//
-// Usage:
-//   cat file.toml | tomljson > file.json
-//   tomljson file1.toml > file.json
 package main
 
 import (
@@ -17,12 +12,13 @@ import (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "tomljson can be used in two ways:")
-		fmt.Fprintln(os.Stderr, "Writing to STDIN and reading from STDOUT:")
-		fmt.Fprintln(os.Stderr, "  cat file.toml | tomljson > file.json")
-		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Reading from a file name:")
-		fmt.Fprintln(os.Stderr, "  tomljson file.toml")
+		fmt.Fprintln(os.Stderr, `tomljson can be used in two ways:
+Writing to STDIN and reading from STDOUT:
+  cat file.toml | tomljson > file.json
+
+Reading from a file name:
+  tomljson file.toml
+`)
 	}
 	flag.Parse()
 	os.Exit(processMain(flag.Args(), os.Stdin, os.Stdout, os.Stderr))
@@ -61,7 +57,7 @@ func reader(r io.Reader) (string, error) {
 	return mapToJSON(tree)
 }
 
-func mapToJSON(tree *toml.Tree) (string, error) {
+func mapToJSON(tree *toml.TomlTree) (string, error) {
 	treeMap := tree.ToMap()
 	bytes, err := json.MarshalIndent(treeMap, "", "  ")
 	if err != nil {

@@ -10,7 +10,11 @@ Pod death sometime during the same day. The time-range during the day when the r
 kube-monkey can be configured with a list of namespaces 
 * to blacklist (any deployments within a blacklisted namespace will not be touched) 
 * to whitelist (only deployments within a whitelisted namespace that are not blacklisted will be scheduled)
-The blacklist overrides the whitelist. The config will be populated with default behavior (blacklist `kube-system` and whitelist `default`). To disable either the blacklist or whitelist provide `[""]` to the respective config.param
+The blacklist overrides the whitelist. The config will be populated with default
+behavior (blacklist `kube-system` and whitelist `default`).
+
+To disable either the blacklist or whitelist provide `[""]` to the respective
+config.param. Disabling the whitelist causes kube-monkey to target _all_ namespaces.
 
 ## Opting-In to Chaos
 
@@ -24,7 +28,7 @@ killed approximately every third weekday.
 **`kube-monkey/identifier`**: A unique identifier for the k8 app (eg. the k8 app's name). This is used to identify the pods 
 that belong to a k8 app as Pods inherit labels from their k8 app.  
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
-* `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status. Does not require kill-value. **Use this label carefully.**
+* `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
 * `random-max-percent` to specify a maximum % with kill-value that can be killed. At the scheduled time, a uniform random specified % of the running pods will be terminated.
 
@@ -79,13 +83,13 @@ spec:
 
 ### Overriding the apiserver
 #### Use cases:
-* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L336) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver. 
-* If you are running an unauthenticated system, you may need to force the http apiserver enpoint. 
+* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L331) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver. 
+* If you are running an unauthenticated system, you may need to force the http apiserver endpoint. 
 
 #### To override the apiserver specify in the config.toml file
 ```toml
 [kubernetes]
-host="https://your-apiserver-url.com"
+host="https://your-apiserver-url.com:apiport"
 ```
 
 ## How kube-monkey works
@@ -132,6 +136,7 @@ time_zone = "America/New_York"           # Set tzdata timezone example. Note the
 
 ## Deploying
 
+**Manually**
 1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml` 
 
 > For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml` or `kubectl apply -f km-config.yaml`
@@ -139,6 +144,14 @@ time_zone = "America/New_York"           # Set tzdata timezone example. Note the
 2. Run kube-monkey as a k8 app within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
+
+**Helm Chart**  
+A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit `$PROJECT/helm/kubemonkey/values.yaml` and update the value of `image.repository` to point at the location of your container.
+
+Helm can then be executed using
+```bash
+helm install $release helm/kubemonkey
+```
 
 ## Logging
 
@@ -168,9 +181,5 @@ versions of Kubernetes are compatible.
 
 ## Ways to contribute
 
-- Add unit [tests](https://golang.org/pkg/testing/)
-- Support more k8 types
-  - ~~deployments~~
-  - ~~statefulsets~~
-  - dameonsets
-  - etc
+See [How to Contribute](https://github.com/asobti/kube-monkey/blob/master/CONTRIBUTING.md)
+
