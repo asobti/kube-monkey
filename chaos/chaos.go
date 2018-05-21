@@ -19,6 +19,15 @@ type Chaos struct {
 	victim victims.Victim
 }
 
+type ChaosIntf interface {
+	Victim() victims.Victim
+	KillAt() time.Time
+	Schedule(chan<- *ChaosResult)
+	DurationToKillTime() time.Duration
+	NewResult(error) *ChaosResult
+	Execute(chan<- *ChaosResult)
+}
+
 // Create a new Chaos instance
 func New(killtime time.Time, victim victims.Victim) *Chaos {
 	// TargetPodName will be populated at time of termination

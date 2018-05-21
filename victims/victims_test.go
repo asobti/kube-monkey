@@ -12,13 +12,6 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-const (
-	NAMESPACE  = metav1.NamespaceDefault
-	IDENTIFIER = "kube-monkey-id"
-	KIND       = "Pod"
-	NAME       = "name"
-)
-
 func newPod(name string, status v1.PodPhase) v1.Pod {
 
 	return v1.Pod{

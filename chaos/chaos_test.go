@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/asobti/kube-monkey/config"
+	"github.com/asobti/kube-monkey/victims"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
@@ -20,12 +21,12 @@ type ChaosTestSuite struct {
 }
 
 func (s *ChaosTestSuite) SetupTest() {
-	s.chaos = NewMock()
+	s.chaos = New(time.Now(), victims.NewVictimMock())
 	s.client = fake.NewSimpleClientset()
 }
 
 func (s *ChaosTestSuite) TestVerifyExecutionNotEnrolled() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	v.On("IsEnrolled", s.client).Return(false, nil)
 	err := s.chaos.verifyExecution(s.client)
 	v.AssertExpectations(s.T())
@@ -33,7 +34,7 @@ func (s *ChaosTestSuite) TestVerifyExecutionNotEnrolled() {
 }
 
 func (s *ChaosTestSuite) TestVerifyExecutionBlacklisted() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	v.On("IsEnrolled", s.client).Return(true, nil)
 	v.On("IsBlacklisted").Return(true)
 	err := s.chaos.verifyExecution(s.client)
@@ -42,7 +43,7 @@ func (s *ChaosTestSuite) TestVerifyExecutionBlacklisted() {
 }
 
 func (s *ChaosTestSuite) TestVerifyExecutionNotWhitelisted() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	v.On("IsEnrolled", s.client).Return(true, nil)
 	v.On("IsBlacklisted").Return(false)
 	v.On("IsWhitelisted").Return(false)
@@ -52,7 +53,7 @@ func (s *ChaosTestSuite) TestVerifyExecutionNotWhitelisted() {
 }
 
 func (s *ChaosTestSuite) TestVerifyExecutionWhitelisted() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	v.On("IsEnrolled", s.client).Return(true, nil)
 	v.On("IsBlacklisted").Return(false)
 	v.On("IsWhitelisted").Return(true)
@@ -62,7 +63,7 @@ func (s *ChaosTestSuite) TestVerifyExecutionWhitelisted() {
 }
 
 func (s *ChaosTestSuite) TestTerminateKillTypeError() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	errMsg := "KillType Error"
 	v.On("KillType", s.client).Return("", errors.New(errMsg))
 	v.On("DeleteRandomPod", s.client).Return(nil)
@@ -71,7 +72,7 @@ func (s *ChaosTestSuite) TestTerminateKillTypeError() {
 }
 
 func (s *ChaosTestSuite) TestTerminateAll() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	v.On("KillType", s.client).Return(config.KillAllLabelValue, nil)
 	v.On("TerminateAllPods", s.client).Return(nil)
 	_ = s.chaos.terminate(s.client)
@@ -79,7 +80,7 @@ func (s *ChaosTestSuite) TestTerminateAll() {
 }
 
 func (s *ChaosTestSuite) TestTerminateKillValueError() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	errMsg := "KillValue Error"
 	v.On("KillType", s.client).Return("", nil)
 	v.On("KillValue", s.client).Return(0, errors.New(errMsg))
@@ -89,7 +90,7 @@ func (s *ChaosTestSuite) TestTerminateKillValueError() {
 }
 
 func (s *ChaosTestSuite) TestTerminateKillFixed() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	killValue := 1
 	v.On("KillType", s.client).Return(config.KillFixedLabelValue, nil)
 	v.On("KillValue", s.client).Return(killValue, nil)
@@ -99,7 +100,7 @@ func (s *ChaosTestSuite) TestTerminateKillFixed() {
 }
 
 func (s *ChaosTestSuite) TestTerminateKillRandom() {
-	v := s.chaos.victim.(*victimMock)
+	v := s.chaos.victim.(*victims.VictimMock)
 	killValue := 1
 	v.On("KillType", s.client).Return(config.KillRandomLabelValue, nil)
 	v.On("KillValue", s.client).Return(killValue, nil)
