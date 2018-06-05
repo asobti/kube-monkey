@@ -9,5 +9,6 @@ git:
   depth: 1
 
 script:
+- make bootstrap
 - make
 - .travis/check_workspace.sh

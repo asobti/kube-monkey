@@ -1,15 +1,22 @@
-all: build
+all: test
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-TAG = v0.2.1
+TAG = v0.2.3
+GOLANGCI_RELEASE = v1.4.1
 
-.PHONY: all build container clean
+.PHONY: all build container clean gofmt lint test
 
-build: test clean gofmt
+bootstrap:
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s $(GOLANGCI_RELEASE)
+
+lint:
+	bin/golangci-lint run -E golint -E goimports
+
+build: clean gofmt lint
 	$(ENVVAR) go build -o kube-monkey
 
 # Supressing docker build avoids printing the env variables
-container: build
+container: test
 ifneq ($(and $(http_proxy), $(https_proxy)),)
 	@echo Starting Docker build, importing both http_proxy and https_proxy env variables
 	@docker build --build-arg http_proxy=$(http_proxy) --build-arg https_proxy=$(https_proxy) -t kube-monkey:$(TAG) .
@@ -33,5 +40,6 @@ gofmt:
 
 clean:
 	rm -f kube-monkey
-test:
+
+test: build
 	go test -v -cover ./...
