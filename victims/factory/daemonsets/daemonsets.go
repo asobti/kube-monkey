@@ -14,7 +14,7 @@ type DaemonSet struct {
 	*victims.VictimBase
 }
 
-// Create a new instance of DaemonSet
+// New creates a new instance of DaemonSet
 func New(dep *v1.DaemonSet) (*DaemonSet, error) {
 	ident, err := identifier(dep)
 	if err != nil {

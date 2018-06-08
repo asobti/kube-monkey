@@ -14,7 +14,7 @@ type Deployment struct {
 	*victims.VictimBase
 }
 
-// Create a new instance of Deployment
+// New creates a new instance of Deployment
 func New(dep *v1.Deployment) (*Deployment, error) {
 	ident, err := identifier(dep)
 	if err != nil {

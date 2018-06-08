@@ -20,7 +20,7 @@ import (
 
 type Victim interface {
 	VictimBaseTemplate
-	VictimSpecificApiCalls
+	VictimSpecificAPICalls
 }
 
 type VictimBaseTemplate interface {
@@ -31,17 +31,17 @@ type VictimBaseTemplate interface {
 	Identifier() string
 	Mtbf() int
 
-	VictimApiCalls
+	VictimAPICalls
 }
 
-type VictimSpecificApiCalls interface {
+type VictimSpecificAPICalls interface {
 	// Depends on which version i.e. apps/v1 or extensions/v1beta2
 	IsEnrolled(kube.Interface) (bool, error) // Get updated enroll status
 	KillType(kube.Interface) (string, error) // Get updated kill config type
 	KillValue(kube.Interface) (int, error)   // Get updated kill config value
 }
 
-type VictimApiCalls interface {
+type VictimAPICalls interface {
 	// Exposed Api Calls
 	RunningPods(kube.Interface) ([]v1.Pod, error)
 	Pods(kube.Interface) ([]v1.Pod, error)
@@ -143,14 +143,12 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 		fallthrough
 	case numPods == killNum:
 		glog.V(6).Infof("Killing ALL %d running pods for %s %s", numPods, v.kind, v.name)
-		break
 	case killNum == 0:
 		return fmt.Errorf("No terminations requested for %s %s", v.kind, v.name)
 	case killNum < 0:
 		return fmt.Errorf("Cannot request negative terminations %d for %s %s", numPods, v.kind, v.name)
 	case numPods > killNum:
 		glog.V(6).Infof("Killing %d running pods for %s %s", numPods, v.kind, v.name)
-		break
 	default:
 		return fmt.Errorf("unexpected behavior for terminating %s %s", v.kind, v.name)
 	}
@@ -253,7 +251,7 @@ func labelRequirementForPods(identifier string) (*labels.Requirement, error) {
 	return labels.NewRequirement(config.IdentLabelKey, selection.Equals, sets.NewString(identifier).UnsortedList())
 }
 
-// Pick a random pod name from a list of Pods
+// RandomPodName picks a random pod name from a list of Pods
 func RandomPodName(pods []v1.Pod) string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randIndex := r.Intn(len(pods))

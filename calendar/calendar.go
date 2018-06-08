@@ -32,7 +32,7 @@ func nextWeekday(loc *time.Location) time.Time {
 	}
 }
 
-// Calculates the next time the Scheduled should run
+// NextRuntime calculates the next time the Scheduled should run
 func NextRuntime(loc *time.Location, r int) time.Time {
 	now := time.Now().In(loc)
 
@@ -49,7 +49,7 @@ func NextRuntime(loc *time.Location, r int) time.Time {
 	return time.Date(year, month, day, r, 0, 0, 0, loc)
 }
 
-// Returns a random time within the range specified by startHour and endHour
+// RandomTimeInRange returns a random time within the range specified by startHour and endHour
 func RandomTimeInRange(startHour int, endHour int, loc *time.Location) time.Time {
 	// calculate the number of minutes in the range
 	minutesInRange := (endHour - startHour) * 60

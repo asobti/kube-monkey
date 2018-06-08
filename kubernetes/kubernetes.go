@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// Create, verify and return an instance of k8 clientset
+// CreateClient creates, verifes and returns an instance of k8 clientset
 func CreateClient() (*kube.Clientset, error) {
 	client, err := NewInClusterClient()
 	if err != nil {
@@ -27,12 +27,11 @@ func CreateClient() (*kube.Clientset, error) {
 
 	if VerifyClient(client) {
 		return client, nil
-	} else {
-		return nil, fmt.Errorf("Unable to verify client connectivity to Kubernetes apiserver")
 	}
+	return nil, fmt.Errorf("Unable to verify client connectivity to Kubernetes apiserver")
 }
 
-// Only creates an initialized instance of k8 clientset
+// NewInClusterClient only creates an initialized instance of k8 clientset
 func NewInClusterClient() (*kube.Clientset, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {

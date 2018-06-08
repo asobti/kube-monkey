@@ -14,7 +14,7 @@ type StatefulSet struct {
 	*victims.VictimBase
 }
 
-// Create a new instance of StatefulSet
+// New creates a new instance of StatefulSet
 func New(ss *v1.StatefulSet) (*StatefulSet, error) {
 	ident, err := identifier(ss)
 	if err != nil {
