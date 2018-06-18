@@ -4,6 +4,12 @@ language: go
 go:
 - "1.10"
 
+# Only clone the most recent commit.
+git:
+  depth: 1
+
+install: false
+
 script:
 - make
 - .travis/check_workspace.sh
