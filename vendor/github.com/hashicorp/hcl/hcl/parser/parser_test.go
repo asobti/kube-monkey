@@ -59,6 +59,10 @@ func TestListType(t *testing.T) {
 			[]token.Type{token.NUMBER, token.STRING},
 		},
 		{
+			`foo = [false]`,
+			[]token.Type{token.BOOL},
+		},
+		{
 			`foo = []`,
 			[]token.Type{},
 		},
@@ -389,6 +393,7 @@ func TestCommentGroup(t *testing.T) {
 		groups int
 	}{
 		{"# Hello\n# World", 1},
+		{"# Hello\r\n# Windows", 1},
 	}
 
 	for _, tc := range cases {
@@ -418,6 +423,10 @@ func TestParse(t *testing.T) {
 		},
 		{
 			"comment.hcl",
+			false,
+		},
+		{
+			"comment_crlf.hcl",
 			false,
 		},
 		{
@@ -458,6 +467,10 @@ func TestParse(t *testing.T) {
 		},
 		{
 			"complex.hcl",
+			false,
+		},
+		{
+			"complex_crlf.hcl",
 			false,
 		},
 		{

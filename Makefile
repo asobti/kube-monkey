@@ -1,7 +1,7 @@
 all: build
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-TAG = v0.2.2
+TAG = v0.2.1
 
 .PHONY: all build container clean
 
