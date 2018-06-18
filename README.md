@@ -175,7 +175,7 @@ More resources: See the [k8 logging page](https://kubernetes.io/docs/concepts/cl
 
 ## Compatibility with Kubernetes
 
-kube-monkey is built using v6.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the 
+kube-monkey is built using v7.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the 
 [Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which 
 versions of Kubernetes are compatible.
 
