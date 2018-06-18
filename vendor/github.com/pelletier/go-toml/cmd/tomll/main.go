@@ -1,3 +1,8 @@
+// Tomll is a linter for TOML
+//
+// Usage:
+//   cat file.toml | tomll > file_linted.toml
+//   tomll file1.toml file2.toml # lint the two files in place
 package main
 
 import (
@@ -12,15 +17,14 @@ import (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, `tomll can be used in two ways:
-Writing to STDIN and reading from STDOUT:
-  cat file.toml | tomll > file.toml
-
-Reading and updating a list of files:
-  tomll a.toml b.toml c.toml
-
-When given a list of files, tomll will modify all files in place without asking.
-`)
+		fmt.Fprintln(os.Stderr, "tomll can be used in two ways:")
+		fmt.Fprintln(os.Stderr, "Writing to STDIN and reading from STDOUT:")
+		fmt.Fprintln(os.Stderr, "  cat file.toml | tomll > file.toml")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Reading and updating a list of files:")
+		fmt.Fprintln(os.Stderr, "  tomll a.toml b.toml c.toml")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "When given a list of files, tomll will modify all files in place without asking.")
 	}
 	flag.Parse()
 	// read from stdin and print to stdout

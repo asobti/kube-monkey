@@ -1,37 +1,14 @@
 package toml
 
 import (
-	"strings"
+	"reflect"
 	"testing"
 )
 
 func testFlow(t *testing.T, input string, expectedFlow []token) {
-	ch := lexToml(strings.NewReader(input))
-	for _, expected := range expectedFlow {
-		token := <-ch
-		if token != expected {
-			t.Log("While testing: ", input)
-			t.Log("compared (got)", token, "to (expected)", expected)
-			t.Log("\tvalue:", token.val, "<->", expected.val)
-			t.Log("\tvalue as bytes:", []byte(token.val), "<->", []byte(expected.val))
-			t.Log("\ttype:", token.typ.String(), "<->", expected.typ.String())
-			t.Log("\tline:", token.Line, "<->", expected.Line)
-			t.Log("\tcolumn:", token.Col, "<->", expected.Col)
-			t.Log("compared", token, "to", expected)
-			t.FailNow()
-		}
-	}
-
-	tok, ok := <-ch
-	if ok {
-		t.Log("channel is not closed!")
-		t.Log(len(ch)+1, "tokens remaining:")
-
-		t.Log("token ->", tok)
-		for token := range ch {
-			t.Log("token ->", token)
-		}
-		t.FailNow()
+	tokens := lexToml([]byte(input))
+	if !reflect.DeepEqual(tokens, expectedFlow) {
+		t.Fatal("Different flows. Expected\n", expectedFlow, "\nGot:\n", tokens)
 	}
 }
 
@@ -531,6 +508,30 @@ func TestKeyEqualStringUnicodeEscape(t *testing.T) {
 		{Position{1, 8}, tokenString, "hello δ"},
 		{Position{1, 25}, tokenEOF, ""},
 	})
+	testFlow(t, `foo = "\uabcd"`, []token{
+		{Position{1, 1}, tokenKey, "foo"},
+		{Position{1, 5}, tokenEqual, "="},
+		{Position{1, 8}, tokenString, "\uabcd"},
+		{Position{1, 15}, tokenEOF, ""},
+	})
+	testFlow(t, `foo = "\uABCD"`, []token{
+		{Position{1, 1}, tokenKey, "foo"},
+		{Position{1, 5}, tokenEqual, "="},
+		{Position{1, 8}, tokenString, "\uABCD"},
+		{Position{1, 15}, tokenEOF, ""},
+	})
+	testFlow(t, `foo = "\U000bcdef"`, []token{
+		{Position{1, 1}, tokenKey, "foo"},
+		{Position{1, 5}, tokenEqual, "="},
+		{Position{1, 8}, tokenString, "\U000bcdef"},
+		{Position{1, 19}, tokenEOF, ""},
+	})
+	testFlow(t, `foo = "\U000BCDEF"`, []token{
+		{Position{1, 1}, tokenKey, "foo"},
+		{Position{1, 5}, tokenEqual, "="},
+		{Position{1, 8}, tokenString, "\U000BCDEF"},
+		{Position{1, 19}, tokenEOF, ""},
+	})
 	testFlow(t, `foo = "\u2"`, []token{
 		{Position{1, 1}, tokenKey, "foo"},
 		{Position{1, 5}, tokenEqual, "="},
@@ -689,7 +690,7 @@ func TestKeyGroupArray(t *testing.T) {
 
 func TestQuotedKey(t *testing.T) {
 	testFlow(t, "\"a b\" = 42", []token{
-		{Position{1, 1}, tokenKey, "\"a b\""},
+		{Position{1, 1}, tokenKey, "a b"},
 		{Position{1, 7}, tokenEqual, "="},
 		{Position{1, 9}, tokenInteger, "42"},
 		{Position{1, 11}, tokenEOF, ""},
@@ -723,4 +724,27 @@ func TestLexUnknownRvalue(t *testing.T) {
 		{Position{1, 3}, tokenEqual, "="},
 		{Position{1, 5}, tokenError, `no value can start with \`},
 	})
+}
+
+func BenchmarkLexer(b *testing.B) {
+	sample := `title = "Hugo: A Fast and Flexible Website Generator"
+baseurl = "http://gohugo.io/"
+MetaDataFormat = "yaml"
+pluralizeListTitles = false
+
+[params]
+  description = "Documentation of Hugo, a fast and flexible static site generator built with love by spf13, bep and friends in Go"
+  author = "Steve Francia (spf13) and friends"
+  release = "0.22-DEV"
+
+[[menu.main]]
+	name = "Download Hugo"
+	pre = "<i class='fa fa-download'></i>"
+	url = "https://github.com/spf13/hugo/releases"
+	weight = -200
+`
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		lexToml([]byte(sample))
+	}
 }
