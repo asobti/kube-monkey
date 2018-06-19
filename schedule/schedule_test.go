@@ -8,6 +8,7 @@ import (
 
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config/param"
+	"github.com/asobti/kube-monkey/victims"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -18,6 +19,10 @@ func newSchedule() *Schedule {
 	return &Schedule{}
 }
 
+func newChaos() *chaos.Chaos {
+	return chaos.New(time.Now(), victims.NewVictimMock())
+}
+
 func TestEntries(t *testing.T) {
 	s := newSchedule()
 	assert.Equal(t, s.Entries(), s.entries)
@@ -25,7 +30,7 @@ func TestEntries(t *testing.T) {
 }
 
 func TestAdd(t *testing.T) {
-	e := chaos.NewMock()
+	e := newChaos()
 	s := newSchedule()
 
 	s.Add(e)
@@ -46,8 +51,8 @@ func TestStringNoEntries(t *testing.T) {
 
 func TestStringWithEntries(t *testing.T) {
 	s := newSchedule()
-	e1 := chaos.NewMock()
-	e2 := chaos.NewMock()
+	e1 := newChaos()
+	e2 := newChaos()
 	s.Add(e1)
 	s.Add(e2)
 

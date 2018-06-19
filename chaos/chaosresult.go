@@ -7,6 +7,11 @@ type ChaosResult struct {
 	err   error
 }
 
+type ChaosResultIntf interface {
+	Victim() victims.Victim
+	Error() error
+}
+
 func (r *ChaosResult) Victim() victims.Victim {
 	return r.chaos.Victim()
 }

@@ -44,11 +44,18 @@ func Run() error {
 		}
 		schedule.Print()
 		fmt.Println(schedule)
-		ScheduleTerminations(schedule.Entries())
+
+		entries := schedule.Entries()
+		chaosList := make([]chaos.ChaosIntf, len(entries))
+		for i := range entries {
+			chaosList[i] = entries[i]
+		}
+
+		ScheduleTerminations(chaosList)
 	}
 }
 
-func ScheduleTerminations(entries []*chaos.Chaos) {
+func ScheduleTerminations(entries []chaos.ChaosIntf) {
 	resultchan := make(chan *chaos.ChaosResult)
 	defer close(resultchan)
 
@@ -61,7 +68,6 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 	var result *chaos.ChaosResult
 
 	glog.V(3).Infof("Status Update: Waiting to run scheduled terminations.")
-
 	// Gather results
 	for completedCount < len(entries) {
 		result = <-resultchan
