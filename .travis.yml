@@ -2,13 +2,11 @@ sudo: false
 language: go
 
 go:
-- "1.10"
+- "1.10.x"
 
 # Only clone the most recent commit.
 git:
   depth: 1
-
-install: false
 
 script:
 - make
