@@ -1,0 +1,13 @@
+FROM golang:latest as builder
+LABEL maintainer="nsidhaye"
+
+RUN go get github.com/asobti/kube-monkey
+WORKDIR $GOPATH/src/github.com/asobti/kube-monkey
+#RUN make build
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o kube-monkey
+
+FROM alpine
+
+RUN	apk update && apk upgrade && apk add --no-cache bash tzdata
+
+COPY --from=builder /go/src/github.com/asobti/kube-monkey/kube-monkey /kube-monkey
