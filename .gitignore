@@ -3,3 +3,4 @@
 build/
 RPMS/
 kube-monkey
+Dockerfile
