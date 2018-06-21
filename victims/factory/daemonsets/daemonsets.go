@@ -26,7 +26,7 @@ func New(dep *v1.DaemonSet) (*DaemonSet, error) {
 	}
 	kind := fmt.Sprintf("%T", *dep)
 
-	return &DaemonSet{victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
+	return &DaemonSet{VictimBase: victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey

@@ -26,7 +26,7 @@ func New(ss *v1.StatefulSet) (*StatefulSet, error) {
 	}
 	kind := fmt.Sprintf("%T", *ss)
 
-	return &StatefulSet{victims.New(kind, ss.Name, ss.Namespace, ident, mtbf)}, nil
+	return &StatefulSet{VictimBase: victims.New(kind, ss.Name, ss.Namespace, ident, mtbf)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey

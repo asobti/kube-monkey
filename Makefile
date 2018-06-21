@@ -2,15 +2,18 @@ all: test
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 TAG = v0.2.3
-GOLANGCI_RELEASE = v1.4.1
+GOLANGCI_INSTALLED := $(shell which bin/golangci-lint)
+
 
 .PHONY: all build container clean gofmt lint test
 
-bootstrap:
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s $(GOLANGCI_RELEASE)
-
 lint:
+ifdef GOLANGCI_INSTALLED
 	bin/golangci-lint run -E golint -E goimports
+else
+	@echo Warning golangci-lint not installed. Skipping linting
+	@echo Installation instructions: https://github.com/golangci/golangci-lint#ci-installation
+endif
 
 build: clean gofmt lint
 	$(ENVVAR) go build -o kube-monkey
