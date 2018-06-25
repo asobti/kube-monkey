@@ -19,11 +19,10 @@ func durationToNextRun(runhour int, loc *time.Location) time.Duration {
 		glog.V(1).Infof("Debug mode detected!")
 		glog.V(1).Infof("Status Update: Generating next schedule in %.0f sec\n", debugDelayDuration.Seconds())
 		return debugDelayDuration
-	} else {
-		nextRun := calendar.NextRuntime(loc, runhour)
-		glog.V(1).Infof("Status Update: Generating next schedule at %s\n", nextRun)
-		return nextRun.Sub(time.Now())
 	}
+	nextRun := calendar.NextRuntime(loc, runhour)
+	glog.V(1).Infof("Status Update: Generating next schedule at %s\n", nextRun)
+	return time.Until(nextRun)
 }
 
 func Run() error {
@@ -49,7 +48,7 @@ func Run() error {
 }
 
 func ScheduleTerminations(entries []*chaos.Chaos) {
-	resultchan := make(chan *chaos.ChaosResult)
+	resultchan := make(chan *chaos.Result)
 	defer close(resultchan)
 
 	// Spin off all terminations
@@ -58,7 +57,7 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 	}
 
 	completedCount := 0
-	var result *chaos.ChaosResult
+	var result *chaos.Result
 
 	glog.V(3).Infof("Status Update: Waiting to run scheduled terminations.")
 

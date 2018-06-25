@@ -16,7 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Get all eligible daemonsets that opted in (filtered by config.EnabledLabel)
+// EligibleDaemonSets gets all eligible daemonsets that opted in (filtered by config.EnabledLabel)
 func EligibleDaemonSets(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
 	enabledVictims, err := clientset.AppsV1().DaemonSets(namespace).List(*filter)
 	if err != nil {
@@ -82,6 +82,10 @@ func (d *DaemonSet) KillValue(clientset kube.Interface) (int, error) {
 	}
 
 	killModeInt, err := strconv.Atoi(killMode)
+	if err != nil {
+		return -1, fmt.Errorf("%s %s has an invalid killMode: %v", d.Kind(), d.Name(), killMode)
+	}
+
 	if !(killModeInt > 0) {
 		return -1, fmt.Errorf("Invalid value for label %s: %d", config.KillValueLabelKey, killModeInt)
 	}

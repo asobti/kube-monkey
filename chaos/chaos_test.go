@@ -29,7 +29,7 @@ func (s *ChaosTestSuite) TestVerifyExecutionNotEnrolled() {
 	v.On("IsEnrolled", s.client).Return(false, nil)
 	err := s.chaos.verifyExecution(s.client)
 	v.AssertExpectations(s.T())
-	s.EqualError(err, v.Kind()+" "+v.Name()+" is no longer enrolled in kube-monkey. Skipping\n")
+	s.EqualError(err, v.Kind()+" "+v.Name()+" is no longer enrolled in kube-monkey. Skipping")
 }
 
 func (s *ChaosTestSuite) TestVerifyExecutionBlacklisted() {
@@ -38,7 +38,7 @@ func (s *ChaosTestSuite) TestVerifyExecutionBlacklisted() {
 	v.On("IsBlacklisted").Return(true)
 	err := s.chaos.verifyExecution(s.client)
 	v.AssertExpectations(s.T())
-	s.EqualError(err, v.Kind()+" "+v.Name()+" is blacklisted. Skipping\n")
+	s.EqualError(err, v.Kind()+" "+v.Name()+" is blacklisted. Skipping")
 }
 
 func (s *ChaosTestSuite) TestVerifyExecutionNotWhitelisted() {
@@ -48,7 +48,7 @@ func (s *ChaosTestSuite) TestVerifyExecutionNotWhitelisted() {
 	v.On("IsWhitelisted").Return(false)
 	err := s.chaos.verifyExecution(s.client)
 	v.AssertExpectations(s.T())
-	s.EqualError(err, v.Kind()+" "+v.Name()+" is not whitelisted. Skipping\n")
+	s.EqualError(err, v.Kind()+" "+v.Name()+" is not whitelisted. Skipping")
 }
 
 func (s *ChaosTestSuite) TestVerifyExecutionWhitelisted() {

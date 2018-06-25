@@ -16,7 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Get all eligible deployments that opted in (filtered by config.EnabledLabel)
+// EligibleDeployments gets all eligible deployments that opted in (filtered by config.EnabledLabel)
 func EligibleDeployments(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
 	enabledVictims, err := clientset.AppsV1().Deployments(namespace).List(*filter)
 	if err != nil {
@@ -82,7 +82,7 @@ func (d *Deployment) KillValue(clientset kube.Interface) (int, error) {
 	}
 
 	killModeInt, err := strconv.Atoi(killMode)
-	if !(killModeInt > 0) {
+	if err != nil || !(killModeInt > 0) {
 		return -1, fmt.Errorf("Invalid value for label %s: %d", config.KillValueLabelKey, killModeInt)
 	}
 

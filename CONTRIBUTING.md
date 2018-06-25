@@ -1,4 +1,6 @@
 ## Git Flow for Dev Work
+Install go 1.10
+
 Fork the project on github and install golang
 ```bash
 go get github.com/asobti/kube-monkey

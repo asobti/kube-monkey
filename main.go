@@ -33,7 +33,9 @@ func initLogging() {
 	}
 	// Since km runs as a k8 pod, log everything to stderr (stdout not supported)
 	// this takes advantage of k8's logging driver allowing kubectl logs kube-monkey
-	flag.Lookup("alsologtostderr").Value.Set("true")
+	if err := flag.Lookup("alsologtostderr").Value.Set("true"); err != nil {
+		glog.Errorf("Failed to set alsologtostderr", err)
+	}
 }
 
 func initConfig() {

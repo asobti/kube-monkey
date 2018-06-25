@@ -3,3 +3,5 @@
 build/
 RPMS/
 kube-monkey
+bin/
+.vscode/

@@ -21,7 +21,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// Gathers list of enabled/enrolled kinds for judgement by the scheduler
+// EligibleVictims gathers list of enabled/enrolled kinds for judgement by
+// the scheduler
 // This checks against config.WhitelistedNamespaces but
 // each victim checks themselves against the ns blacklist
 // TODO: fetch all namespaces from k8 apiserver to check blacklist here

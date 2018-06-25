@@ -8,6 +8,10 @@ go:
 git:
   depth: 1
 
+env:
+- GOLANGCI_RELEASE="v1.4.1"
+
 script:
+- curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s ${GOLANGCI_RELEASE}
 - make
 - .travis/check_workspace.sh

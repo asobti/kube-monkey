@@ -14,7 +14,7 @@ type Deployment struct {
 	*victims.VictimBase
 }
 
-// Create a new instance of Deployment
+// New creates a new instance of Deployment
 func New(dep *v1.Deployment) (*Deployment, error) {
 	ident, err := identifier(dep)
 	if err != nil {
@@ -26,7 +26,7 @@ func New(dep *v1.Deployment) (*Deployment, error) {
 	}
 	kind := fmt.Sprintf("%T", *dep)
 
-	return &Deployment{victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
+	return &Deployment{VictimBase: victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey
