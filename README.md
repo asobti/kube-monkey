@@ -110,7 +110,9 @@ At termination time, kube-monkey will:
 
 ## Docker Images
 
-Docker images for kube-monkey can be found at [DockerHub](https://hub.docker.com/r/ayushsobti/kube-monkey/tags/)
+Docker images for kube-monkey can be found at [DockerHub](https://hub.docker.com/r/ayushsobti/kube-monkey/tags/).
+
+Every commit to the `master` branch triggers the build of a new image, tagged `latest`. Additionally, stable release images are also added, tagged with the version number.
 
 ## Building
 
