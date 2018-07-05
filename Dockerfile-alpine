@@ -1,5 +1,4 @@
 FROM golang:latest as builder
-LABEL maintainer="nsidhaye"
 
 RUN go get github.com/asobti/kube-monkey
 WORKDIR $GOPATH/src/github.com/asobti/kube-monkey
@@ -7,6 +6,7 @@ WORKDIR $GOPATH/src/github.com/asobti/kube-monkey
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o kube-monkey
 
 FROM alpine
+LABEL maintainer="asobti <ayushsobti@gmail.com>"
 
 RUN	apk update && apk upgrade && apk add --no-cache bash tzdata
 
