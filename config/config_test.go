@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -51,7 +50,7 @@ func (s *ConfigTestSuite) TestTimezone() {
 
 	// avoid Exit(255) on glog.Fatal
 	monkey.Patch(glog.Fatal, func(a ...interface{}) {
-		s.Equal(a[0], "cannot find nolnexistent in zip file "+os.Getenv("GOROOT")+"/lib/time/zoneinfo.zip")
+		s.Contains(a[0], "cannot find nolnexistent in zip file")
 	})
 	defer func() { monkey.Unpatch(glog.Fatal) }()
 	s.Equal((*time.Location)(nil), Timezone())
