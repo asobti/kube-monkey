@@ -1,5 +1,4 @@
 FROM golang:latest as builder
-LABEL maintainer="nsidhaye"
 
 RUN go get github.com/asobti/kube-monkey
 WORKDIR $GOPATH/src/github.com/asobti/kube-monkey
@@ -7,6 +6,7 @@ WORKDIR $GOPATH/src/github.com/asobti/kube-monkey
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o kube-monkey
 
 FROM ubuntu
+LABEL maintainer="asobti <ayushsobti@gmail.com>"
 
 RUN if (dpkg -l | grep -cq tzdata); then \
         echo "tzdata package already installed! Skipping tzdata installation"; \
