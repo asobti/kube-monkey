@@ -134,6 +134,7 @@ run_hour = 8                             # Run scheduling at 8am on weekdays
 start_hour = 10                          # Don't schedule any pod deaths before 10am
 end_hour = 16                            # Don't schedule any pod deaths after 4pm
 blacklisted_namespaces = ["kube-system"] # Critical apps live here
+whitelisted_namespaces = ["default"]     # Kill only default namespace apps
 time_zone = "America/New_York"           # Set tzdata timezone example. Note the field is time_zone not timezone
 ```
 
