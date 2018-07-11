@@ -25,8 +25,8 @@ Opt-in is done by setting the following labels on a Kubernetes k8s app:
 **`kube-monkey/enabled`**: Set to **`"enabled"`** to opt-in to kube-monkey  
 **`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8 app can expect to have a Pod
 killed approximately every third weekday.  
-**`kube-monkey/identifier`**: A unique identifier for the k8s app (eg. the k8s app's name). This is used to identify the pods
-that belong to a k8s app as Pods inherit labels from their k8s app.  
+**`kube-monkey/identifier`**: A unique identifier for the k8s apps. This is used to identify the pods
+that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. Recommendation is to set this value to be the same as the app's name.  
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
 * `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
@@ -50,7 +50,7 @@ spec:
     metadata:
       labels:
         kube-monkey/enabled: enabled
-        kube-monkey/identifier: monkey-victim-pods
+        kube-monkey/identifier: monkey-victim
         kube-monkey/mtbf: '2'
         kube-monkey/kill-mode: "fixed"
         kube-monkey/kill-value: 1
