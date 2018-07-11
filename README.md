@@ -18,15 +18,15 @@ config.param. Disabling the whitelist causes kube-monkey to target _all_ namespa
 
 ## Opting-In to Chaos
 
-kube-monkey works on an opt-in model and will only schedule terminations for k8 apps that have explicitly agreed to have their pods terminated by kube-monkey.
+kube-monkey works on an opt-in model and will only schedule terminations for k8s apps that have explicitly agreed to have their pods terminated by kube-monkey.
 
-Opt-in is done by setting the following labels on a Kubernetes k8 app:
+Opt-in is done by setting the following labels on a Kubernetes k8s app:
 
 **`kube-monkey/enabled`**: Set to **`"enabled"`** to opt-in to kube-monkey  
 **`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8 app can expect to have a Pod
 killed approximately every third weekday.  
-**`kube-monkey/identifier`**: A unique identifier for the k8 app (eg. the k8 app's name). This is used to identify the pods 
-that belong to a k8 app as Pods inherit labels from their k8 app.  
+**`kube-monkey/identifier`**: A unique identifier for the k8s app (eg. the k8s app's name). This is used to identify the pods
+that belong to a k8s app as Pods inherit labels from their k8s app.
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
 * `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
@@ -57,7 +57,7 @@ spec:
 [... omitted ...]
 ```
 
-For newer versions of kubernetes you may need to add the labels to the k8 app metadata as well.
+For newer versions of kubernetes you may need to add the labels to the k8s app metadata as well.
 
 ```yaml
 ---
@@ -97,15 +97,15 @@ host="https://your-apiserver-url.com:apiport"
 #### Scheduling time
 Scheduling happens once a day on Weekdays - this is when a schedule for terminations for the current day is generated.   
 During scheduling, kube-monkey will:  
-1. Generate a list of eligible k8 apps (k8 apps that have opted-in and are not blacklisted, if specified, and are whitelisted, if specified)
-2. For each eligible k8 app, flip a biased coin (bias determined by `kube-monkey/mtbf`) to determine if a pod for that k8 app should be killed today  
+1. Generate a list of eligible k8s apps (k8s apps that have opted-in and are not blacklisted, if specified, and are whitelisted, if specified)
+2. For each eligible k8s app, flip a biased coin (bias determined by `kube-monkey/mtbf`) to determine if a pod for that k8s app should be killed today
 3. For each victim, calculate a random time when a pod will be killed
 
 #### Termination time
-This is the randomly generated time during the day when a victim k8 app will have a pod killed.
+This is the randomly generated time during the day when a victim k8s app will have a pod killed.
 At termination time, kube-monkey will:
-1. Check if the k8 app is still eligible (has not opted-out or been blacklisted or removed from the whitelist since scheduling)
-2. Check if the k8 app has updated kill-mode and kill-value
+1. Check if the k8s app is still eligible (has not opted-out or been blacklisted or removed from the whitelist since scheduling)
+2. Check if the k8s app has updated kill-mode and kill-value
 3. Depending on kill-mode and kill-value, execute pods
 
 ## Docker Images
@@ -145,7 +145,7 @@ time_zone = "America/New_York"           # Set tzdata timezone example. Note the
 
 > For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml` or `kubectl apply -f km-config.yaml`
 
-2. Run kube-monkey as a k8 app within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
+2. Run kube-monkey as a k8s app within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
@@ -175,7 +175,7 @@ kube-monkey uses glog and supports all command-line features for glog. To specif
 >
 > L5: Auto-resolved inconsequential issues
 
-More resources: See the [k8 logging page](https://kubernetes.io/docs/concepts/cluster-administration/logging/) suggesting [community conventions for logging severity](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
+More resources: See the [k8s logging page](https://kubernetes.io/docs/concepts/cluster-administration/logging/) suggesting [community conventions for logging severity](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
 
 ## Compatibility with Kubernetes
 
