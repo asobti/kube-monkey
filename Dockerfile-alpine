@@ -2,8 +2,7 @@ FROM golang:latest as builder
 
 RUN go get github.com/asobti/kube-monkey
 WORKDIR $GOPATH/src/github.com/asobti/kube-monkey
-#RUN make build
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o kube-monkey
+RUN make build
 
 FROM alpine
 LABEL maintainer="asobti <ayushsobti@gmail.com>"
