@@ -48,8 +48,9 @@ containers: proxies alpine ubuntu test
 
 alpine:
 	@echo $(dockerbuild) -t kube-monkey:$(TAG) alpine
-	@$(dockerbuild) -t kube-monkey:$(TAG)_alpine alpine
+	@$(dockerbuild) -t kube-monkey:$(TAG) alpine
 ubuntu:
+	@echo $(dockerbuild) -t kube-monkey:$(TAG)_ubuntu
 	@$(dockerbuild) -t kube-monkey:$(TAG)_ubuntu ubuntu
 
 gofmt:
