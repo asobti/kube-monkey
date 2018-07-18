@@ -109,12 +109,12 @@ Docker images for kube-monkey can be found at [DockerHub](https://hub.docker.com
 
 ## Building
 
-Clone the repository and build the container.
+Clone the repository and build the containers.
 
 ```bash
 go get github.com/asobti/kube-monkey
 cd $GOPATH/src/github.com/asobti/kube-monkey
-make container
+make containers
 ```
 
 ## Configuring
