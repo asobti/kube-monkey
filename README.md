@@ -1,6 +1,6 @@
 # kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey)
 
-kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes pods in the cluster encouraging and validating the development of failure-resilient services.
+kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
 
 ---
 
@@ -9,21 +9,17 @@ Pod death sometime during the same day. The time-range during the day when the r
 
 kube-monkey can be configured with a list of namespaces 
 * to blacklist (any deployments within a blacklisted namespace will not be touched) 
-* to whitelist (only deployments within a whitelisted namespace that are not blacklisted will be scheduled)
-The blacklist overrides the whitelist. The config will be populated with default
-behavior (blacklist `kube-system` and whitelist `default`).
 
-To disable either the blacklist or whitelist provide `[""]` to the respective
-config.param. Disabling the whitelist causes kube-monkey to target _all_ namespaces.
+To disable the blacklist provide `[""]` in the `blacklisted_namespaces` config.param.
 
 ## Opting-In to Chaos
 
-kube-monkey works on an opt-in model and will only schedule terminations for k8s apps that have explicitly agreed to have their pods terminated by kube-monkey.
+kube-monkey works on an opt-in model and will only schedule terminations for Kubernetes (k8s) apps that have explicitly agreed to have their pods terminated by kube-monkey.
 
-Opt-in is done by setting the following labels on a Kubernetes k8s app:
+Opt-in is done by setting the following labels on a k8s app:
 
 **`kube-monkey/enabled`**: Set to **`"enabled"`** to opt-in to kube-monkey  
-**`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8 app can expect to have a Pod
+**`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8s app can expect to have a Pod
 killed approximately every third weekday.  
 **`kube-monkey/identifier`**: A unique identifier for the k8s apps. This is used to identify the pods
 that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. Recommendation is to set this value to be the same as the app's name.  

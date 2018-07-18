@@ -30,7 +30,7 @@ func (s *ConfigTestSuite) TestSetDefaults() {
 	s.Equal(16, viper.GetInt(param.EndHour))
 	s.Equal(int64(5), viper.GetInt64(param.GracePeriodSec))
 	s.Equal([]string{metav1.NamespaceSystem}, viper.GetStringSlice(param.BlacklistedNamespaces))
-	s.Equal([]string{metav1.NamespaceDefault}, viper.GetStringSlice(param.WhitelistedNamespaces))
+	s.Equal([]string{metav1.NamespaceAll}, viper.GetStringSlice(param.WhitelistedNamespaces))
 	s.False(viper.GetBool(param.DebugEnabled))
 	s.Equal(viper.GetInt(param.DebugScheduleDelay), 30)
 	s.False(viper.GetBool(param.DebugForceShouldKill))
@@ -106,9 +106,9 @@ func (s *ConfigTestSuite) TestBlacklistEnabled() {
 }
 
 func (s *ConfigTestSuite) TestWhitelistEnabled() {
-	s.True(WhitelistEnabled())
-	viper.Set(param.WhitelistedNamespaces, []string{metav1.NamespaceAll})
 	s.False(WhitelistEnabled())
+	viper.Set(param.WhitelistedNamespaces, []string{metav1.NamespaceDefault})
+	s.True(WhitelistEnabled())
 }
 
 func (s *ConfigTestSuite) TestClusterrAPIServerHost() {

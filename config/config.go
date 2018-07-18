@@ -41,7 +41,7 @@ func SetDefaults() {
 	viper.SetDefault(param.EndHour, 16)
 	viper.SetDefault(param.GracePeriodSec, 5)
 	viper.SetDefault(param.BlacklistedNamespaces, []string{metav1.NamespaceSystem})
-	viper.SetDefault(param.WhitelistedNamespaces, []string{metav1.NamespaceDefault})
+	viper.SetDefault(param.WhitelistedNamespaces, []string{metav1.NamespaceAll})
 
 	viper.SetDefault(param.DebugEnabled, false)
 	viper.SetDefault(param.DebugScheduleDelay, 30)
