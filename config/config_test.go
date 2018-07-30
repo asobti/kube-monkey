@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -58,6 +60,13 @@ func (s *ConfigTestSuite) TestTimezone() {
 	s.Equal(Timezone().String(), "UTC")
 }
 
+func (s *ConfigTestSuite) TestStartHourEnv() {
+	envname := "KUBEMONKEY_START_HOUR"
+	defer os.Setenv(envname, os.Getenv(envname))
+	os.Setenv(envname, "11")
+	s.Equal(11, StartHour())
+}
+
 func (s *ConfigTestSuite) TestRunHour() {
 	viper.Set(param.RunHour, 11)
 	s.Equal(11, RunHour())
@@ -77,6 +86,18 @@ func (s *ConfigTestSuite) TestGracePeriodSeconds() {
 	g := int64(100)
 	viper.Set(param.GracePeriodSec, 100)
 	s.Equal(&g, GracePeriodSeconds())
+}
+
+func (s *ConfigTestSuite) TestBlacklistedNamespacesEnv() {
+	blns := []string{"namespace3", "namespace4"}
+	envname := "KUBEMONKEY_BLACKLISTED_NAMESPACES"
+	defer os.Setenv(envname, os.Getenv(envname))
+	os.Setenv(envname, strings.Join(blns, " "))
+	ns := BlacklistedNamespaces()
+	s.Len(ns, len(blns))
+	for _, v := range blns {
+		s.Contains(ns, v)
+	}
 }
 
 func (s *ConfigTestSuite) TestBlacklistedNamespaces() {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -34,6 +35,9 @@ const (
 )
 
 func SetDefaults() {
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
 	viper.SetDefault(param.DryRun, true)
 	viper.SetDefault(param.Timezone, "America/Los_Angeles")
 	viper.SetDefault(param.RunHour, 8)
