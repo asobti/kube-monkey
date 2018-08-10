@@ -169,10 +169,9 @@ func TestDeletePodsFixedPercentage(t *testing.T) {
 	pod7 := newPod("app7", v1.PodRunning)
 
 	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3, &pod4, &pod5, &pod6, &pod7)
-	podList := getPodList(client).Items
 
 	_ = v.DeletePodsFixedPercentage(client, 50) // 50% means we kill 3 out of 6 running pods
-	podList = getPodList(client).Items
+	podList := getPodList(client).Items
 	assert.Lenf(t, podList, 4, "Expected 4 items in podList, got %d", len(podList)) // we're left with 4 (3 running + 1 pending)
 
 	_ = v.DeletePodsFixedPercentage(client, 50) // 50% means we kill 1.5 out of 3 pods. as we always round down, the number of pods to kill will be 1
