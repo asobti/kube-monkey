@@ -149,10 +149,9 @@ func TestDeletePodsRandomMaxPercentage(t *testing.T) {
 	}
 
 	client := fake.NewSimpleClientset(pods...)
-	podList := getPodList(client).Items
 
 	_ = v.DeleteRandomPodsMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
-	podList = getPodList(client).Items
+	podList := getPodList(client).Items
 
 	podsLeftAlive := len(podList)
 	assert.Truef(t, podsLeftAlive > 50 && podsLeftAlive < 100, "Expected between 50 and 100 pods alive, got %d", len(podList))
