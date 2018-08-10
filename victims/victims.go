@@ -50,7 +50,7 @@ type VictimAPICalls interface {
 	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
 	DeleteRandomPods(kube.Interface, int) error
 	DeleteRandomPodsMaxPercentage(kube.Interface, int) error
-	DeleteRandomPodsFixedPercentage(kube.Interface, int) error
+	DeletePodsFixedPercentage(kube.Interface, int) error
 	TerminateAllPods(kube.Interface) error
 	IsBlacklisted() bool
 	IsWhitelisted() bool
@@ -129,8 +129,8 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteopts)
 }
 
-// Removes a fixed percentage of of pods for the victim
-func (v *VictimBase) DeleteRandomPodsFixedPercentage(clientset kube.Interface, killPercentage int) error {
+// Removes a fixed percentage of pods for the victim
+func (v *VictimBase) DeletePodsFixedPercentage(clientset kube.Interface, killPercentage int) error {
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
 		return err

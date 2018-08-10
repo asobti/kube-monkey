@@ -121,8 +121,8 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 		return c.Victim().DeleteRandomPods(clientset, killValue)
 	case config.KillRandomMaxLabelValue:
 		return c.Victim().DeleteRandomPodsMaxPercentage(clientset, killValue)
-	case config.KillRandomFixedLabelValue:
-		return c.Victim().DeleteRandomPodsFixedPercentage(clientset, killValue)
+	case config.KillFixedPercentageLabelValue:
+		return c.Victim().DeletePodsFixedPercentage(clientset, killValue)
 	default:
 		return fmt.Errorf("Failed to recognize KillValue label for %s %s. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 	}
