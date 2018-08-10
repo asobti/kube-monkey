@@ -18,7 +18,7 @@ type Chaos struct {
 	victim victims.Victim
 }
 
-// Create a new Chaos instance
+// New creates a new Chaos instance
 func New(killtime time.Time, victim victims.Victim) *Chaos {
 	// TargetPodName will be populated at time of termination
 	return &Chaos{
@@ -36,19 +36,19 @@ func (c *Chaos) KillAt() time.Time {
 }
 
 // Schedule the execution of Chaos
-func (c *Chaos) Schedule(resultchan chan<- *ChaosResult) {
+func (c *Chaos) Schedule(resultchan chan<- *Result) {
 	time.Sleep(c.DurationToKillTime())
 	c.Execute(resultchan)
 }
 
 // Calculates the duration from now until Chaos.killAt
 func (c *Chaos) DurationToKillTime() time.Duration {
-	return c.killAt.Sub(time.Now())
+	return time.Until(c.killAt)
 }
 
 // Exposed function that calls the actual execution of the chaos, i.e. termination of pods
 // The result is sent back over the channel provided
-func (c *Chaos) Execute(resultchan chan<- *ChaosResult) {
+func (c *Chaos) Execute(resultchan chan<- *Result) {
 	// Create kubernetes clientset
 	clientset, err := kubernetes.CreateClient()
 	if err != nil {
@@ -81,17 +81,17 @@ func (c *Chaos) verifyExecution(clientset kube.Interface) error {
 	}
 
 	if !enrolled {
-		return fmt.Errorf("%s %s is no longer enrolled in kube-monkey. Skipping\n", c.Victim().Kind(), c.Victim().Name())
+		return fmt.Errorf("%s %s is no longer enrolled in kube-monkey. Skipping", c.Victim().Kind(), c.Victim().Name())
 	}
 
 	// Has the victim been blacklisted since scheduling?
 	if c.Victim().IsBlacklisted() {
-		return fmt.Errorf("%s %s is blacklisted. Skipping\n", c.Victim().Kind(), c.Victim().Name())
+		return fmt.Errorf("%s %s is blacklisted. Skipping", c.Victim().Kind(), c.Victim().Name())
 	}
 
 	// Has the victim been removed from the whitelist since scheduling?
 	if !c.Victim().IsWhitelisted() {
-		return fmt.Errorf("%s %s is not whitelisted. Skipping\n", c.Victim().Kind(), c.Victim().Name())
+		return fmt.Errorf("%s %s is not whitelisted. Skipping", c.Victim().Kind(), c.Victim().Name())
 	}
 
 	// Send back valid for termination
@@ -126,9 +126,6 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 	default:
 		return fmt.Errorf("Failed to recognize KillValue label for %s %s. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 	}
-
-	// Send back termination success
-	return nil
 }
 
 // Redundant for DeleteRandomPods(clientset,1) but DeleteRandomPod is faster
@@ -138,8 +135,8 @@ func (c *Chaos) terminatePod(clientset kube.Interface) error {
 }
 
 // Create a ChaosResult instance
-func (c *Chaos) NewResult(e error) *ChaosResult {
-	return &ChaosResult{
+func (c *Chaos) NewResult(e error) *Result {
+	return &Result{
 		chaos: c,
 		err:   e,
 	}

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -21,6 +22,7 @@ const (
 	// Currently, there does not appear to be
 	// any value in making these configurable
 	// so defining them as consts
+
 	IdentLabelKey        = "kube-monkey/identifier"
 	EnabledLabelKey      = "kube-monkey/enabled"
 	EnabledLabelValue    = "enabled"
@@ -34,6 +36,9 @@ const (
 )
 
 func SetDefaults() {
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
 	viper.SetDefault(param.DryRun, true)
 	viper.SetDefault(param.Timezone, "America/Los_Angeles")
 	viper.SetDefault(param.RunHour, 8)
@@ -41,7 +46,7 @@ func SetDefaults() {
 	viper.SetDefault(param.EndHour, 16)
 	viper.SetDefault(param.GracePeriodSec, 5)
 	viper.SetDefault(param.BlacklistedNamespaces, []string{metav1.NamespaceSystem})
-	viper.SetDefault(param.WhitelistedNamespaces, []string{metav1.NamespaceDefault})
+	viper.SetDefault(param.WhitelistedNamespaces, []string{metav1.NamespaceAll})
 
 	viper.SetDefault(param.DebugEnabled, false)
 	viper.SetDefault(param.DebugScheduleDelay, 30)
@@ -54,7 +59,9 @@ func setupWatch() {
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		glog.V(4).Info("Config change detected")
-		ValidateConfigs()
+		if err := ValidateConfigs(); err != nil {
+			panic(err)
+		}
 	})
 }
 
@@ -71,9 +78,8 @@ func Init() error {
 	if err := ValidateConfigs(); err != nil {
 		glog.Errorf("Failed to validate %v", err)
 		return err
-	} else {
-		glog.V(4).Info("Successfully validated configs")
 	}
+	glog.V(4).Info("Successfully validated configs")
 	setupWatch()
 	return nil
 }
@@ -131,9 +137,8 @@ func WhitelistEnabled() bool {
 func ClusterAPIServerHost() (string, bool) {
 	if viper.IsSet(param.ClusterAPIServerHost) {
 		return viper.GetString(param.ClusterAPIServerHost), true
-	} else {
-		return "", false
 	}
+	return "", false
 }
 
 func DebugEnabled() bool {

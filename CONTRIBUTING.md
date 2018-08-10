@@ -1,4 +1,6 @@
 ## Git Flow for Dev Work
+Install go 1.10
+
 Fork the project on github and install golang
 ```bash
 go get github.com/asobti/kube-monkey
@@ -29,5 +31,7 @@ Make sure to test your branch from scratch and run `make test`! The make process
 - Enhance documentation for [Helm](https://github.com/linki/chaoskube#how)
 - Add [related projects](https://github.com/linki/chaoskube#related-work)
 - Convert from glide to dep
-- Push image to dockerhub
+- ~~Push image to dockerhub~~
+- Analyze api versions and link dependency chart (i.e. k8s v1.8+ deprecates v1beta deployments (madeup)) #70
+- Whitelist opt-in feature #5
 

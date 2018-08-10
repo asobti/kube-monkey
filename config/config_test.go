@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ func (s *ConfigTestSuite) TestSetDefaults() {
 	s.Equal(16, viper.GetInt(param.EndHour))
 	s.Equal(int64(5), viper.GetInt64(param.GracePeriodSec))
 	s.Equal([]string{metav1.NamespaceSystem}, viper.GetStringSlice(param.BlacklistedNamespaces))
-	s.Equal([]string{metav1.NamespaceDefault}, viper.GetStringSlice(param.WhitelistedNamespaces))
+	s.Equal([]string{metav1.NamespaceAll}, viper.GetStringSlice(param.WhitelistedNamespaces))
 	s.False(viper.GetBool(param.DebugEnabled))
 	s.Equal(viper.GetInt(param.DebugScheduleDelay), 30)
 	s.False(viper.GetBool(param.DebugForceShouldKill))
@@ -51,12 +52,19 @@ func (s *ConfigTestSuite) TestTimezone() {
 
 	// avoid Exit(255) on glog.Fatal
 	monkey.Patch(glog.Fatal, func(a ...interface{}) {
-		s.Equal(a[0], "cannot find nolnexistent in zip file "+os.Getenv("GOROOT")+"/lib/time/zoneinfo.zip")
+		s.Contains(a[0], "cannot find nolnexistent in zip file")
 	})
 	defer func() { monkey.Unpatch(glog.Fatal) }()
 	s.Equal((*time.Location)(nil), Timezone())
 	viper.Set(param.Timezone, "UTC")
 	s.Equal(Timezone().String(), "UTC")
+}
+
+func (s *ConfigTestSuite) TestStartHourEnv() {
+	envname := "KUBEMONKEY_START_HOUR"
+	defer os.Setenv(envname, os.Getenv(envname))
+	os.Setenv(envname, "11")
+	s.Equal(11, StartHour())
 }
 
 func (s *ConfigTestSuite) TestRunHour() {
@@ -78,6 +86,18 @@ func (s *ConfigTestSuite) TestGracePeriodSeconds() {
 	g := int64(100)
 	viper.Set(param.GracePeriodSec, 100)
 	s.Equal(&g, GracePeriodSeconds())
+}
+
+func (s *ConfigTestSuite) TestBlacklistedNamespacesEnv() {
+	blns := []string{"namespace3", "namespace4"}
+	envname := "KUBEMONKEY_BLACKLISTED_NAMESPACES"
+	defer os.Setenv(envname, os.Getenv(envname))
+	os.Setenv(envname, strings.Join(blns, " "))
+	ns := BlacklistedNamespaces()
+	s.Len(ns, len(blns))
+	for _, v := range blns {
+		s.Contains(ns, v)
+	}
 }
 
 func (s *ConfigTestSuite) TestBlacklistedNamespaces() {
@@ -107,9 +127,9 @@ func (s *ConfigTestSuite) TestBlacklistEnabled() {
 }
 
 func (s *ConfigTestSuite) TestWhitelistEnabled() {
-	s.True(WhitelistEnabled())
-	viper.Set(param.WhitelistedNamespaces, []string{metav1.NamespaceAll})
 	s.False(WhitelistEnabled())
+	viper.Set(param.WhitelistedNamespaces, []string{metav1.NamespaceDefault})
+	s.True(WhitelistEnabled())
 }
 
 func (s *ConfigTestSuite) TestClusterrAPIServerHost() {

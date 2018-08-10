@@ -16,7 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Get all eligible statefulsets that opted in (filtered by config.EnabledLabel)
+// EligibleStatefulSets gets all eligible statefulsets that opted in (filtered by config.EnabledLabel)
 func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
 	enabledVictims, err := clientset.AppsV1().StatefulSets(namespace).List(*filter)
 	if err != nil {
@@ -82,7 +82,7 @@ func (ss *StatefulSet) KillValue(clientset kube.Interface) (int, error) {
 	}
 
 	killModeInt, err := strconv.Atoi(killMode)
-	if !(killModeInt > 0) {
+	if err != nil || !(killModeInt > 0) {
 		return -1, fmt.Errorf("Invalid value for label %s: %d", config.KillValueLabelKey, killModeInt)
 	}
 

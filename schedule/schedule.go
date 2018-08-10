@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	TODAY          = "\t********** Today's schedule **********"
-	NO_TERMINATION = "No terminations scheduled"
-	HEADER_ROW     = "\tk8 Api Kind\tKind Name\t\tTermination Time"
-	SEP_ROW        = "\t-----------\t---------\t\t----------------"
-	ROW_FORMAT     = "\t%s\t%s\t\t%s"
-	DATE_FORMAT    = "01/02/2006 15:04:05 -0700 MST"
-	END            = "\t********** End of schedule **********"
+	Today         = "\t********** Today's schedule **********"
+	NoTermination = "No terminations scheduled"
+	HeaderRow     = "\tk8 Api Kind\tKind Name\t\tTermination Time"
+	SepRow        = "\t-----------\t---------\t\t----------------"
+	RowFormat     = "\t%s\t%s\t\t%s"
+	DateFormat    = "01/02/2006 15:04:05 -0700 MST"
+	End           = "\t********** End of schedule **********"
 )
 
 type Schedule struct {
@@ -38,17 +38,17 @@ func (s *Schedule) Add(entry *chaos.Chaos) {
 
 func (s *Schedule) String() string {
 	schedString := []string{}
-	schedString = append(schedString, fmt.Sprint(TODAY))
+	schedString = append(schedString, fmt.Sprint(Today))
 	if len(s.entries) == 0 {
-		schedString = append(schedString, fmt.Sprint(NO_TERMINATION))
+		schedString = append(schedString, fmt.Sprint(NoTermination))
 	} else {
-		schedString = append(schedString, fmt.Sprint(HEADER_ROW))
-		schedString = append(schedString, fmt.Sprint(SEP_ROW))
+		schedString = append(schedString, fmt.Sprint(HeaderRow))
+		schedString = append(schedString, fmt.Sprint(SepRow))
 		for _, chaos := range s.entries {
-			schedString = append(schedString, fmt.Sprintf(ROW_FORMAT, chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DATE_FORMAT)))
+			schedString = append(schedString, fmt.Sprintf(RowFormat, chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat)))
 		}
 	}
-	schedString = append(schedString, fmt.Sprint(END))
+	schedString = append(schedString, fmt.Sprint(End))
 
 	return strings.Join(schedString, "\n")
 }
@@ -56,7 +56,7 @@ func (s *Schedule) String() string {
 func (s Schedule) Print() {
 	glog.V(4).Infof("Status Update: %v terminations scheduled today", len(s.entries))
 	for _, chaos := range s.entries {
-		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DATE_FORMAT))
+		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat))
 	}
 }
 
@@ -89,9 +89,8 @@ func CalculateKillTime() time.Time {
 		// calculate a second-offset in the next minute
 		secOffset := r.Intn(60)
 		return time.Now().In(loc).Add(time.Duration(secOffset) * time.Second)
-	} else {
-		return calendar.RandomTimeInRange(config.StartHour(), config.EndHour(), loc)
 	}
+	return calendar.RandomTimeInRange(config.StartHour(), config.EndHour(), loc)
 }
 
 func ShouldScheduleChaos(mtbf int) bool {
@@ -100,6 +99,6 @@ func ShouldScheduleChaos(mtbf int) bool {
 	}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	var probability float64 = 1 / float64(mtbf)
+	probability := 1 / float64(mtbf)
 	return probability > r.Float64()
 }

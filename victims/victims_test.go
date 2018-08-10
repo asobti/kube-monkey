@@ -113,6 +113,7 @@ func TestDeleteRandomPods(t *testing.T) {
 
 	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3)
 	podList := getPodList(client).Items
+	assert.Lenf(t, podList, 3, "Expected 3 items in podList, got %d", len(podList))
 
 	err := v.DeleteRandomPods(client, 0)
 	assert.EqualError(t, err, "No terminations requested for Pod name")

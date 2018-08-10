@@ -1,32 +1,28 @@
 # kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey)
 
-kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes pods in the cluster encouraging and validating the development of failure-resilient services.
+kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
 
 ---
 
 kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
 Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and defaults to 10am to 4pm.
 
-kube-monkey can be configured with a list of namespaces 
-* to blacklist (any deployments within a blacklisted namespace will not be touched) 
-* to whitelist (only deployments within a whitelisted namespace that are not blacklisted will be scheduled)
-The blacklist overrides the whitelist. The config will be populated with default
-behavior (blacklist `kube-system` and whitelist `default`).
+kube-monkey can be configured with a list of namespaces
+* to blacklist (any deployments within a blacklisted namespace will not be touched)
 
-To disable either the blacklist or whitelist provide `[""]` to the respective
-config.param. Disabling the whitelist causes kube-monkey to target _all_ namespaces.
+To disable the blacklist provide `[""]` in the `blacklisted_namespaces` config.param.
 
 ## Opting-In to Chaos
 
-kube-monkey works on an opt-in model and will only schedule terminations for k8 apps that have explicitly agreed to have their pods terminated by kube-monkey.
+kube-monkey works on an opt-in model and will only schedule terminations for Kubernetes (k8s) apps that have explicitly agreed to have their pods terminated by kube-monkey.
 
-Opt-in is done by setting the following labels on a Kubernetes k8 app:
+Opt-in is done by setting the following labels on a k8s app:
 
 **`kube-monkey/enabled`**: Set to **`"enabled"`** to opt-in to kube-monkey  
-**`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8 app can expect to have a Pod
+**`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8s app can expect to have a Pod
 killed approximately every third weekday.  
-**`kube-monkey/identifier`**: A unique identifier for the k8 app (eg. the k8 app's name). This is used to identify the pods 
-that belong to a k8 app as Pods inherit labels from their k8 app.  
+**`kube-monkey/identifier`**: A unique identifier for the k8s apps. This is used to identify the pods
+that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. Recommendation is to set this value to be the same as the app's name.  
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
 * `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
@@ -53,14 +49,14 @@ spec:
     metadata:
       labels:
         kube-monkey/enabled: enabled
-        kube-monkey/identifier: monkey-victim-pods
+        kube-monkey/identifier: monkey-victim
         kube-monkey/mtbf: '2'
         kube-monkey/kill-mode: "fixed"
         kube-monkey/kill-value: 1
 [... omitted ...]
 ```
 
-For newer versions of kubernetes you may need to add the labels to the k8 app metadata as well.
+For newer versions of kubernetes you may need to add the labels to the k8s app metadata as well.
 
 ```yaml
 ---
@@ -86,8 +82,8 @@ spec:
 
 ### Overriding the apiserver
 #### Use cases:
-* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L331) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver. 
-* If you are running an unauthenticated system, you may need to force the http apiserver endpoint. 
+* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L331) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver.
+* If you are running an unauthenticated system, you may need to force the http apiserver endpoint.
 
 #### To override the apiserver specify in the config.toml file
 ```toml
@@ -98,18 +94,21 @@ host="https://your-apiserver-url.com:apiport"
 ## How kube-monkey works
 
 #### Scheduling time
-Scheduling happens once a day on Weekdays - this is when a schedule for terminations for the current day is generated.   
-During scheduling, kube-monkey will:  
-1. Generate a list of eligible k8 apps (k8 apps that have opted-in and are not blacklisted, if specified, and are whitelisted, if specified)
-2. For each eligible k8 app, flip a biased coin (bias determined by `kube-monkey/mtbf`) to determine if a pod for that k8 app should be killed today  
+Scheduling happens once a day on Weekdays - this is when a schedule for terminations for the current day is generated. During scheduling, kube-monkey will:  
+1. Generate a list of eligible k8s apps (k8s apps that have opted-in and are not blacklisted, if specified, and are whitelisted, if specified)
+2. For each eligible k8s app, flip a biased coin (bias determined by `kube-monkey/mtbf`) to determine if a pod for that k8s app should be killed today
 3. For each victim, calculate a random time when a pod will be killed
 
 #### Termination time
-This is the randomly generated time during the day when a victim k8 app will have a pod killed.
+This is the randomly generated time during the day when a victim k8s app will have a pod killed.
 At termination time, kube-monkey will:
-1. Check if the k8 app is still eligible (has not opted-out or been blacklisted or removed from the whitelist since scheduling)
-2. Check if the k8 app has updated kill-mode and kill-value
+1. Check if the k8s app is still eligible (has not opted-out or been blacklisted or removed from the whitelist since scheduling)
+2. Check if the k8s app has updated kill-mode and kill-value
 3. Depending on kill-mode and kill-value, execute pods
+
+## Docker Images
+
+Docker images for kube-monkey can be found at [DockerHub](https://hub.docker.com/r/ayushsobti/kube-monkey/tags/)
 
 ## Building
 
@@ -122,7 +121,7 @@ make container
 ```
 
 ## Configuring
-kube-monkey is configured by a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before the kubemonkey deployment. 
+kube-monkey is configured by environment variables or a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before the kubemonkey deployment.
 
 Configuration keys and descriptions can be found in [`config/param/param.go`](https://github.com/asobti/kube-monkey/blob/master/config/param/param.go)
 
@@ -137,14 +136,25 @@ blacklisted_namespaces = ["kube-system"] # Critical apps live here
 time_zone = "America/New_York"           # Set tzdata timezone example. Note the field is time_zone not timezone
 ```
 
+#### Example environment variables
+```
+KUBEMONKEY_DRY_RUN=true
+KUBEMONKEY_RUN_HOUR=8
+KUBEMONKEY_START_HOUR=10
+KUBEMONKEY_END_HOUR=16
+KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
+KUBEMONKEY_TIME_ZONE=America/New_York
+```
+
+
 ## Deploying
 
 **Manually**
-1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml` 
+1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml`
 
 > For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml` or `kubectl apply -f km-config.yaml`
 
-2. Run kube-monkey as a k8 app within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
+2. Run kube-monkey as a k8s app within the Kubernetes cluster, in a namespace that has permissions to kill Pods in other namespaces (eg. `kube-system`).
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
@@ -169,20 +179,19 @@ kube-monkey uses glog and supports all command-line features for glog. To specif
 > L2: Successful terminations
 >
 > L3: More detailed schedule status info
-> 
+>
 > L4: Debugging verbose schedule and config info
 >
 > L5: Auto-resolved inconsequential issues
 
-More resources: See the [k8 logging page](https://kubernetes.io/docs/concepts/cluster-administration/logging/) suggesting [community conventions for logging severity](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
+More resources: See the [k8s logging page](https://kubernetes.io/docs/concepts/cluster-administration/logging/) suggesting [community conventions for logging severity](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
 
 ## Compatibility with Kubernetes
 
-kube-monkey is built using v6.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the 
-[Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which 
+kube-monkey is built using v7.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the
+[Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which
 versions of Kubernetes are compatible.
 
 ## Ways to contribute
 
 See [How to Contribute](https://github.com/asobti/kube-monkey/blob/master/CONTRIBUTING.md)
-

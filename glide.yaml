@@ -17,7 +17,7 @@ import:
   - pkg/selection
   - pkg/util/sets
 - package: k8s.io/client-go
-  version: v6.0.0
+  version: v7.0.0
   subpackages:
   - discovery
   - kubernetes

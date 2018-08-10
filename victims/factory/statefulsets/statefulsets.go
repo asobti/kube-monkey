@@ -14,7 +14,7 @@ type StatefulSet struct {
 	*victims.VictimBase
 }
 
-// Create a new instance of StatefulSet
+// New creates a new instance of StatefulSet
 func New(ss *v1.StatefulSet) (*StatefulSet, error) {
 	ident, err := identifier(ss)
 	if err != nil {
@@ -26,7 +26,7 @@ func New(ss *v1.StatefulSet) (*StatefulSet, error) {
 	}
 	kind := fmt.Sprintf("%T", *ss)
 
-	return &StatefulSet{victims.New(kind, ss.Name, ss.Namespace, ident, mtbf)}, nil
+	return &StatefulSet{VictimBase: victims.New(kind, ss.Name, ss.Namespace, ident, mtbf)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey

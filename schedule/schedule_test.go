@@ -37,9 +37,9 @@ func TestStringNoEntries(t *testing.T) {
 	s := newSchedule()
 
 	schedString := []string{}
-	schedString = append(schedString, fmt.Sprint(TODAY))
-	schedString = append(schedString, fmt.Sprint(NO_TERMINATION))
-	schedString = append(schedString, fmt.Sprint(END))
+	schedString = append(schedString, fmt.Sprint(Today))
+	schedString = append(schedString, fmt.Sprint(NoTermination))
+	schedString = append(schedString, fmt.Sprint(End))
 
 	assert.Equal(t, strings.Join(schedString, "\n"), s.String())
 }
@@ -52,13 +52,13 @@ func TestStringWithEntries(t *testing.T) {
 	s.Add(e2)
 
 	schedString := []string{}
-	schedString = append(schedString, fmt.Sprint(TODAY))
-	schedString = append(schedString, fmt.Sprint(HEADER_ROW))
-	schedString = append(schedString, fmt.Sprint(SEP_ROW))
+	schedString = append(schedString, fmt.Sprint(Today))
+	schedString = append(schedString, fmt.Sprint(HeaderRow))
+	schedString = append(schedString, fmt.Sprint(SepRow))
 	for _, chaos := range s.entries {
-		schedString = append(schedString, fmt.Sprintf(ROW_FORMAT, chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DATE_FORMAT)))
+		schedString = append(schedString, fmt.Sprintf(RowFormat, chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat)))
 	}
-	schedString = append(schedString, fmt.Sprint(END))
+	schedString = append(schedString, fmt.Sprint(End))
 
 	assert.Equal(t, strings.Join(schedString, "\n"), s.String())
 }
