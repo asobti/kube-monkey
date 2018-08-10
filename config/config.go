@@ -27,7 +27,8 @@ const (
 	MtbfLabelKey         = "kube-monkey/mtbf"
 	KillTypeLabelKey     = "kube-monkey/kill-mode"
 	KillValueLabelKey    = "kube-monkey/kill-value"
-	KillRandomLabelValue = "random-max-percent"
+	KillRandomMaxLabelValue = "random-max-percent"
+	KillRandomFixedLabelValue = "random-fixed-percent"
 	KillFixedLabelValue  = "fixed"
 	KillAllLabelValue    = "kill-all"
 )

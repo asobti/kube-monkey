@@ -134,6 +134,29 @@ func TestDeleteRandomPods(t *testing.T) {
 	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 
+func TestDeleteRandomPodsFixedPercentage(t *testing.T) {
+
+	v := newVictimBase()
+	pod1 := newPod("app1", v1.PodRunning)
+	pod2 := newPod("app2", v1.PodPending) // not running
+	pod3 := newPod("app3", v1.PodRunning)
+	pod4 := newPod("app4", v1.PodRunning)
+	pod5 := newPod("app5", v1.PodRunning)
+	pod6 := newPod("app6", v1.PodRunning)
+	pod7 := newPod("app7", v1.PodRunning)
+
+	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3, &pod4, &pod5, &pod6, &pod7)
+	podList := getPodList(client).Items
+
+	_ = v.DeleteRandomPodsFixedPercentage(client, 50) // 50% means we kill 3 out of 6 running pods
+	podList = getPodList(client).Items
+	assert.Lenf(t, podList, 4, "Expected 4 items in podList, got %d", len(podList)) // we're left with 4 (3 running + 1 pending)
+
+	_ = v.DeleteRandomPodsFixedPercentage(client, 50) // 50% means we kill 1.5 out of 3 pods. as we always round down, the number of pods to kill will be 1
+	podList = getPodList(client).Items
+	assert.Lenf(t, podList, 3, "Expected 3 items in podList, got %d", len(podList)) // we're left with 3 (2 running + 1 pending)
+}
+
 func TestTerminateAllPods(t *testing.T) {
 
 	v := newVictimBase()

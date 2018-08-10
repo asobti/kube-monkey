@@ -31,10 +31,13 @@ that belong to a k8 app as Pods inherit labels from their k8 app.
 * `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
 * `random-max-percent` to specify a maximum % with kill-value that can be killed. At the scheduled time, a uniform random specified % of the running pods will be terminated.
+* `random-fixed-percent` to specify a fixed % with kill-value that can be killed. At the scheduled time, a specified fixed % of the running pods will be terminated.
+
 
 **`kube-monkey/kill-value`**: Specify value for kill-mode
 * if `fixed`, provide an integer of pods to kill
 * if `random-max-percent`, provide a number from 0-100 to specify the max % of pods kube-monkey can kill
+* if `random-fixed-percent`, provide a number from 0-100 to specify the % of pods to kill
 
 #### Example of opted-in Deployment killing one pod per purge
 

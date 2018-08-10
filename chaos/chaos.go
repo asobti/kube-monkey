@@ -2,7 +2,6 @@ package chaos
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/golang/glog"
@@ -120,9 +119,10 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 	switch killType {
 	case config.KillFixedLabelValue:
 		return c.Victim().DeleteRandomPods(clientset, killValue)
-	case config.KillRandomLabelValue:
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		return c.Victim().DeleteRandomPods(clientset, killValue*100/(r.Intn(100)+1))
+	case config.KillRandomMaxLabelValue:
+		return c.Victim().DeleteRandomPodsMaxPercentage(clientset, killValue)
+	case config.KillRandomFixedLabelValue:
+		return c.Victim().DeleteRandomPodsFixedPercentage(clientset, killValue)
 	default:
 		return fmt.Errorf("Failed to recognize KillValue label for %s %s. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 	}

@@ -2,6 +2,7 @@ package victims
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
@@ -48,6 +49,8 @@ type VictimApiCalls interface {
 	DeletePod(kube.Interface, string) error
 	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
 	DeleteRandomPods(kube.Interface, int) error
+	DeleteRandomPodsMaxPercentage(kube.Interface, int) error
+	DeleteRandomPodsFixedPercentage(kube.Interface, int) error
 	TerminateAllPods(kube.Interface) error
 	IsBlacklisted() bool
 	IsWhitelisted() bool
@@ -124,6 +127,39 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	}
 
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteopts)
+}
+
+func (v *VictimBase) DeleteRandomPodsFixedPercentage(clientset kube.Interface, killPercentage int) error {
+	pods, err := v.RunningPods(clientset)
+	if err != nil {
+		return err
+	}
+
+	numPods := len(pods)
+
+	podsToKillA := float64(numPods) * float64(killPercentage) / 100
+	killNum := int(math.Floor(podsToKillA))
+
+	glog.V(6).Infof("Killing %d percent of running pods for %s %s", killPercentage, v.kind, v.name)
+
+	return v.DeleteRandomPods(clientset, killNum)
+}
+
+func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, maxPercentage int) error {
+	pods, err := v.RunningPods(clientset)
+	if err != nil {
+		return err
+	}
+
+	numPods := len(pods)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	killPercentage := (r.Intn(maxPercentage) + 1)
+	podsToKillA := float64(numPods) * float64(killPercentage) / 100
+	killNum := int(math.Floor(podsToKillA))
+
+	glog.V(6).Infof("Killing %d percent of running pods for %s %s", killPercentage, v.kind, v.name)
+
+	return v.DeleteRandomPods(clientset, killNum)
 }
 
 // Removes specified number of random pods for the victim
