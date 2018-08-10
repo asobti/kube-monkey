@@ -1,8 +1,11 @@
 package victims
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/asobti/kube-monkey/config"
 	"github.com/stretchr/testify/assert"
@@ -133,6 +136,26 @@ func TestDeleteRandomPods(t *testing.T) {
 
 	err = v.DeleteRandomPods(client, 2)
 	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
+}
+
+func TestDeletePodsRandomMaxPercentage(t *testing.T) {
+
+	v := newVictimBase()
+
+	var pods []runtime.Object
+	for i := 0; i < 100; i++ {
+		pod := newPod(fmt.Sprintf("app%d", i), v1.PodRunning)
+		pods = append(pods, &pod)
+	}
+
+	client := fake.NewSimpleClientset(pods...)
+	podList := getPodList(client).Items
+
+	_ = v.DeleteRandomPodsMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
+	podList = getPodList(client).Items
+
+	podsLeftAlive := len(podList)
+	assert.Truef(t, podsLeftAlive > 50 && podsLeftAlive < 100, "Expected between 50 and 100 pods alive, got %d", len(podList))
 }
 
 func TestDeletePodsFixedPercentage(t *testing.T) {
