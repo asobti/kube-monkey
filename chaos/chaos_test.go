@@ -98,14 +98,22 @@ func (s *ChaosTestSuite) TestTerminateKillFixed() {
 	v.AssertExpectations(s.T())
 }
 
-func (s *ChaosTestSuite) TestTerminateKillRandom() {
+func (s *ChaosTestSuite) TestTerminateKillRandomMaxPercentage() {
 	v := s.chaos.victim.(*victimMock)
 	killValue := 1
 	v.On("KillType", s.client).Return(config.KillRandomMaxLabelValue, nil)
 	v.On("KillValue", s.client).Return(killValue, nil)
-	v.On("DeleteRandomPods", s.client, mock.AnythingOfType("int")).Return(nil)
-	v.On("DeleteRandomPodsFixedPercentage", s.client, mock.AnythingOfType("int")).Return(nil)
 	v.On("DeleteRandomPodsMaxPercentage", s.client, mock.AnythingOfType("int")).Return(nil)
+	_ = s.chaos.terminate(s.client)
+	v.AssertExpectations(s.T())
+}
+
+func (s *ChaosTestSuite) TestTerminateKillRandomFixedPercentage() {
+	v := s.chaos.victim.(*victimMock)
+	killValue := 1
+	v.On("KillType", s.client).Return(config.KillRandomFixedLabelValue, nil)
+	v.On("KillValue", s.client).Return(killValue, nil)
+	v.On("DeleteRandomPodsFixedPercentage", s.client, mock.AnythingOfType("int")).Return(nil)
 	_ = s.chaos.terminate(s.client)
 	v.AssertExpectations(s.T())
 }

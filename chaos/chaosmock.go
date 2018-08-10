@@ -46,6 +46,16 @@ func (vm *victimMock) DeleteRandomPods(clientset kube.Interface, killValue int) 
 	return args.Error(0)
 }
 
+func (vm *victimMock) DeleteRandomPodsMaxPercentage(clientset kube.Interface, killValue int) error {
+	args := vm.Called(clientset, killValue)
+	return args.Error(0)
+}
+
+func (vm *victimMock) DeleteRandomPodsFixedPercentage(clientset kube.Interface, killValue int) error {
+	args := vm.Called(clientset, killValue)
+	return args.Error(0)
+}
+
 func (vm *victimMock) TerminateAllPods(clientset kube.Interface) error {
 	args := vm.Called(clientset)
 	return args.Error(0)

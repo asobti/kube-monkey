@@ -129,6 +129,7 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteopts)
 }
 
+// Removes a fixed percentage of of pods for the victim
 func (v *VictimBase) DeleteRandomPodsFixedPercentage(clientset kube.Interface, killPercentage int) error {
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
@@ -137,14 +138,15 @@ func (v *VictimBase) DeleteRandomPodsFixedPercentage(clientset kube.Interface, k
 
 	numPods := len(pods)
 
-	podsToKillA := float64(numPods) * float64(killPercentage) / 100
-	killNum := int(math.Floor(podsToKillA))
+	numberOfPodsToKill := float64(numPods) * float64(killPercentage) / 100
+	killNum := int(math.Floor(numberOfPodsToKill))
 
 	glog.V(6).Infof("Killing %d percent of running pods for %s %s", killPercentage, v.kind, v.name)
 
 	return v.DeleteRandomPods(clientset, killNum)
 }
 
+// Removes a random percentage of of pods for the victim (up to the max percentage value specified)
 func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, maxPercentage int) error {
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
@@ -152,10 +154,11 @@ func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, max
 	}
 
 	numPods := len(pods)
+
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	killPercentage := (r.Intn(maxPercentage) + 1)
-	podsToKillA := float64(numPods) * float64(killPercentage) / 100
-	killNum := int(math.Floor(podsToKillA))
+	numberOfPodsToKill := float64(numPods) * float64(killPercentage) / 100
+	killNum := int(math.Floor(numberOfPodsToKill))
 
 	glog.V(6).Infof("Killing %d percent of running pods for %s %s", killPercentage, v.kind, v.name)
 
