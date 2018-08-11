@@ -131,6 +131,10 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 
 // Removes a fixed percentage of pods for the victim
 func (v *VictimBase) DeletePodsFixedPercentage(clientset kube.Interface, killPercentage int) error {
+	if killPercentage < 0 || killPercentage > 100 {
+		return fmt.Errorf("The kill percentage needs to be between 0 and 100. It was %d for %s %s", killPercentage, v.kind, v.name)
+	}
+
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
 		return err
@@ -146,8 +150,12 @@ func (v *VictimBase) DeletePodsFixedPercentage(clientset kube.Interface, killPer
 	return v.DeleteRandomPods(clientset, killNum)
 }
 
-// Removes a random percentage of of pods for the victim (up to the max percentage value specified)
+// Removes a random percentage of pods for the victim (up to the max percentage value specified)
 func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, maxPercentage int) error {
+	if maxPercentage < 0 || maxPercentage > 100 {
+		return fmt.Errorf("The max percentage needs to be between 0 and 100. It was %d for %s %s", maxPercentage, v.kind, v.name)
+	}
+
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
 		return err
