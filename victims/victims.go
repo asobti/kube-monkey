@@ -174,7 +174,7 @@ func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, max
 	numPods := len(pods)
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	killPercentage := (r.Intn(maxPercentage) + 1)
+	killPercentage := (r.Intn(maxPercentage + 1))
 	numberOfPodsToKill := float64(numPods) * float64(killPercentage) / 100
 	killNum := int(math.Floor(numberOfPodsToKill))
 
