@@ -134,6 +134,11 @@ func (v *VictimBase) DeletePodsFixedPercentage(clientset kube.Interface, killPer
 	if killPercentage < 0 || killPercentage > 100 {
 		return fmt.Errorf("The kill percentage needs to be between 0 and 100. It was %d for %s %s", killPercentage, v.kind, v.name)
 	}
+	if killPercentage == 0 {
+		glog.V(6).Infof("Not terminating any pods for %s %s\n", v.kind, v.name)
+		// Report success
+		return nil
+	}
 
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
@@ -154,6 +159,11 @@ func (v *VictimBase) DeletePodsFixedPercentage(clientset kube.Interface, killPer
 func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, maxPercentage int) error {
 	if maxPercentage < 0 || maxPercentage > 100 {
 		return fmt.Errorf("The max percentage needs to be between 0 and 100. It was %d for %s %s", maxPercentage, v.kind, v.name)
+	}
+	if maxPercentage == 0 {
+		glog.V(6).Infof("Not terminating any pods for %s %s\n", v.kind, v.name)
+		// Report success
+		return nil
 	}
 
 	pods, err := v.RunningPods(clientset)
