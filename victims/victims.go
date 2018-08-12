@@ -135,7 +135,7 @@ func (v *VictimBase) DeletePodsFixedPercentage(clientset kube.Interface, killPer
 		return fmt.Errorf("The kill percentage needs to be between 0 and 100. It was %d for %s %s", killPercentage, v.kind, v.name)
 	}
 	if killPercentage == 0 {
-		glog.V(6).Infof("Not terminating any pods for %s %s\n", v.kind, v.name)
+		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0\n", v.kind, v.name)
 		// Report success
 		return nil
 	}
@@ -161,7 +161,7 @@ func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, max
 		return fmt.Errorf("The max percentage needs to be between 0 and 100. It was %d for %s %s", maxPercentage, v.kind, v.name)
 	}
 	if maxPercentage == 0 {
-		glog.V(6).Infof("Not terminating any pods for %s %s\n", v.kind, v.name)
+		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0\n", v.kind, v.name)
 		// Report success
 		return nil
 	}
@@ -174,7 +174,7 @@ func (v *VictimBase) DeleteRandomPodsMaxPercentage(clientset kube.Interface, max
 	numPods := len(pods)
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	killPercentage := (r.Intn(maxPercentage + 1))
+	killPercentage := (r.Intn(maxPercentage + 1)) // + 1 because Intn works with half open interval [0,n) and we want [0,n]
 	numberOfPodsToKill := float64(numPods) * float64(killPercentage) / 100
 	killNum := int(math.Floor(numberOfPodsToKill))
 
