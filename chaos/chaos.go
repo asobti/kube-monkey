@@ -105,9 +105,6 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 		glog.Errorf("Failed to check KillType label for %s %s. Proceeding with termination of a single pod. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 		return c.terminatePod(clientset)
 	}
-	if killType == config.KillAllLabelValue {
-		return c.Victim().TerminateAllPods(clientset)
-	}
 
 	killValue, err := c.Victim().KillValue(clientset)
 	if err != nil {
@@ -119,10 +116,15 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 	switch killType {
 	case config.KillFixedLabelValue:
 		return c.Victim().DeleteRandomPods(clientset, killValue)
+	case config.KillAllLabelValue:
+		killNum := c.Victim().KillNumberForKillingAll(clientset, killValue)
+		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillRandomMaxLabelValue:
-		return c.Victim().DeleteRandomPodsMaxPercentage(clientset, killValue)
+		killNum := c.Victim().KillNumberForMaxPercentage(clientset, killValue)
+		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillFixedPercentageLabelValue:
-		return c.Victim().DeletePodsFixedPercentage(clientset, killValue)
+		killNum := c.Victim().KillNumberForFixedPercentage(clientset, killValue)
+		return c.Victim().DeleteRandomPods(clientset, killNum)
 	default:
 		return fmt.Errorf("Failed to recognize KillValue label for %s %s. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
 	}

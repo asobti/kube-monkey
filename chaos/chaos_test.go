@@ -70,14 +70,6 @@ func (s *ChaosTestSuite) TestTerminateKillTypeError() {
 	v.AssertExpectations(s.T())
 }
 
-func (s *ChaosTestSuite) TestTerminateAll() {
-	v := s.chaos.victim.(*victimMock)
-	v.On("KillType", s.client).Return(config.KillAllLabelValue, nil)
-	v.On("TerminateAllPods", s.client).Return(nil)
-	_ = s.chaos.terminate(s.client)
-	v.AssertExpectations(s.T())
-}
-
 func (s *ChaosTestSuite) TestTerminateKillValueError() {
 	v := s.chaos.victim.(*victimMock)
 	errMsg := "KillValue Error"
@@ -98,12 +90,24 @@ func (s *ChaosTestSuite) TestTerminateKillFixed() {
 	v.AssertExpectations(s.T())
 }
 
+func (s *ChaosTestSuite) TestTerminateAllPods() {
+	v := s.chaos.victim.(*victimMock)
+	killValue := 1
+	v.On("KillType", s.client).Return(config.KillAllLabelValue, nil)
+	v.On("KillValue", s.client).Return(killValue, nil)
+	v.On("KillNumberForKillingAll", s.client, killValue).Return(0)
+	v.On("DeleteRandomPods", s.client, 0).Return(nil)
+	_ = s.chaos.terminate(s.client)
+	v.AssertExpectations(s.T())
+}
+
 func (s *ChaosTestSuite) TestTerminateKillRandomMaxPercentage() {
 	v := s.chaos.victim.(*victimMock)
 	killValue := 1
 	v.On("KillType", s.client).Return(config.KillRandomMaxLabelValue, nil)
 	v.On("KillValue", s.client).Return(killValue, nil)
-	v.On("DeleteRandomPodsMaxPercentage", s.client, mock.AnythingOfType("int")).Return(nil)
+	v.On("KillNumberForMaxPercentage", s.client, mock.AnythingOfType("int")).Return(0)
+	v.On("DeleteRandomPods", s.client, 0).Return(nil)
 	_ = s.chaos.terminate(s.client)
 	v.AssertExpectations(s.T())
 }
@@ -113,7 +117,8 @@ func (s *ChaosTestSuite) TestTerminateKillFixedPercentage() {
 	killValue := 1
 	v.On("KillType", s.client).Return(config.KillFixedPercentageLabelValue, nil)
 	v.On("KillValue", s.client).Return(killValue, nil)
-	v.On("DeletePodsFixedPercentage", s.client, mock.AnythingOfType("int")).Return(nil)
+	v.On("KillNumberForFixedPercentage", s.client, mock.AnythingOfType("int")).Return(0)
+	v.On("DeleteRandomPods", s.client, 0).Return(nil)
 	_ = s.chaos.terminate(s.client)
 	v.AssertExpectations(s.T())
 }

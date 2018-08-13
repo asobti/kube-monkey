@@ -150,14 +150,14 @@ func TestInvalidInputsForDeletePodsRandomMaxPercentage(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pods...)
 
-	err := v.DeleteRandomPodsMaxPercentage(client, -1)
-	assert.EqualError(t, err, "The max percentage needs to be between 0 and 100. It was -1 for Pod name")
+	killNum := v.KillNumberForMaxPercentage(client, -1)
+	assert.Equalf(t, 0, killNum, "Should default to 0 percent when percentage has a negative value, got %d", killNum)
 
-	err = v.DeleteRandomPodsMaxPercentage(client, 101)
-	assert.EqualError(t, err, "The max percentage needs to be between 0 and 100. It was 101 for Pod name")
+	killNum = v.KillNumberForMaxPercentage(client, 101)
+	assert.Truef(t, killNum > 0 && killNum <= 100, "Should default to 100 percent pods when percentage is greater than 100, got %d", killNum)
 }
 
-func TestDeletePodsRandomMaxPercentage(t *testing.T) {
+func TestKillNumberForMaxPercentage(t *testing.T) {
 
 	v := newVictimBase()
 
@@ -169,15 +169,11 @@ func TestDeletePodsRandomMaxPercentage(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pods...)
 
-	_ = v.DeletePodsFixedPercentage(client, 0) // 0% means we don't kill any pods
-	podList := getPodList(client).Items
-	assert.Lenf(t, podList, 100, "Expected 100 items in podList, got %d", len(podList))
+	killNum := v.KillNumberForMaxPercentage(client, 0) // 0% means we don't kill any pods
+	assert.Equal(t, killNum, 0, "Expected 0 pods to be killed, got %d", killNum)
 
-	_ = v.DeleteRandomPodsMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
-	podList = getPodList(client).Items
-
-	podsLeftAlive := len(podList)
-	assert.Truef(t, podsLeftAlive > 50 && podsLeftAlive < 100, "Expected between 50 and 100 pods alive, got %d", len(podList))
+	killNum = v.KillNumberForMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
+	assert.Truef(t, killNum >= 0 && killNum <= 50, "Expected kill number between 0 and 50 pods, got %d", killNum)
 }
 
 func TestInvalidInputsForDeletePodsFixedMaxPercentage(t *testing.T) {
@@ -192,11 +188,11 @@ func TestInvalidInputsForDeletePodsFixedMaxPercentage(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pods...)
 
-	err := v.DeletePodsFixedPercentage(client, -1)
-	assert.EqualError(t, err, "The kill percentage needs to be between 0 and 100. It was -1 for Pod name")
+	killNum := v.KillNumberForFixedPercentage(client, -1)
+	assert.Equalf(t, 0, killNum, "Should default to 0 percent when percentage has a negative value, got %d", killNum)
 
-	err = v.DeletePodsFixedPercentage(client, 101)
-	assert.EqualError(t, err, "The kill percentage needs to be between 0 and 100. It was 101 for Pod name")
+	killNum = v.KillNumberForFixedPercentage(client, 101)
+	assert.Equalf(t, 100, killNum, "Should default to 100 percent when percentage is greater than 100, got %d", killNum)
 }
 
 func TestDeletePodsFixedPercentage(t *testing.T) {
@@ -208,43 +204,17 @@ func TestDeletePodsFixedPercentage(t *testing.T) {
 	pod4 := newPod("app4", v1.PodRunning)
 	pod5 := newPod("app5", v1.PodRunning)
 	pod6 := newPod("app6", v1.PodRunning)
-	pod7 := newPod("app7", v1.PodRunning)
 
-	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3, &pod4, &pod5, &pod6, &pod7)
+	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3, &pod4, &pod5, &pod6)
 
-	_ = v.DeletePodsFixedPercentage(client, 0) // 0% means we don't kill any pods
-	podList := getPodList(client).Items
-	assert.Lenf(t, podList, 7, "Expected 7 items in podList, got %d", len(podList)) // we're left with all 7 pods (6 running + 1 pending)
+	killNum := v.KillNumberForFixedPercentage(client, 0) // 0% means we don't kill any pods
+	assert.Equalf(t, killNum, 0, "Expected 0 pods to be killed, got %d", killNum)
 
-	_ = v.DeletePodsFixedPercentage(client, 50) // 50% means we kill 3 out of 6 running pods
-	podList = getPodList(client).Items
-	assert.Lenf(t, podList, 4, "Expected 4 items in podList, got %d", len(podList)) // we're left with 4 (3 running + 1 pending)
+	killNum = v.KillNumberForFixedPercentage(client, 50) // 50% means we kill 2 (rounded down from 2.5) out of 5 running pods
+	assert.Equalf(t, killNum, 2, "Expected 2 pods to be killed, got %d", killNum)
 
-	_ = v.DeletePodsFixedPercentage(client, 50) // 50% means we kill 1.5 out of 3 pods. as we always round down, the number of pods to kill will be 1
-	podList = getPodList(client).Items
-	assert.Lenf(t, podList, 3, "Expected 3 items in podList, got %d", len(podList)) // we're left with 3 (2 running + 1 pending)
-
-	_ = v.DeletePodsFixedPercentage(client, 100) // 100% means we kill all running pods.
-	podList = getPodList(client).Items
-	assert.Lenf(t, podList, 1, "Expected 1 items in podList, got %d", len(podList)) // we're left with 1 pod (pending)
-}
-
-func TestTerminateAllPods(t *testing.T) {
-
-	v := newVictimBase()
-	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending)
-	pod3 := newPod("app3", v1.PodRunning)
-
-	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3)
-
-	_ = v.TerminateAllPods(client)
-
-	podList := getPodList(client).Items
-	assert.Len(t, podList, 0)
-
-	err := v.TerminateAllPods(client)
-	assert.EqualError(t, err, KIND+" "+NAME+" has no pods at the moment")
+	killNum = v.KillNumberForFixedPercentage(client, 100) // 100% means we kill all 6 running pods
+	assert.Equalf(t, killNum, 5, "Expected 5 pods to be killed, got %d", killNum)
 }
 
 func TestDeleteRandomPod(t *testing.T) {
