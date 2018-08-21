@@ -244,13 +244,7 @@ func RandomPodName(pods []v1.Pod) string {
 
 // Returns the number of pods to kill based on the number of all running pods
 func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface, killPercentage int) int {
-	pods, err := v.RunningPods(clientset)
-	if err != nil {
-		glog.V(6).Infof("Failed to get list of running pods %s %s", killPercentage, v.kind, v.name)
-		return 0
-	}
-
-	killNum := len(pods)
+	killNum := v.numberOfRunningPods(clientset)
 
 	return killNum
 }
@@ -271,15 +265,9 @@ func (v *VictimBase) KillNumberForFixedPercentage(clientset kube.Interface, kill
 		killPercentage = 100
 	}
 
-	pods, err := v.RunningPods(clientset)
-	if err != nil {
-		glog.V(6).Infof("Failed to get list of running pods %s %s", killPercentage, v.kind, v.name)
-		return 0
-	}
+	numRunningPods := v.numberOfRunningPods(clientset)
 
-	numPods := len(pods)
-
-	numberOfPodsToKill := float64(numPods) * float64(killPercentage) / 100
+	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
 	killNum := int(math.Floor(numberOfPodsToKill))
 
 	return killNum
@@ -301,18 +289,23 @@ func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPer
 		maxPercentage = 100
 	}
 
+	numRunningPods := v.numberOfRunningPods(clientset)
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	killPercentage := r.Intn(maxPercentage + 1) // + 1 because Intn works with half open interval [0,n) and we want [0,n]
+	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
+	killNum := int(math.Floor(numberOfPodsToKill))
+
+	return killNum
+}
+
+// Returns the number of running pods or 0 if the operation fails
+func (v *VictimBase) numberOfRunningPods(clientset kube.Interface) int {
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
 		glog.V(6).Infof("Failed to get list of running pods %s %s", v.kind, v.name)
 		return 0
 	}
 
-	numPods := len(pods)
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	killPercentage := r.Intn(maxPercentage + 1) // + 1 because Intn works with half open interval [0,n) and we want [0,n]
-	numberOfPodsToKill := float64(numPods) * float64(killPercentage) / 100
-	killNum := int(math.Floor(numberOfPodsToKill))
-
-	return killNum
+	return len(pods)
 }
