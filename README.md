@@ -1,4 +1,4 @@
-# kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey)
+# kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey) [![Go Report](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
 
 kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
 
