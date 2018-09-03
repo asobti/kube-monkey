@@ -126,7 +126,7 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 		killNum := c.Victim().KillNumberForFixedPercentage(clientset, killValue)
 		return c.Victim().DeleteRandomPods(clientset, killNum)
 	default:
-		return fmt.Errorf("Failed to recognize KillValue label for %s %s", c.Victim().Kind(), c.Victim().Name())
+		return fmt.Errorf("Failed to recognize KillType label for %s %s", c.Victim().Kind(), c.Victim().Name())
 	}
 }
 
