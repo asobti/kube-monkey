@@ -123,6 +123,15 @@ func (s *ChaosTestSuite) TestTerminateKillFixedPercentage() {
 	v.AssertExpectations(s.T())
 }
 
+func (s *ChaosTestSuite) TestInvalidKillType() {
+	v := s.chaos.victim.(*victimMock)
+	killValue := 1
+	v.On("KillType", s.client).Return("InvalidKillTypeHere", nil)
+	v.On("KillValue", s.client).Return(killValue, nil)
+	_ = s.chaos.terminate(s.client)
+	v.AssertExpectations(s.T())
+}
+
 func (s *ChaosTestSuite) TestDurationToKillTime() {
 	t := s.chaos.DurationToKillTime()
 	s.WithinDuration(s.chaos.KillAt(), time.Now(), t+time.Millisecond)
