@@ -128,8 +128,9 @@ func (s *ChaosTestSuite) TestInvalidKillType() {
 	killValue := 1
 	v.On("KillType", s.client).Return("InvalidKillTypeHere", nil)
 	v.On("KillValue", s.client).Return(killValue, nil)
-	_ = s.chaos.terminate(s.client)
+	err := s.chaos.terminate(s.client)
 	v.AssertExpectations(s.T())
+	s.EqualError(err, "Failed to recognize KillValue label for Pod "+v.Name()+"")
 }
 
 func (s *ChaosTestSuite) TestDurationToKillTime() {
