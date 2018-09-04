@@ -18,28 +18,18 @@ endif
 build: clean gofmt lint
 	$(ENVVAR) go build -o kube-monkey
 
-proxies:
-ifneq ($(and $(http_proxy), $(https_proxy)),)
-	@echo Starting Docker build, importing both http_proxy and https_proxy env variables
-dockerbuild=docker build --build-arg http_proxy=$(http_proxy) --build-arg https_proxy=$(https_proxy)
-else
+docker_args=
 ifdef http_proxy
-	@echo Starting Docker build, importing http_proxy
-dockerbuild= docker build --build-arg http_proxy=$(http_proxy)
-else
+docker_args+= --build-arg http_proxy=$(http_proxy)
+endif
 ifdef https_proxy
-	@echo Starting Docker build, importing https_proxy
-dockerbuild= docker build --build-arg https_proxy=$(https_proxy)
-else
-	@echo no env proxies set, building normally
-dockerbuild= docker build -t kube-monkey:$(TAG) .
-endif
-endif
+docker_args+= --build-arg https_proxy=$(https_proxy)
 endif
 
 # Supressing docker build avoids printing the env variables
-container: proxies test
-	@$(dockerbuild) -t kube-monkey:$(TAG) .
+container:
+	@echo "Running docker with '$(docker_args)'"
+	@docker build $(docker_args) -t kube-monkey:$(TAG) .
 
 gofmt:
 	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % gofmt -s -w %
