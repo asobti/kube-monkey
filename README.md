@@ -1,4 +1,4 @@
-# kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey)
+# kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey) [![Go Report](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
 
 kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
 
@@ -7,8 +7,8 @@ kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/
 kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
 Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and defaults to 10am to 4pm.
 
-kube-monkey can be configured with a list of namespaces 
-* to blacklist (any deployments within a blacklisted namespace will not be touched) 
+kube-monkey can be configured with a list of namespaces
+* to blacklist (any deployments within a blacklisted namespace will not be touched)
 
 To disable the blacklist provide `[""]` in the `blacklisted_namespaces` config.param.
 
@@ -27,10 +27,13 @@ that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-
 * `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
 * `random-max-percent` to specify a maximum % with kill-value that can be killed. At the scheduled time, a uniform random specified % of the running pods will be terminated.
+* `fixed-percent` to specify a fixed % with kill-value that can be killed. At the scheduled time, a specified fixed % of the running pods will be terminated.
+
 
 **`kube-monkey/kill-value`**: Specify value for kill-mode
 * if `fixed`, provide an integer of pods to kill
 * if `random-max-percent`, provide a number from 0-100 to specify the max % of pods kube-monkey can kill
+* if `fixed-percent`, provide a number from 0-100 to specify the % of pods to kill
 
 #### Example of opted-in Deployment killing one pod per purge
 
@@ -79,8 +82,8 @@ spec:
 
 ### Overriding the apiserver
 #### Use cases:
-* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L331) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver. 
-* If you are running an unauthenticated system, you may need to force the http apiserver endpoint. 
+* Since client-go does not support [cluster dns](https://github.com/kubernetes/client-go/blob/master/rest/config.go#L331) explicitly with a `// TODO: switch to using cluster DNS.` note in the code, you may need to override the apiserver.
+* If you are running an unauthenticated system, you may need to force the http apiserver endpoint.
 
 #### To override the apiserver specify in the config.toml file
 ```toml
@@ -118,7 +121,7 @@ make containers
 ```
 
 ## Configuring
-kube-monkey is configured by a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before the kubemonkey deployment. 
+kube-monkey is configured by environment variables or a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before the kubemonkey deployment.
 
 Configuration keys and descriptions can be found in [`config/param/param.go`](https://github.com/asobti/kube-monkey/blob/master/config/param/param.go)
 
@@ -133,10 +136,21 @@ blacklisted_namespaces = ["kube-system"] # Critical apps live here
 time_zone = "America/New_York"           # Set tzdata timezone example. Note the field is time_zone not timezone
 ```
 
+#### Example environment variables
+```
+KUBEMONKEY_DRY_RUN=true
+KUBEMONKEY_RUN_HOUR=8
+KUBEMONKEY_START_HOUR=10
+KUBEMONKEY_END_HOUR=16
+KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
+KUBEMONKEY_TIME_ZONE=America/New_York
+```
+
+
 ## Deploying
 
 **Manually**
-1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml` 
+1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml`
 
 > For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml` or `kubectl apply -f km-config.yaml`
 
@@ -165,7 +179,7 @@ kube-monkey uses glog and supports all command-line features for glog. To specif
 > L2: Successful terminations
 >
 > L3: More detailed schedule status info
-> 
+>
 > L4: Debugging verbose schedule and config info
 >
 > L5: Auto-resolved inconsequential issues
@@ -174,11 +188,10 @@ More resources: See the [k8s logging page](https://kubernetes.io/docs/concepts/c
 
 ## Compatibility with Kubernetes
 
-kube-monkey is built using v7.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the 
-[Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which 
+kube-monkey is built using v7.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the
+[Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which
 versions of Kubernetes are compatible.
 
 ## Ways to contribute
 
 See [How to Contribute](https://github.com/asobti/kube-monkey/blob/master/CONTRIBUTING.md)
-

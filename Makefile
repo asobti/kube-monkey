@@ -23,35 +23,22 @@ build: clean gofmt lint
 #-RUN go get github.com/asobti/kube-monkey
 #+ENV GIT_SSL_NO_VERIFY=1
 #+RUN go get -v -insecure github.com/asobti/kube-monkey
-proxies:
-ifneq ($(and $(http_proxy), $(https_proxy)),)
-	@echo Starting Docker build, importing both http_proxy and https_proxy env variables
-dockerbuild=docker build --build-arg http_proxy=$(http_proxy) --build-arg https_proxy=$(https_proxy)
-else
+docker_args=
 ifdef http_proxy
-	@echo Starting Docker build, importing http_proxy
-dockerbuild= docker build --build-arg http_proxy=$(http_proxy)
-else
+docker_args+= --build-arg http_proxy=$(http_proxy)
+endif
 ifdef https_proxy
-	@echo Starting Docker build, importing https_proxy
-dockerbuild= docker build --build-arg https_proxy=$(https_proxy)
-else
-	@echo no env proxies set, building normally
-dockerbuild= docker build 
-endif
-endif
+docker_args+= --build-arg https_proxy=$(https_proxy)
 endif
 
 # Supressing docker build avoids printing the env variables
-containers: proxies alpine ubuntu test
-	@echo Building all containers
+containers: test alpine ubuntu
+	@echo "Building all containers with '$(docker_args)'"
 
 alpine:
-	@echo $(dockerbuild) -t kube-monkey:$(TAG) alpine
-	@$(dockerbuild) -t kube-monkey:$(TAG) alpine
+	docker build $(docker_args) -t kube-monkey:$(TAG) alpine
 ubuntu:
-	@echo $(dockerbuild) -t kube-monkey:$(TAG)_ubuntu
-	@$(dockerbuild) -t kube-monkey:$(TAG)_ubuntu ubuntu
+	docker build $(docker_args) -t kube-monkey:$(TAG)_ubuntu ubuntu
 
 gofmt:
 	@echo Checking gofmt:

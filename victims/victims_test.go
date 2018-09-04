@@ -1,8 +1,11 @@
 package victims
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/asobti/kube-monkey/config"
 	"github.com/stretchr/testify/assert"
@@ -135,22 +138,83 @@ func TestDeleteRandomPods(t *testing.T) {
 	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 
-func TestTerminateAllPods(t *testing.T) {
+func TestInvalidInputsForDeletePodsRandomMaxPercentage(t *testing.T) {
+
+	v := newVictimBase()
+
+	var pods []runtime.Object
+	for i := 0; i < 100; i++ {
+		pod := newPod(fmt.Sprintf("app%d", i), v1.PodRunning)
+		pods = append(pods, &pod)
+	}
+
+	client := fake.NewSimpleClientset(pods...)
+
+	killNum := v.KillNumberForMaxPercentage(client, -1)
+	assert.Equalf(t, 0, killNum, "Should default to 0 percent when percentage has a negative value, got %d", killNum)
+
+	killNum = v.KillNumberForMaxPercentage(client, 101)
+	assert.Truef(t, killNum > 0 && killNum <= 100, "Should default to 100 percent pods when percentage is greater than 100, got %d", killNum)
+}
+
+func TestKillNumberForMaxPercentage(t *testing.T) {
+
+	v := newVictimBase()
+
+	var pods []runtime.Object
+	for i := 0; i < 100; i++ {
+		pod := newPod(fmt.Sprintf("app%d", i), v1.PodRunning)
+		pods = append(pods, &pod)
+	}
+
+	client := fake.NewSimpleClientset(pods...)
+
+	killNum := v.KillNumberForMaxPercentage(client, 0) // 0% means we don't kill any pods
+	assert.Equal(t, killNum, 0, "Expected 0 pods to be killed, got %d", killNum)
+
+	killNum = v.KillNumberForMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
+	assert.Truef(t, killNum >= 0 && killNum <= 50, "Expected kill number between 0 and 50 pods, got %d", killNum)
+}
+
+func TestInvalidInputsForDeletePodsFixedMaxPercentage(t *testing.T) {
+
+	v := newVictimBase()
+
+	var pods []runtime.Object
+	for i := 0; i < 100; i++ {
+		pod := newPod(fmt.Sprintf("app%d", i), v1.PodRunning)
+		pods = append(pods, &pod)
+	}
+
+	client := fake.NewSimpleClientset(pods...)
+
+	killNum := v.KillNumberForFixedPercentage(client, -1)
+	assert.Equalf(t, 0, killNum, "Should default to 0 percent when percentage has a negative value, got %d", killNum)
+
+	killNum = v.KillNumberForFixedPercentage(client, 101)
+	assert.Equalf(t, 100, killNum, "Should default to 100 percent when percentage is greater than 100, got %d", killNum)
+}
+
+func TestDeletePodsFixedPercentage(t *testing.T) {
 
 	v := newVictimBase()
 	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending)
+	pod2 := newPod("app2", v1.PodPending) // not running
 	pod3 := newPod("app3", v1.PodRunning)
+	pod4 := newPod("app4", v1.PodRunning)
+	pod5 := newPod("app5", v1.PodRunning)
+	pod6 := newPod("app6", v1.PodRunning)
 
-	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3)
+	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3, &pod4, &pod5, &pod6)
 
-	_ = v.TerminateAllPods(client)
+	killNum := v.KillNumberForFixedPercentage(client, 0) // 0% means we don't kill any pods
+	assert.Equalf(t, killNum, 0, "Expected 0 pods to be killed, got %d", killNum)
 
-	podList := getPodList(client).Items
-	assert.Len(t, podList, 0)
+	killNum = v.KillNumberForFixedPercentage(client, 50) // 50% means we kill 2 (rounded down from 2.5) out of 5 running pods
+	assert.Equalf(t, killNum, 2, "Expected 2 pods to be killed, got %d", killNum)
 
-	err := v.TerminateAllPods(client)
-	assert.EqualError(t, err, KIND+" "+NAME+" has no pods at the moment")
+	killNum = v.KillNumberForFixedPercentage(client, 100) // 100% means we kill all 6 running pods
+	assert.Equalf(t, killNum, 5, "Expected 5 pods to be killed, got %d", killNum)
 }
 
 func TestDeleteRandomPod(t *testing.T) {
