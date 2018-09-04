@@ -281,11 +281,11 @@ func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPer
 		return 0
 	}
 	if maxPercentage < 0 {
-		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 0%", maxPercentage, v.kind, v.name)
+		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 0%%", maxPercentage, v.kind, v.name)
 		maxPercentage = 0
 	}
 	if maxPercentage > 100 {
-		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 100%", maxPercentage, v.kind, v.name)
+		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 100%%", maxPercentage, v.kind, v.name)
 		maxPercentage = 100
 	}
 

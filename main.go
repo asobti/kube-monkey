@@ -26,7 +26,7 @@ func initLogging() {
 	if _, err := os.Stat(flag.Lookup("log_dir").Value.String()); os.IsNotExist(err) {
 		err = os.MkdirAll(flag.Lookup("log_dir").Value.String(), os.ModePerm)
 		if err != nil {
-			glog.Errorf("Failed to open custom log directory; defaulting to /tmp! Error: %v", flag.Lookup("log_dir").Value, err)
+			glog.Errorf("Failed to open custom log directory at %s; defaulting to /tmp! Error: %v", flag.Lookup("log_dir").Value, err)
 		} else {
 			glog.V(5).Infof("Created custom logging %s directory!", flag.Lookup("log_dir").Value)
 		}
@@ -34,7 +34,7 @@ func initLogging() {
 	// Since km runs as a k8 pod, log everything to stderr (stdout not supported)
 	// this takes advantage of k8's logging driver allowing kubectl logs kube-monkey
 	if err := flag.Lookup("alsologtostderr").Value.Set("true"); err != nil {
-		glog.Errorf("Failed to set alsologtostderr", err)
+		glog.Errorf("Failed to set alsologtostderr. Error: %v", err)
 	}
 }
 
