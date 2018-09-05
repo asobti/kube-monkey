@@ -2,6 +2,7 @@ all: test
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 TAG := $(shell cat VERSION)
+GO_COMPILER := $(shell cat GOLANG_VERSION)
 GOLANGCI_INSTALLED := $(shell which bin/golangci-lint 2>/dev/null)
 
 
@@ -15,6 +16,8 @@ else
 	@echo Installation instructions: https://github.com/golangci/golangci-lint #ci-installation
 endif
 
+local: clean gofmt lint
+	docker build -v ./:/go/src/github.com/asobti/kube-monkey/kube-monkey golang
 build: clean gofmt lint
 	$(ENVVAR) go build -o kube-monkey
 
@@ -23,7 +26,7 @@ build: clean gofmt lint
 #-RUN go get github.com/asobti/kube-monkey
 #+ENV GIT_SSL_NO_VERIFY=1
 #+RUN go get -v -insecure github.com/asobti/kube-monkey
-docker_args=
+docker_args= --build-arg GOLANG_VER=$(GO_COMPILER) 
 ifdef http_proxy
 docker_args+= --build-arg http_proxy=$(http_proxy)
 endif
