@@ -73,9 +73,9 @@ func (s *ChaosTestSuite) TestTerminateKillTypeError() {
 func (s *ChaosTestSuite) TestTerminateKillValueError() {
 	v := s.chaos.victim.(*victimMock)
 	errMsg := "KillValue Error"
-	v.On("KillType", s.client).Return("", nil)
+	v.On("KillType", s.client).Return(config.KillFixedLabelValue, nil)
 	v.On("KillValue", s.client).Return(0, errors.New(errMsg))
-	v.On("DeleteRandomPod", s.client).Return(nil)
+	v.On("DeleteRandomPods", s.client, 1).Return(nil)
 	_ = s.chaos.terminate(s.client)
 	v.AssertExpectations(s.T())
 }
@@ -92,10 +92,8 @@ func (s *ChaosTestSuite) TestTerminateKillFixed() {
 
 func (s *ChaosTestSuite) TestTerminateAllPods() {
 	v := s.chaos.victim.(*victimMock)
-	killValue := 1
 	v.On("KillType", s.client).Return(config.KillAllLabelValue, nil)
-	v.On("KillValue", s.client).Return(killValue, nil)
-	v.On("KillNumberForKillingAll", s.client, killValue).Return(0)
+	v.On("KillNumberForKillingAll", s.client).Return(0)
 	v.On("DeleteRandomPods", s.client, 0).Return(nil)
 	_ = s.chaos.terminate(s.client)
 	v.AssertExpectations(s.T())
@@ -125,12 +123,23 @@ func (s *ChaosTestSuite) TestTerminateKillFixedPercentage() {
 
 func (s *ChaosTestSuite) TestInvalidKillType() {
 	v := s.chaos.victim.(*victimMock)
-	killValue := 1
 	v.On("KillType", s.client).Return("InvalidKillTypeHere", nil)
-	v.On("KillValue", s.client).Return(killValue, nil)
 	err := s.chaos.terminate(s.client)
 	v.AssertExpectations(s.T())
 	s.EqualError(err, "Failed to recognize KillType label for Pod "+v.Name()+"")
+}
+
+func (s *ChaosTestSuite) TestGetKillValue() {
+	v := s.chaos.victim.(*victimMock)
+	killValue := 5
+	v.On("KillValue", s.client).Return(killValue, nil)
+	s.Equal(killValue, s.chaos.getKillValue(s.client))
+}
+
+func (s *ChaosTestSuite) TestGetKillValueDefaultsOnError() {
+	v := s.chaos.victim.(*victimMock)
+	v.On("KillValue", s.client).Return(0, errors.New("InvalidKillValue"))
+	s.Equal(1, s.chaos.getKillValue(s.client))
 }
 
 func (s *ChaosTestSuite) TestDurationToKillTime() {

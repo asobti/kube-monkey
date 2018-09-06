@@ -46,8 +46,8 @@ func (vm *victimMock) DeleteRandomPods(clientset kube.Interface, killValue int) 
 	return args.Error(0)
 }
 
-func (vm *victimMock) KillNumberForKillingAll(clientset kube.Interface, killValue int) int {
-	args := vm.Called(clientset, killValue)
+func (vm *victimMock) KillNumberForKillingAll(clientset kube.Interface) int {
+	args := vm.Called(clientset)
 	return args.Int(0)
 }
 

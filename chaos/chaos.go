@@ -106,28 +106,32 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 		return c.terminatePod(clientset)
 	}
 
-	killValue, err := c.Victim().KillValue(clientset)
-	if err != nil {
-		glog.Errorf("Failed to check KillValue label for %s %s. Proceeding with termination of a single pod. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
-		return c.terminatePod(clientset)
-	}
-
 	// Validate killtype
 	switch killType {
 	case config.KillFixedLabelValue:
-		return c.Victim().DeleteRandomPods(clientset, killValue)
+		return c.Victim().DeleteRandomPods(clientset, c.getKillValue(clientset))
 	case config.KillAllLabelValue:
-		killNum := c.Victim().KillNumberForKillingAll(clientset, killValue)
+		killNum := c.Victim().KillNumberForKillingAll(clientset)
 		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillRandomMaxLabelValue:
-		killNum := c.Victim().KillNumberForMaxPercentage(clientset, killValue)
+		killNum := c.Victim().KillNumberForMaxPercentage(clientset, c.getKillValue(clientset))
 		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillFixedPercentageLabelValue:
-		killNum := c.Victim().KillNumberForFixedPercentage(clientset, killValue)
+		killNum := c.Victim().KillNumberForFixedPercentage(clientset, c.getKillValue(clientset))
 		return c.Victim().DeleteRandomPods(clientset, killNum)
 	default:
 		return fmt.Errorf("Failed to recognize KillType label for %s %s", c.Victim().Kind(), c.Victim().Name())
 	}
+}
+
+func (c *Chaos) getKillValue(clientset kube.Interface) int {
+	killValue, err := c.Victim().KillValue(clientset)
+	if err != nil {
+		glog.Errorf("Failed to check KillValue label for %s %s. Defaulting to 1. Error: %v", c.Victim().Kind(), c.Victim().Name(), err.Error())
+		killValue = 1
+	}
+
+	return killValue
 }
 
 // Redundant for DeleteRandomPods(clientset,1) but DeleteRandomPod is faster

@@ -56,7 +56,7 @@ type VictimAPICalls interface {
 
 type VictimKillNumberGenerator interface {
 	KillNumberForMaxPercentage(kube.Interface, int) int
-	KillNumberForKillingAll(kube.Interface, int) int
+	KillNumberForKillingAll(kube.Interface) int
 	KillNumberForFixedPercentage(kube.Interface, int) int
 }
 
@@ -264,7 +264,7 @@ func RandomPodName(pods []v1.Pod) string {
 }
 
 // Returns the number of pods to kill based on the number of all running pods
-func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface, killPercentage int) int {
+func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface) int {
 	killNum := v.numberOfRunningPods(clientset)
 
 	return killNum
