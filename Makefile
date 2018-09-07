@@ -2,7 +2,6 @@ all: test
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 TAG := $(shell cat VERSION)
-GO_COMPILER := $(shell cat GOLANG_VERSION)
 GOLANGCI_INSTALLED := $(shell which bin/golangci-lint 2>/dev/null)
 
 
@@ -16,8 +15,6 @@ else
 	@echo Installation instructions: https://github.com/golangci/golangci-lint #ci-installation
 endif
 
-local: clean gofmt lint
-	docker build -v ./:/go/src/github.com/asobti/kube-monkey/kube-monkey golang
 build: clean gofmt lint
 	$(ENVVAR) go build -o kube-monkey
 
@@ -26,7 +23,8 @@ build: clean gofmt lint
 #-RUN go get github.com/asobti/kube-monkey
 #+ENV GIT_SSL_NO_VERIFY=1
 #+RUN go get -v -insecure github.com/asobti/kube-monkey
-docker_args= --build-arg GOLANG_VER=$(GO_COMPILER) 
+
+docker_args=
 ifdef http_proxy
 docker_args+= --build-arg http_proxy=$(http_proxy)
 endif
@@ -35,19 +33,21 @@ docker_args+= --build-arg https_proxy=$(https_proxy)
 endif
 
 # Supressing docker build avoids printing the env variables
-containers: test alpine ubuntu
-	@echo "Building all containers with '$(docker_args)'"
-
-alpine:
-	docker build $(docker_args) -t kube-monkey:$(TAG) alpine
-ubuntu:
-	docker build $(docker_args) -t kube-monkey:$(TAG)_ubuntu ubuntu
-
 # Docker compatibility mode support
 # If running Docker version < 17, multi-stage builds are not supported
 # this target uses a single-stage build to make the container
-ubuntu-compat: clean build
-	docker build $(docker_args) -t kube-monkey:$(TAG)_ubuntu -f ubuntu_compat/Dockerfile .
+container: test
+	@echo "Building container with '$(docker_args)'"
+	@docker build $(docker_args) -t kube-monkey:$(TAG) .
+
+# If you do not have golang installed, you can use the docker multi-stage docker build process
+# This requires Docker version > 17.05 and will pull down an official golang container
+# You can specify the GOLANG_VERSION by adding a docker build arg
+# docker_args= --build-arg GOLANG_VERSION=1.11
+# Overwrite the Dockerfile with the one from the ubuntu or alpine folder 
+multi-stage:
+	@echo "Building multi-stage container with '$(docker_args)'"
+	@docker build $(docker_args) -t kube-monkey:$(TAG) .
 
 gofmt:
 	@echo Checking gofmt:

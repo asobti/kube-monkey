@@ -1,8 +1,8 @@
 # Image configurations
-
+ARG GOLANG_VERSION
 FROM golang:{GOLANG_VERSION:-1.10} as builder
 
-RUN go get github.com/asobti/kube-monkey
+COPY . $GOPATH/src/github.com/asobti/kube-monkey
 WORKDIR $GOPATH/src/github.com/asobti/kube-monkey
 RUN make build
 
