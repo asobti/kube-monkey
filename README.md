@@ -163,6 +163,9 @@ schedule_immediate_kill= true
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
+3. You should be able to see debug logs by `kubectl logs -f deployment.apps/kube-monkey --namespace=kube-system`  here the `deployment.apps/kube-monkey` is the k8s deployment for kube monkey.
+
+
 **Helm Chart**  
 A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit `$PROJECT/helm/kubemonkey/values.yaml` and update the value of `image.repository` to point at the location of your container.
 
