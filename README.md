@@ -145,7 +145,12 @@ KUBEMONKEY_END_HOUR=16
 KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
-
+#### Example Config to test monkey works as expected enabeling debug mode
+```toml
+[debug]
+enabled= true
+schedule_immediate_kill= true
+```
 
 ## Deploying
 
@@ -165,6 +170,7 @@ Helm can then be executed using
 ```bash
 helm install $release helm/kubemonkey
 ```
+
 
 ## Logging
 
