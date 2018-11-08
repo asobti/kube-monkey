@@ -18,31 +18,3 @@ data:
     [debug]
     enabled= true
     schedule_immediate_kill= true
----
-
-apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: kube-monkey
-  namespace: kube-system
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: kube-monkey
-    spec:
-      containers:
-        -  name: kube-monkey
-           command:
-             - "/kube-monkey"
-           args: ["-v=5", "-log_dir=/var/log/kube-monkey"]
-           image: ayushsobti/kube-monkey:v0.2.3
-           volumeMounts:
-             - name: config-volume
-               mountPath: "/etc/kube-monkey"
-      volumes:
-        - name: config-volume
-          configMap:
-            name: kube-monkey-config-map
-      serviceAccountName: tiller
