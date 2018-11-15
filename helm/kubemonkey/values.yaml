@@ -4,6 +4,8 @@
 
 replicaCount: 1
 namespace: default
+rbac:
+  enabled: true
 image:
   repository: ayushsobti/kube-monkey
   tag: v0.2.3
