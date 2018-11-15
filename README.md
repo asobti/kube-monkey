@@ -167,7 +167,7 @@ See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples
 
 
 **Helm Chart**  
-A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit `$PROJECT/helm/kubemonkey/values.yaml` and update the value of `image.repository` to point at the location of your container.
+A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `asobti/kube-monkey`.
 
 Helm can then be executed using
 ```bash
