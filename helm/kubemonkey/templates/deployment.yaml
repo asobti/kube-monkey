@@ -2,6 +2,7 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: {{ template "kubemonkey.fullname" . }}
+  namespace: {{ .Values.namespace }}
   labels:
     app: {{ template "kubemonkey.name" . }}
     chart: {{ template "kubemonkey.chart" . }}
