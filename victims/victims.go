@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/golang/glog"
-
 	"github.com/asobti/kube-monkey/config"
+	"github.com/golang/glog"
+	"github.com/pkg/errors"
 
 	kube "k8s.io/client-go/kubernetes"
 
@@ -131,8 +131,18 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 		return nil
 	}
 
+	pod, err := clientset.CoreV1().Pods(v.namespace).Get(podName, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "unable to get pod %s for %s/%s", podName, v.namespace, v.name)
+	}
+
+	gracePeriodSec := config.GracePeriodSeconds()
+	if pod.Spec.TerminationGracePeriodSeconds != nil && *pod.Spec.TerminationGracePeriodSeconds > *gracePeriodSec {
+		gracePeriodSec = pod.Spec.TerminationGracePeriodSeconds
+	}
+
 	deleteopts := &metav1.DeleteOptions{
-		GracePeriodSeconds: config.GracePeriodSeconds(),
+		GracePeriodSeconds: gracePeriodSec,
 	}
 
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteopts)
