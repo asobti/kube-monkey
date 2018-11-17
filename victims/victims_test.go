@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/asobti/kube-monkey/config"
+	"github.com/bouk/monkey"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -105,6 +106,23 @@ func TestDeletePod(t *testing.T) {
 
 	podList := getPodList(client).Items
 	assert.Lenf(t, podList, 0, "Expected 0 items in podList, got %d", len(podList))
+}
+
+func TestDeletePodDryRun(t *testing.T) {
+	// mock DryRun
+	monkey.Patch(config.DryRun, func() bool { return true })
+	defer monkey.Unpatch(config.DryRun)
+
+	v := newVictimBase()
+	pod := newPod("app", v1.PodRunning)
+
+	client := fake.NewSimpleClientset(&pod)
+
+	err := v.DeletePod(client, "app")
+	assert.NoError(t, err)
+
+	podList := getPodList(client).Items
+	assert.Lenf(t, podList, 1, "Expected 1 item in podList, got %d", len(podList))
 }
 
 func TestDeleteRandomPods(t *testing.T) {
