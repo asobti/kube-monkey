@@ -126,6 +126,11 @@ func (v *VictimBase) Pods(clientset kube.Interface) ([]v1.Pod, error) {
 
 // Removes specified pod for victim
 func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
+	if config.DryRun() {
+		glog.Infof("[DryRun Mode] Terminated pod %s for %s/%s", podName, v.namespace, v.name)
+		return nil
+	}
+
 	deleteopts := &metav1.DeleteOptions{
 		GracePeriodSeconds: config.GracePeriodSeconds(),
 	}
