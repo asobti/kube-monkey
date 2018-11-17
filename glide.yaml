@@ -22,5 +22,7 @@ import:
   - discovery
   - kubernetes
   - rest
+- package: github.com/pkg/errors
+  version: ^0.8.0
 testImport:
 - package: github.com/bouk/monkey
