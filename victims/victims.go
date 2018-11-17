@@ -2,7 +2,6 @@ package victims
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"math"
 	"math/rand"
 	"time"

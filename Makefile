@@ -36,6 +36,10 @@ container:
 gofmt:
 	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % gofmt -s -w %
 
+# Same as gofmt, but also orders imports
+goimports:
+	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % goimports -w %
+
 clean:
 	rm -f kube-monkey
 
