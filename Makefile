@@ -7,6 +7,8 @@ GOLANGCI_INSTALLED := $(shell which bin/golangci-lint)
 
 .PHONY: all build container clean gofmt lint test
 
+# linting is temporarily disabled
+# see https://github.com/asobti/kube-monkey/pull/123
 lint:
 ifdef GOLANGCI_INSTALLED
 	bin/golangci-lint run -E golint -E goimports
@@ -15,7 +17,7 @@ else
 	@echo Installation instructions: https://github.com/golangci/golangci-lint#ci-installation
 endif
 
-build: clean gofmt lint
+build: clean gofmt
 	$(ENVVAR) go build -o kube-monkey
 
 docker_args=
