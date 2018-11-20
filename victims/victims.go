@@ -166,6 +166,8 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 	switch {
 	case numPods == 0:
 		return fmt.Errorf("%s %s has no running pods at the moment", v.kind, v.name)
+	case killNum == 0:
+		return fmt.Errorf("no terminations requested for %s %s", v.kind, v.name)
 	case numPods < killNum:
 		glog.Warningf("%s %s has only %d currently running pods, but %d terminations requested", v.kind, v.name, numPods, killNum)
 		fallthrough
@@ -181,11 +183,10 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	// Generate a []int of size `numPods` with random-values in the range [0, n)
-	// take the first `killNum` elements from this slice
-	// kill pods at those indices
-	for _, i := range r.Perm(numPods)[:killNum] {
-		targetPod := pods[i].Name
+	for i := 0; i < killNum; i++ {
+		victimIndex := r.Intn(numPods)
+		targetPod := pods[victimIndex].Name
+
 		glog.V(6).Infof("Terminating pod %s for %s %s/%s\n", targetPod, v.kind, v.namespace, v.name)
 
 		err = v.DeletePod(clientset, targetPod)

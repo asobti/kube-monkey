@@ -41,7 +41,20 @@ func newPod(name string, status v1.PodPhase) v1.Pod {
 			Phase: status,
 		},
 	}
+}
 
+func generateNPods(namePrefix string, n int, status v1.PodPhase) []runtime.Object {
+	var pods []runtime.Object
+	for i := 0; i < n; i++ {
+		pod := newPod(fmt.Sprintf("%s%d", namePrefix, i), status)
+		pods = append(pods, &pod)
+	}
+
+	return pods
+}
+
+func generateNRunningPods(namePrefix string, n int) []runtime.Object {
+	return generateNPods(namePrefix, n, v1.PodRunning)
 }
 
 func newVictimBase() *VictimBase {
@@ -137,10 +150,10 @@ func TestDeleteRandomPods(t *testing.T) {
 	assert.Lenf(t, podList, 3, "Expected 3 items in podList, got %d", len(podList))
 
 	err := v.DeleteRandomPods(client, 0)
-	assert.EqualError(t, err, "No terminations requested for Pod name")
+	assert.NotNil(t, err, "expected err for killNum=0 but got nil")
 
 	err = v.DeleteRandomPods(client, -1)
-	assert.EqualError(t, err, "Cannot request negative terminations 2 for Pod name")
+	assert.NotNil(t, err, "expected err for negative terminations but got nil")
 
 	_ = v.DeleteRandomPods(client, 1)
 	podList = getPodList(client).Items
@@ -156,83 +169,130 @@ func TestDeleteRandomPods(t *testing.T) {
 	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 
-func TestInvalidInputsForDeletePodsRandomMaxPercentage(t *testing.T) {
-
-	v := newVictimBase()
-
-	var pods []runtime.Object
-	for i := 0; i < 100; i++ {
-		pod := newPod(fmt.Sprintf("app%d", i), v1.PodRunning)
-		pods = append(pods, &pod)
-	}
-
-	client := fake.NewSimpleClientset(pods...)
-
-	killNum := v.KillNumberForMaxPercentage(client, -1)
-	assert.Equalf(t, 0, killNum, "Should default to 0 percent when percentage has a negative value, got %d", killNum)
-
-	killNum = v.KillNumberForMaxPercentage(client, 101)
-	assert.Truef(t, killNum > 0 && killNum <= 100, "Should default to 100 percent pods when percentage is greater than 100, got %d", killNum)
-}
-
 func TestKillNumberForMaxPercentage(t *testing.T) {
 
 	v := newVictimBase()
 
-	var pods []runtime.Object
-	for i := 0; i < 100; i++ {
-		pod := newPod(fmt.Sprintf("app%d", i), v1.PodRunning)
-		pods = append(pods, &pod)
-	}
+	pods := generateNRunningPods("app", 100)
 
 	client := fake.NewSimpleClientset(pods...)
 
-	killNum := v.KillNumberForMaxPercentage(client, 0) // 0% means we don't kill any pods
-	assert.Equal(t, killNum, 0, "Expected 0 pods to be killed, got %d", killNum)
-
-	killNum = v.KillNumberForMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
+	killNum, err := v.KillNumberForMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
+	assert.Nil(t, err, "Expected err to be nil but got %v", err)
 	assert.Truef(t, killNum >= 0 && killNum <= 50, "Expected kill number between 0 and 50 pods, got %d", killNum)
 }
 
-func TestInvalidInputsForDeletePodsFixedMaxPercentage(t *testing.T) {
-
-	v := newVictimBase()
-
-	var pods []runtime.Object
-	for i := 0; i < 100; i++ {
-		pod := newPod(fmt.Sprintf("app%d", i), v1.PodRunning)
-		pods = append(pods, &pod)
+func TestKillNumberForMaxPercentageInvalidValues(t *testing.T) {
+	type TestCase struct {
+		name          string
+		maxPercentage int
+		expectedNum   int
+		expectedErr   bool
 	}
 
-	client := fake.NewSimpleClientset(pods...)
+	tcs := []TestCase{
+		{
+			name:          "Negative value for maxPercentage",
+			maxPercentage: -1,
+			expectedNum:   0,
+			expectedErr:   true,
+		},
+		{
+			name:          "0 value for maxPercentage",
+			maxPercentage: 0,
+			expectedNum:   0,
+			expectedErr:   false,
+		},
+		{
+			name:          "maxPercentage greater than 100",
+			maxPercentage: 110,
+			expectedNum:   0,
+			expectedErr:   true,
+		},
+	}
 
-	killNum := v.KillNumberForFixedPercentage(client, -1)
-	assert.Equalf(t, 0, killNum, "Should default to 0 percent when percentage has a negative value, got %d", killNum)
+	for _, tc := range tcs {
+		v := newVictimBase()
+		client := fake.NewSimpleClientset()
 
-	killNum = v.KillNumberForFixedPercentage(client, 101)
-	assert.Equalf(t, 100, killNum, "Should default to 100 percent when percentage is greater than 100, got %d", killNum)
+		result, err := v.KillNumberForMaxPercentage(client, tc.maxPercentage)
+
+		if tc.expectedErr {
+			assert.NotNil(t, err, tc.name)
+		} else {
+			assert.Nil(t, err, tc.name)
+			assert.Equal(t, result, tc.expectedNum, tc.name)
+		}
+	}
 }
 
 func TestDeletePodsFixedPercentage(t *testing.T) {
+	type TestCase struct {
+		name           string
+		killPercentage int
+		pods           []runtime.Object
+		expectedNum    int
+		expectedErr    bool
+	}
 
-	v := newVictimBase()
-	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending) // not running
-	pod3 := newPod("app3", v1.PodRunning)
-	pod4 := newPod("app4", v1.PodRunning)
-	pod5 := newPod("app5", v1.PodRunning)
-	pod6 := newPod("app6", v1.PodRunning)
+	tcs := []TestCase{
+		{
+			name:           "negative value for killPercentage",
+			killPercentage: -1,
+			expectedNum:    0,
+			expectedErr:    true,
+		},
+		{
+			name:           "0 value for killPercentage",
+			killPercentage: 0,
+			expectedNum:    0,
+			expectedErr:    false,
+		},
+		{
+			name:           "killPercentage greater than 100",
+			killPercentage: 110,
+			expectedNum:    0,
+			expectedErr:    true,
+		},
+		{
+			name:           "correctly calculates pods to kill based on killPercentage",
+			killPercentage: 50,
+			pods:           generateNRunningPods("app", 10),
+			expectedNum:    5,
+			expectedErr:    false,
+		},
+		{
+			name:           "correctly floors fractional values for the number of pods to kill",
+			killPercentage: 33,
+			pods:           generateNRunningPods("app", 10),
+			expectedNum:    3,
+			expectedErr:    false,
+		},
+		{
+			name:           "does not count pending pods when calculating num of pods to kill",
+			killPercentage: 80,
+			pods: append(
+				generateNPods("running", 1, v1.PodRunning),
+				generateNPods("pending", 1, v1.PodPending)...),
+			expectedNum: 0,
+			expectedErr: false,
+		},
+	}
 
-	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3, &pod4, &pod5, &pod6)
+	for _, tc := range tcs {
+		client := fake.NewSimpleClientset(tc.pods...)
+		v := newVictimBase()
 
-	killNum := v.KillNumberForFixedPercentage(client, 0) // 0% means we don't kill any pods
-	assert.Equalf(t, killNum, 0, "Expected 0 pods to be killed, got %d", killNum)
+		result, err := v.KillNumberForFixedPercentage(client, tc.killPercentage)
 
-	killNum = v.KillNumberForFixedPercentage(client, 50) // 50% means we kill 2 (rounded down from 2.5) out of 5 running pods
-	assert.Equalf(t, killNum, 2, "Expected 2 pods to be killed, got %d", killNum)
+		if tc.expectedErr {
+			assert.NotNil(t, err, tc.name)
+		} else {
+			assert.Nil(t, err, tc.name)
+			assert.Equal(t, tc.expectedNum, result, tc.name)
+		}
+	}
 
-	killNum = v.KillNumberForFixedPercentage(client, 100) // 100% means we kill all 6 running pods
-	assert.Equalf(t, killNum, 5, "Expected 5 pods to be killed, got %d", killNum)
 }
 
 func TestDeleteRandomPod(t *testing.T) {
