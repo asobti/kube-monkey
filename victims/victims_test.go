@@ -284,3 +284,47 @@ func TestRandomPodName(t *testing.T) {
 	name := RandomPodName([]v1.Pod{pod1, pod2})
 	assert.Truef(t, strings.HasPrefix(name, "app"), "Pod name %s should start with 'app'", name)
 }
+
+func TestGetDeleteOptsForPod(t *testing.T) {
+	type TestCase struct {
+		name                   string
+		terminationGracePeriod *int64
+		expectedGracePeriod    *int64
+	}
+
+	// helper method to create *int64 from int64 since Go does not allow
+	// use of address operator (&) on numeric constants
+	newInt64Pointer := func(val int64) *int64 {
+		return &val
+	}
+
+	defaultGracePeriod := config.GracePeriodSeconds()
+
+	tcs := []TestCase{
+		{
+			name:                   "nil pod TerminationGracePeriod",
+			terminationGracePeriod: nil,
+			expectedGracePeriod:    defaultGracePeriod,
+		},
+		{
+			name:                   "pod TerminateGracePeriod lower than configured grace period",
+			terminationGracePeriod: newInt64Pointer(*defaultGracePeriod - int64(1)),
+			expectedGracePeriod:    defaultGracePeriod,
+		},
+		{
+			name:                   "pod TerminationGracePeriod higher than configured grace period",
+			terminationGracePeriod: newInt64Pointer(*defaultGracePeriod + int64(1)),
+			expectedGracePeriod:    newInt64Pointer(*defaultGracePeriod + int64(1)),
+		},
+	}
+
+	for _, tc := range tcs {
+		pod := newPod("app", v1.PodRunning)
+		pod.Spec.TerminationGracePeriodSeconds = tc.terminationGracePeriod
+
+		v := newVictimBase()
+		deleteOpts := v.GetDeleteOptsForPod(&pod)
+
+		assert.Equal(t, deleteOpts.GracePeriodSeconds, tc.expectedGracePeriod, tc.name)
+	}
+}
