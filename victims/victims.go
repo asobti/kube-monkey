@@ -136,16 +136,22 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 		return errors.Wrapf(err, "unable to get pod %s for %s/%s", podName, v.namespace, v.name)
 	}
 
+	deleteOpts := v.GetDeleteOptsForPod(pod)
+	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteOpts)
+}
+
+// Creates the DeleteOptions object for the pod. Grace period is calculated as the higher
+// of configured grace period and termination grace period set on the pod
+func (v *VictimBase) GetDeleteOptsForPod(pod *v1.Pod) *metav1.DeleteOptions {
 	gracePeriodSec := config.GracePeriodSeconds()
+
 	if pod.Spec.TerminationGracePeriodSeconds != nil && *pod.Spec.TerminationGracePeriodSeconds > *gracePeriodSec {
 		gracePeriodSec = pod.Spec.TerminationGracePeriodSeconds
 	}
 
-	deleteopts := &metav1.DeleteOptions{
+	return &metav1.DeleteOptions{
 		GracePeriodSeconds: gracePeriodSec,
 	}
-
-	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteopts)
 }
 
 // Removes specified number of random pods for the victim
