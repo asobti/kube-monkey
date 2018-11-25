@@ -1,7 +1,7 @@
 all: test
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-TAG = v0.2.3
+TAG := $(shell cat VERSION)
 GOLANGCI_INSTALLED := $(shell which bin/golangci-lint)
 
 
