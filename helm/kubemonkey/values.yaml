@@ -8,18 +8,18 @@ rbac:
   enabled: true
 image:
   repository: ayushsobti/kube-monkey
-  tag: v0.2.3
+  tag: PR103
   pullPolicy: IfNotPresent
 config:
-  dryRun: false  
+  dryRun: true 
   runHour: 8
   startHour: 10
   endHour: 16
   blacklistedNamespaces: kube-system
   whitelistedNamespaces:
-  timeZone: America/New_York
+  timeZone: Australia/Melbourne
   debug:
-   enabled: false # if you want to enable debugging and see how pods killed immediately set this to true
+   enabled: true # if you want to enable debugging and see how pods killed immediately set this to true
    schedule_immediate_kill: true
 args:
   logLevel: 5
