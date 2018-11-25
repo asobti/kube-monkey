@@ -3,19 +3,24 @@
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
-namespace: kube-system
+namespace: default
+rbac:
+  enabled: true
 image:
-  repository: $Your_Container_Repo$
-  tag: v0.2.2
+  repository: ayushsobti/kube-monkey
+  tag: v0.2.3
   pullPolicy: IfNotPresent
 config:
-  dryRun: false
+  dryRun: false  
   runHour: 8
   startHour: 10
   endHour: 16
   blacklistedNamespaces: kube-system
   whitelistedNamespaces:
   timeZone: America/New_York
+  debug:
+   enabled: false # if you want to enable debugging and see how pods killed immediately set this to true
+   schedule_immediate_kill: true
 args:
   logLevel: 5
   logDir: /var/log/kube-monkey

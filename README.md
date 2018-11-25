@@ -145,7 +145,12 @@ KUBEMONKEY_END_HOUR=16
 KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
-
+#### Example Config to test monkey works as expected enabeling debug mode
+```toml
+[debug]
+enabled= true
+schedule_immediate_kill= true
+```
 
 ## Deploying
 
@@ -158,13 +163,17 @@ KUBEMONKEY_TIME_ZONE=America/New_York
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
+3. You should be able to see debug logs by `kubectl logs -f deployment.apps/kube-monkey --namespace=kube-system`  here the `deployment.apps/kube-monkey` is the k8s deployment for kube monkey.
+
+
 **Helm Chart**  
-A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit `$PROJECT/helm/kubemonkey/values.yaml` and update the value of `image.repository` to point at the location of your container.
+A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `asobti/kube-monkey`.
 
 Helm can then be executed using
 ```bash
 helm install $release helm/kubemonkey
 ```
+
 
 ## Logging
 

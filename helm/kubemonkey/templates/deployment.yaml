@@ -2,6 +2,7 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: {{ template "kubemonkey.fullname" . }}
+  namespace: {{ .Values.namespace }}
   labels:
     app: {{ template "kubemonkey.name" . }}
     chart: {{ template "kubemonkey.chart" . }}
@@ -29,6 +30,7 @@ spec:
           volumeMounts:
              - name: config-volume
                mountPath: "/etc/kube-monkey"
+      serviceAccountName: {{ template "kubemonkey.fullname" . }} 
       volumes:
         - name: config-volume
           configMap:
