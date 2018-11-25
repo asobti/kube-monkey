@@ -145,7 +145,7 @@ KUBEMONKEY_END_HOUR=16
 KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
-#### Example Config to test monkey works as expected enabeling debug mode
+#### Example Config to test kube-monkey works by enabeling debug mode
 ```toml
 [debug]
 enabled= true
@@ -167,7 +167,7 @@ See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples
 
 
 **Helm Chart**  
-A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `asobti/kube-monkey`.
+A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `ayushsobti/kube-monkey`.
 
 Helm can then be executed using
 ```bash
