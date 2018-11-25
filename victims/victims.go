@@ -55,9 +55,9 @@ type VictimAPICalls interface {
 }
 
 type VictimKillNumberGenerator interface {
-	KillNumberForMaxPercentage(kube.Interface, int) int
-	KillNumberForKillingAll(kube.Interface, int) int
-	KillNumberForFixedPercentage(kube.Interface, int) int
+	KillNumberForMaxPercentage(kube.Interface, int) (int, error)
+	KillNumberForKillingAll(kube.Interface) (int, error)
+	KillNumberForFixedPercentage(kube.Interface, int) (int, error)
 }
 
 type VictimBase struct {
@@ -166,35 +166,33 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 	switch {
 	case numPods == 0:
 		return fmt.Errorf("%s %s has no running pods at the moment", v.kind, v.name)
+	case killNum == 0:
+		return fmt.Errorf("no terminations requested for %s %s", v.kind, v.name)
 	case numPods < killNum:
 		glog.Warningf("%s %s has only %d currently running pods, but %d terminations requested", v.kind, v.name, numPods, killNum)
 		fallthrough
 	case numPods == killNum:
 		glog.V(6).Infof("Killing ALL %d running pods for %s %s", numPods, v.kind, v.name)
-	case killNum == 0:
-		return fmt.Errorf("No terminations requested for %s %s", v.kind, v.name)
 	case killNum < 0:
-		return fmt.Errorf("Cannot request negative terminations %d for %s %s", numPods, v.kind, v.name)
+		return fmt.Errorf("cannot request negative terminations %d for %s %s", killNum, v.kind, v.name)
 	case numPods > killNum:
-		glog.V(6).Infof("Killing %d running pods for %s %s", numPods, v.kind, v.name)
+		glog.V(6).Infof("Killing %d running pods for %s %s", killNum, v.kind, v.name)
 	default:
 		return fmt.Errorf("unexpected behavior for terminating %s %s", v.kind, v.name)
 	}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	killCount := 0
-	for _, i := range r.Perm(numPods) {
-		if killCount == killNum {
-			// Report success
-			return nil
-		}
-		targetPod := pods[i].Name
-		glog.V(6).Infof("Terminating pod %s for %s %s\n", targetPod, v.kind, v.name)
+
+	for i := 0; i < killNum; i++ {
+		victimIndex := r.Intn(numPods)
+		targetPod := pods[victimIndex].Name
+
+		glog.V(6).Infof("Terminating pod %s for %s %s/%s\n", targetPod, v.kind, v.namespace, v.name)
+
 		err = v.DeletePod(clientset, targetPod)
 		if err != nil {
 			return err
 		}
-		killCount++
 	}
 
 	// Successful termination
@@ -264,69 +262,67 @@ func RandomPodName(pods []v1.Pod) string {
 }
 
 // Returns the number of pods to kill based on the number of all running pods
-func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface, killPercentage int) int {
-	killNum := v.numberOfRunningPods(clientset)
+func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface) (int, error) {
+	killNum, err := v.numberOfRunningPods(clientset)
+	if err != nil {
+		return 0, err
+	}
 
-	return killNum
+	return killNum, nil
 }
 
 // Returns the number of pods to kill based on a kill percentage and the number of running pods
-func (v *VictimBase) KillNumberForFixedPercentage(clientset kube.Interface, killPercentage int) int {
+func (v *VictimBase) KillNumberForFixedPercentage(clientset kube.Interface, killPercentage int) (int, error) {
 	if killPercentage == 0 {
 		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0\n", v.kind, v.name)
 		// Report success
-		return 0
+		return 0, nil
 	}
-	if killPercentage < 0 {
-		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 0", killPercentage, v.kind, v.name)
-		killPercentage = 0
-	}
-	if killPercentage > 100 {
-		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 100", killPercentage, v.kind, v.name)
-		killPercentage = 100
+	if killPercentage < 0 || killPercentage > 100 {
+		return 0, fmt.Errorf("percentage value of %d is invalid. Must be [0-100]", killPercentage)
 	}
 
-	numRunningPods := v.numberOfRunningPods(clientset)
+	numRunningPods, err := v.numberOfRunningPods(clientset)
+	if err != nil {
+		return 0, err
+	}
 
 	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
 	killNum := int(math.Floor(numberOfPodsToKill))
 
-	return killNum
+	return killNum, nil
 }
 
 // Returns a number of pods to kill based on a a random kill percentage (between 0 and maxPercentage) and the number of running pods
-func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPercentage int) int {
+func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPercentage int) (int, error) {
 	if maxPercentage == 0 {
-		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0\n", v.kind, v.name)
+		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0", v.kind, v.name)
 		// Report success
-		return 0
+		return 0, nil
 	}
-	if maxPercentage < 0 {
-		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 0%%", maxPercentage, v.kind, v.name)
-		maxPercentage = 0
-	}
-	if maxPercentage > 100 {
-		glog.V(6).Infof("Expected kill percentage config %d to be between 0 and 100 for %s %s. Defaulting to 100%%", maxPercentage, v.kind, v.name)
-		maxPercentage = 100
+	if maxPercentage < 0 || maxPercentage > 100 {
+		return 0, fmt.Errorf("percentage value of %d is invalid. Must be [0-100]", maxPercentage)
 	}
 
-	numRunningPods := v.numberOfRunningPods(clientset)
+	numRunningPods, err := v.numberOfRunningPods(clientset)
+	if err != nil {
+		return 0, err
+	}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	killPercentage := r.Intn(maxPercentage + 1) // + 1 because Intn works with half open interval [0,n) and we want [0,n]
 	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
 	killNum := int(math.Floor(numberOfPodsToKill))
 
-	return killNum
+	return killNum, nil
 }
 
 // Returns the number of running pods or 0 if the operation fails
-func (v *VictimBase) numberOfRunningPods(clientset kube.Interface) int {
+func (v *VictimBase) numberOfRunningPods(clientset kube.Interface) (int, error) {
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
-		glog.V(6).Infof("Failed to get list of running pods %s %s", v.kind, v.name)
-		return 0
+		return 0, errors.Wrapf(err, "Failed to get running pods for victim %s %s", v.kind, v.name)
 	}
 
-	return len(pods)
+	return len(pods), nil
 }
