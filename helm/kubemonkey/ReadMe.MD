@@ -1,4 +1,4 @@
-# Chaoskube Helm Chart
+# Kube-Monkey Helm Chart
 
 [chaoskube](https://github.com/linki/chaoskube) periodically kills random pods in your Kubernetes cluster.
 
