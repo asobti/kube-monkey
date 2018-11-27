@@ -36,11 +36,24 @@ If you're confident you want to use it in real run `helm` with:
 $ helm install --name my-release kubemonkey --set config.dryRun=false
 ```
 
-By default `Kube-Monkey` runs in without any white listed namespace mode so it doesn't actually kill anything.
+By default `Kube-Monkey` runs in without any white listed namespace assigned so it doesn't actually kill anything.
 If you're confident you want to enable it in real, run `helm` with:
 
 ```console
-$ helm install --name my-release kubemonkey --set config.dryRun=false --set config.whitelistedNamespaces=namespace1,namespace2,namespace3
+$ helm install --name my-release kubemonkey \
+               --set config.dryRun=false \
+               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3
+```
+
+If you want to see how kube-monkey kills pods immediatley in debub mode.
+If you're confident you want to enable it in real in debug mode, run `helm` with:
+
+```console
+$ helm install --name my-release kubemonkey \
+               --set config.dryRun=false \
+               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3
+               --set config.debug.enabled=true
+               --set config.debug.schedule_immediate_kill=true
 ```
 
 | Parameter                 | Description                                         | Default                          |
@@ -63,18 +76,52 @@ $ helm install --name my-release kubemonkey --set config.dryRun=false --set conf
 | `args.logLevel`           | go log level                                        | 5                                |
 | `args.logDir`             | log directory                                       | /var/log/kube-monkey             |
 
-Setting label and namespaces selectors from the shell can be tricky but is possible (example with zsh):
+after all you can simply edit values.yaml and run kube-monkey in your prefered way as below
 
 ```console
-$ helm install \
-  --set labels='app=mate\,stage!=prod',namespaces='!kube-system\,!production' \
-  stable/chaoskube --debug --dry-run | grep -A7 args
-    args:
-    - --interval=10m
-    - --labels=app=foo,stage!=prod
-    - --namespaces=!kube-system,!production
-    - --timezone=America/New_York
-    - --excludedWeekdays="Sat,Tue"
-    - --excludedTimesOfDay="12:00-18:00"
-    - --excludedDaysOfYear="Apr1,Dec24"
+$ helm install --name my-release kubemonkey
+```
+example modified values.yaml
+
+```yaml
+replicaCount: 1
+namespace: default
+rbac:
+  enabled: true
+image:
+  repository: ayushsobti/kube-monkey
+  tag: v0.3.0
+  pullPolicy: IfNotPresent
+config:
+  dryRun: true
+  runHour: 8
+  startHour: 10
+  endHour: 16
+  blacklistedNamespaces: kube-system
+  whitelistedNamespaces: namespace1,namespace2
+  timeZone: America/New_York
+  debug:
+   enabled: false # if you want to enable debugging and see how pods killed immediately set this to true
+   schedule_immediate_kill: false
+args:
+  logLevel: 5
+  logDir: /var/log/kube-monkey
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
 ```
