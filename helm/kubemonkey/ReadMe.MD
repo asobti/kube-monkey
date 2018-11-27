@@ -44,15 +44,15 @@ $ helm install stable/chaoskube --set dryRun=false
 | `rbac.enabled`            | rbac enabled or not                                 | true                             |
 | `image.tag.IfNotPresent`  | image pull logic                                    | IfNotPresent                     |
 | `namespace`               | namespace that kube-monkey will be installed        | default                          |
-| `config.dryRun`           | Will not kill pods only logs                        | false                            |
-| `config.runHour`          | Schedule start time in 24hr format                  | 8                                |
-| `config.startHour`        | Pod killing start time  in 24hr format              | 10                               |
-| `config.endHour`          | Pod killing stop time  in 24hr format               | 16                               |
-| `config.whitelistedNamespaces`| Pods in this namespace that opt-in will be killed|                                 |
-| `config.endHour.blacklistedNamespaces`| Pods in this namespace will not be killed| kube-system                     |
-| `priorityClassName`       | priorityClassName                                   | `nil`                            |
-| `rbac.create`             | create rbac service account and roles               | false                            |
-| `rbac.serviceAccountName` | name of serviceAccount to use when create is false  | default                          |
+| `config.dryRun`           | will not kill pods only logs                        | false                            |
+| `config.runHour`          | schedule start time in 24hr format                  | 8                                |
+| `config.startHour`        | pod killing start time  in 24hr format              | 10                               |
+| `config.endHour`          | pod killing stop time  in 24hr format               | 16                               |
+| `config.whitelistedNamespaces`| pods in this namespace that opt-in will be killed|                                 |
+| `config.endHour.blacklistedNamespaces`| pods in this namespace will not be killed| kube-system                     |
+| `config.timeZone`         | time zone in DZ format                              | `America/New_York`               |
+| `config.debug.enabled`    | debug mode                                          | false                            |
+| `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time| true             |
 | `resources`               | CPU/Memory resource requests/limits                 | `{}`                             |
 | `nodeSelector`            | Node labels for pod assignment                      | `{}`                             |
 | `tolerations`             | Toleration labels for pod assignment                | `[]`                             |
