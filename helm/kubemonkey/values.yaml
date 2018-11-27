@@ -11,7 +11,7 @@ image:
   tag: v0.3.0
   pullPolicy: IfNotPresent
 config:
-  dryRun: false  
+  dryRun: true  
   runHour: 8
   startHour: 10
   endHour: 16
@@ -20,7 +20,7 @@ config:
   timeZone: America/New_York
   debug:
    enabled: false # if you want to enable debugging and see how pods killed immediately set this to true
-   schedule_immediate_kill: true
+   schedule_immediate_kill: false
 args:
   logLevel: 5
   logDir: /var/log/kube-monkey
