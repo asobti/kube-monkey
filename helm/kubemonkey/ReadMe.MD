@@ -76,12 +76,12 @@ $ helm install --name my-release kubemonkey \
 | `args.logLevel`           | go log level                                        | 5                                |
 | `args.logDir`             | log directory                                       | /var/log/kube-monkey             |
 
-after all you can simply edit values.yaml and run kube-monkey in your prefered way as below
+after all you can simply edit values.yaml with your prefered configs and run as below
 
 ```console
 $ helm install --name my-release kubemonkey
 ```
-example modified values.yaml
+example of a modified values.yaml
 
 ```yaml
 replicaCount: 1
