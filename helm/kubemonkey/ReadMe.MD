@@ -51,13 +51,10 @@ $ helm install stable/chaoskube --set dryRun=false
 | `config.whitelistedNamespaces`| pods in this namespace that opt-in will be killed|                                 |
 | `config.endHour.blacklistedNamespaces`| pods in this namespace will not be killed| kube-system                     |
 | `config.timeZone`         | time zone in DZ format                              | `America/New_York`               |
-| `config.debug.enabled`    | debug mode                                          | false                            |
+| `config.debug.enabled`    | debug mode,need to be enabled to see debuging behaviour| false                         |
 | `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time| true             |
-| `resources`               | CPU/Memory resource requests/limits                 | `{}`                             |
-| `nodeSelector`            | Node labels for pod assignment                      | `{}`                             |
-| `tolerations`             | Toleration labels for pod assignment                | `[]`                             |
-| `affinity`                | Affinity settings for pod assignment                | `{}`                             |
-| `minimumAge`              | Set minimum pod age to filter pod by                | `0s`                             |
+| `args.logLevel`           | go log level                                        | 5                                |
+| `args.logDir`             | log directory                                       | /var/log/kube-monkey             |
 
 Setting label and namespaces selectors from the shell can be tricky but is possible (example with zsh):
 
