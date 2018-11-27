@@ -48,8 +48,8 @@ $ helm install stable/chaoskube --set dryRun=false
 | `config.runHour`          | Schedule start time in 24hr format                  | 8                                |
 | `config.startHour`        | Pod killing start time  in 24hr format              | 10                               |
 | `config.endHour`          | Pod killing stop time  in 24hr format               | 16                               |
-| `config.endHour`      | Set Time Range to avoid actions (Optional)          | "" (Don't skip any times of day) |
-| `config.endHour.blacklistedNamespaces`      | Set Days of the Year to avoid actions (Optional)    | "" (Don't skip any days)         |
+| `config.whitelistedNamespaces`| Pods in this namespace that opt-in will be killed|                                 |
+| `config.endHour.blacklistedNamespaces`| Pods in this namespace will not be killed| kube-system                     |
 | `priorityClassName`       | priorityClassName                                   | `nil`                            |
 | `rbac.create`             | create rbac service account and roles               | false                            |
 | `rbac.serviceAccountName` | name of serviceAccount to use when create is false  | default                          |
