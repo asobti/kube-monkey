@@ -8,7 +8,7 @@ rbac:
   enabled: true
 image:
   repository: ayushsobti/kube-monkey
-  tag: v0.2.3
+  tag: v0.3.0
   pullPolicy: IfNotPresent
 config:
   dryRun: false  
