@@ -2,15 +2,16 @@
 
 [Kube-Monkey](https://github.com/asobti/kube-monkey) periodically kills pods in your Kubernetes cluster,that are opt-in based on their own rules.
 
-## TL;DR;
+## Official Helm;
 
-TBA to official helm charts
+TBA to official helm charts,There is no official helm chart yet for kube-monkey.
 
 ## Installing the Chart
 
 To install the chart with the release name `my-release`:
 
 ```console
+$ git clone https://github.com/asobti/kube-monkey
 $ cd kube-monkey/helm
 $ helm install --name my-release kubemonkey
 ```
@@ -42,17 +43,16 @@ If you're confident you want to enable it in real, run `helm` with:
 ```console
 $ helm install --name my-release kubemonkey \
                --set config.dryRun=false \
-               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3
+               --set config.whitelistedNamespaces="namespace1"\,"namespace2"\,"namespace3"
 ```
 
 If you want to see how kube-monkey kills pods immediatley in debub mode.
-If you're confident you want to enable it in real in debug mode, run `helm` with:
 
 ```console
 $ helm install --name my-release kubemonkey \
                --set config.dryRun=false \
-               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3
-               --set config.debug.enabled=true
+               --set config.whitelistedNamespaces="namespace1"\,"namespace2"\,"namespace3" \
+               --set config.debug.enabled=true \
                --set config.debug.schedule_immediate_kill=true
 ```
 
@@ -76,12 +76,12 @@ $ helm install --name my-release kubemonkey \
 | `args.logLevel`           | go log level                                        | 5                                |
 | `args.logDir`             | log directory                                       | /var/log/kube-monkey             |
 
-after all you can simply edit values.yaml and run kube-monkey in your prefered way as below
+after all you can simply edit values.yaml with your prefered configs and run as below
 
 ```console
 $ helm install --name my-release kubemonkey
 ```
-example modified values.yaml
+example of a modified values.yaml
 
 ```yaml
 replicaCount: 1
@@ -93,7 +93,7 @@ image:
   tag: v0.3.0
   pullPolicy: IfNotPresent
 config:
-  dryRun: true
+  dryRun: false
   runHour: 8
   startHour: 10
   endHour: 16
