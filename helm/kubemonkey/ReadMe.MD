@@ -16,7 +16,7 @@ $ cd kube-monkey/helm
 $ helm install --name my-release kubemonkey
 ```
 
-The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configuration) section lists the parameters that can be configured during installation.
+The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#'List of configurations') section lists the parameters that can be configured during installation.
 
 ## Uninstalling the Chart
 
