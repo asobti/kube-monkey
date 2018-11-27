@@ -47,7 +47,6 @@ $ helm install --name my-release kubemonkey \
 ```
 
 If you want to see how kube-monkey kills pods immediatley in debub mode.
-If you're confident you want to enable it in real in debug mode, run `helm` with:
 
 ```console
 $ helm install --name my-release kubemonkey \
