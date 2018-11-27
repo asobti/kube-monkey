@@ -4,76 +4,124 @@
 
 ## TL;DR;
 
-```console
-$ helm install stable/chaoskube
-```
+TBA to official helm charts
 
 ## Installing the Chart
 
 To install the chart with the release name `my-release`:
 
 ```console
-$ helm install --name my-release stable/chaoskube
+$ cd kube-monkey/helm
+$ helm install --name my-release kubemonkey
 ```
 
-The command deploys chaoskube on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
 ## Uninstalling the Chart
 
 To uninstall/delete the my-release deployment:
 
 ```console
-$ helm delete my-release
+$ helm delete my-release --purge
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
 
 ## Configuration
 
-By default `chaoskube` runs in dry-run mode so it doesn't actually kill anything.
-If you're sure you want to use it run `helm` with:
+By default `Kube-Monkey` runs in dry-run mode so it doesn't actually kill anything.
+If you're confident you want to use it in real run `helm` with:
 
 ```console
-$ helm install stable/chaoskube --set dryRun=false
+$ helm install --name my-release kubemonkey --set config.dryRun=false
+```
+
+By default `Kube-Monkey` runs in without any white listed namespace assigned so it doesn't actually kill anything.
+If you're confident you want to enable it in real, run `helm` with:
+
+```console
+$ helm install --name my-release kubemonkey \
+               --set config.dryRun=false \
+               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3
+```
+
+If you want to see how kube-monkey kills pods immediatley in debub mode.
+If you're confident you want to enable it in real in debug mode, run `helm` with:
+
+```console
+$ helm install --name my-release kubemonkey \
+               --set config.dryRun=false \
+               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3
+               --set config.debug.enabled=true
+               --set config.debug.schedule_immediate_kill=true
 ```
 
 | Parameter                 | Description                                         | Default                          |
 |---------------------------|-----------------------------------------------------|----------------------------------|
-| `name`                    | container name                                      | chaoskube                        |
-| `image`                   | docker image                                        | quay.io/linki/chaoskube          |
-| `imageTag`                | docker image tag                                    | v0.10.0                          |
-| `replicas`                | number of replicas to run                           | 1                                |
-| `interval`                | interval between pod terminations                   | 10m                              |
-| `labels`                  | label selector to filter pods by                    | "" (matches everything)          |
-| `annotations`             | annotation selector to filter pods by               | "" (matches everything)          |
-| `namespaces`              | namespace selector to filter pods by                | "" (all namespaces)              |
-| `dryRun`                  | don't kill pods, only log what would have been done | true                             |
-| `debug`                   | Enable debug logging mode, for detailed logs        | false                            |
-| `timezone`                | Set timezone for running actions (Optional)         | "" (UTC)                         |
-| `excludedWeekdays`        | Set Days of the Week to avoid actions (Optional)    | "" (Don't skip any weekdays)     |
-| `excludedTimesOfDay`      | Set Time Range to avoid actions (Optional)          | "" (Don't skip any times of day) |
-| `excludedDaysOfYear`      | Set Days of the Year to avoid actions (Optional)    | "" (Don't skip any days)         |
-| `priorityClassName`       | priorityClassName                                   | `nil`                            |
-| `rbac.create`             | create rbac service account and roles               | false                            |
-| `rbac.serviceAccountName` | name of serviceAccount to use when create is false  | default                          |
-| `resources`               | CPU/Memory resource requests/limits                 | `{}`                             |
-| `nodeSelector`            | Node labels for pod assignment                      | `{}`                             |
-| `tolerations`             | Toleration labels for pod assignment                | `[]`                             |
-| `affinity`                | Affinity settings for pod assignment                | `{}`                             |
-| `minimumAge`              | Set minimum pod age to filter pod by                | `0s`                             |
+| `image.repository`        | docker image repo                                   | ayushsobti/kube-monkey           |
+| `image.tag`               | docker image tag                                    | v0.3.0                           |
+| `replicaCount`            | number of replicas to run                           | 1                                |
+| `rbac.enabled`            | rbac enabled or not                                 | true                             |
+| `image.tag.IfNotPresent`  | image pull logic                                    | IfNotPresent                     |
+| `namespace`               | namespace that kube-monkey will be installed        | default                          |
+| `config.dryRun`           | will not kill pods only logs                        | false                            |
+| `config.runHour`          | schedule start time in 24hr format                  | 8                                |
+| `config.startHour`        | pod killing start time  in 24hr format              | 10                               |
+| `config.endHour`          | pod killing stop time  in 24hr format               | 16                               |
+| `config.whitelistedNamespaces`| pods in this namespace that opt-in will be killed|                                 |
+| `config.endHour.blacklistedNamespaces`| pods in this namespace will not be killed| kube-system                     |
+| `config.timeZone`         | time zone in DZ format                              | `America/New_York`               |
+| `config.debug.enabled`    | debug mode,need to be enabled to see debuging behaviour| false                         |
+| `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time| true             |
+| `args.logLevel`           | go log level                                        | 5                                |
+| `args.logDir`             | log directory                                       | /var/log/kube-monkey             |
 
-Setting label and namespaces selectors from the shell can be tricky but is possible (example with zsh):
+after all you can simply edit values.yaml and run kube-monkey in your prefered way as below
 
 ```console
-$ helm install \
-  --set labels='app=mate\,stage!=prod',namespaces='!kube-system\,!production' \
-  stable/chaoskube --debug --dry-run | grep -A7 args
-    args:
-    - --interval=10m
-    - --labels=app=foo,stage!=prod
-    - --namespaces=!kube-system,!production
-    - --timezone=America/New_York
-    - --excludedWeekdays="Sat,Tue"
-    - --excludedTimesOfDay="12:00-18:00"
-    - --excludedDaysOfYear="Apr1,Dec24"
+$ helm install --name my-release kubemonkey
+```
+example modified values.yaml
+
+```yaml
+replicaCount: 1
+namespace: default
+rbac:
+  enabled: true
+image:
+  repository: ayushsobti/kube-monkey
+  tag: v0.3.0
+  pullPolicy: IfNotPresent
+config:
+  dryRun: true
+  runHour: 8
+  startHour: 10
+  endHour: 16
+  blacklistedNamespaces: kube-system
+  whitelistedNamespaces: namespace1,namespace2
+  timeZone: America/New_York
+  debug:
+   enabled: false # if you want to enable debugging and see how pods killed immediately set this to true
+   schedule_immediate_kill: false
+args:
+  logLevel: 5
+  logDir: /var/log/kube-monkey
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
 ```
