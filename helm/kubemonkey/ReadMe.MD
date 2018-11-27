@@ -1,6 +1,6 @@
 # Kube-Monkey Helm Chart
 
-[chaoskube](https://github.com/linki/chaoskube) periodically kills random pods in your Kubernetes cluster.
+[Kube-Monkey](https://github.com/asobti/kube-monkey) periodically kills pods in your Kubernetes cluster,that are opt-in based on their own rules.
 
 ## TL;DR;
 
