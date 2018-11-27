@@ -43,7 +43,7 @@ If you're confident you want to enable it in real, run `helm` with:
 ```console
 $ helm install --name my-release kubemonkey \
                --set config.dryRun=false \
-               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3
+               --set config.whitelistedNamespaces="namespace1"\,"namespace2"\,"namespace3"
 ```
 
 If you want to see how kube-monkey kills pods immediatley in debub mode.
@@ -51,7 +51,7 @@ If you want to see how kube-monkey kills pods immediatley in debub mode.
 ```console
 $ helm install --name my-release kubemonkey \
                --set config.dryRun=false \
-               --set config.whitelistedNamespaces=namespace1\,namespace2\,namespace3 \
+               --set config.whitelistedNamespaces="namespace1"\,"namespace2"\,"namespace3" \
                --set config.debug.enabled=true \
                --set config.debug.schedule_immediate_kill=true
 ```
