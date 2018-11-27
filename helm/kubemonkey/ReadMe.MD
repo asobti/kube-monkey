@@ -93,7 +93,7 @@ image:
   tag: v0.3.0
   pullPolicy: IfNotPresent
 config:
-  dryRun: true
+  dryRun: false
   runHour: 8
   startHour: 10
   endHour: 16
