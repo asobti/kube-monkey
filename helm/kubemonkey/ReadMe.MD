@@ -55,6 +55,22 @@ $ helm install --name my-release kubemonkey \
                --set config.debug.enabled=true \
                --set config.debug.schedule_immediate_kill=true
 ```
+If you want change time kube-monkey wakesup and start and end killing pods.
+
+```console
+$ helm install --name my-release kubemonkey \
+               --set config.dryRun=false \
+               --set config.whitelistedNamespaces="namespace1\"\,\"namespace2\"\,\"namespace3" \
+               --set config.runHour=10 \
+               --set config.startHour=11 \
+               --set config.endHour=17 
+```
+If you want validate intended values passed in to configmap .
+
+```console
+$ helm get manifest my-release
+```
+
 
 | Parameter                 | Description                                         | Default                          |
 |---------------------------|-----------------------------------------------------|----------------------------------|
@@ -70,7 +86,7 @@ $ helm install --name my-release kubemonkey \
 | `config.endHour`          | pod killing stop time  in 24hr format               | 16                               |
 | `config.whitelistedNamespaces`| pods in this namespace that opt-in will be killed|                                 |
 | `config.endHour.blacklistedNamespaces`| pods in this namespace will not be killed| kube-system                     |
-| `config.timeZone`         | time zone in DZ format                              | `America/New_York`               |
+| `config.timeZone`         | time zone in DZ format                              | America/New_York                 |
 | `config.debug.enabled`    | debug mode,need to be enabled to see debuging behaviour| false                         |
 | `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time| true             |
 | `args.logLevel`           | go log level                                        | 5                                |
@@ -81,9 +97,10 @@ after all you can simply edit values.yaml with your prefered configs and run as 
 ```console
 $ helm install --name my-release kubemonkey
 ```
-example of a modified values.yaml
+example of a modified values.yaml (only important parts are displayed)
 
 ```yaml
+...
 replicaCount: 1
 namespace: default
 rbac:
@@ -106,22 +123,5 @@ config:
 args:
   logLevel: 5
   logDir: /var/log/kube-monkey
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+...
 ```
