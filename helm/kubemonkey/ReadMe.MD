@@ -30,10 +30,17 @@ The command removes all the Kubernetes components associated with the chart and 
 ## Configuration
 
 By default `Kube-Monkey` runs in dry-run mode so it doesn't actually kill anything.
-If you're sure you want to use it run `helm` with:
+If you're confident you want to use it in real run `helm` with:
 
 ```console
-$ helm install stable/chaoskube --set dryRun=false
+$ helm install --name my-release kubemonkey --set config.dryRun=false
+```
+
+By default `Kube-Monkey` runs in without any white listed namespace mode so it doesn't actually kill anything.
+If you're confident you want to enable it in real, run `helm` with:
+
+```console
+$ helm install --name my-release kubemonkey --set config.dryRun=false --set config.whitelistedNamespaces=namespace1,namespace2,namespace3
 ```
 
 | Parameter                 | Description                                         | Default                          |
