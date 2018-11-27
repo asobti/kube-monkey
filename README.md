@@ -169,11 +169,11 @@ See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples
 **Helm Chart**  
 A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `ayushsobti/kube-monkey`.
 
-Helm can then be executed using
+Helm can then be executed using for default values
 ```bash
 helm install $release helm/kubemonkey
 ```
-
+refer [kube-monkey helm chart ReadME.MD](https://github.com/prageethw/kube-monkey/blob/master/helm/kubemonkey/ReadMe.MD)
 
 ## Logging
 
