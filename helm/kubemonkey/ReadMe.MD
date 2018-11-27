@@ -41,16 +41,15 @@ $ helm install stable/chaoskube --set dryRun=false
 | `image.repository`        | docker image repo                                   | ayushsobti/kube-monkey           |
 | `image.tag`               | docker image tag                                    | v0.3.0                           |
 | `replicaCount`            | number of replicas to run                           | 1                                |
-| `interval`                | interval between pod terminations                   | 10m                              |
-| `labels`                  | label selector to filter pods by                    | "" (matches everything)          |
-| `annotations`             | annotation selector to filter pods by               | "" (matches everything)          |
-| `namespace`               | namespace selector to filter pods by                | "" (all namespaces)              |
-| `dryRun`                  | don't kill pods, only log what would have been done | true                             |
-| `debug`                   | Enable debug logging mode, for detailed logs        | false                            |
-| `timezone`                | Set timezone for running actions (Optional)         | "" (UTC)                         |
-| `excludedWeekdays`        | Set Days of the Week to avoid actions (Optional)    | "" (Don't skip any weekdays)     |
-| `excludedTimesOfDay`      | Set Time Range to avoid actions (Optional)          | "" (Don't skip any times of day) |
-| `excludedDaysOfYear`      | Set Days of the Year to avoid actions (Optional)    | "" (Don't skip any days)         |
+| `rbac.enabled`            | rbac enabled or not                                 | true                             |
+| `image.tag.IfNotPresent`  | image pull logic                                    | IfNotPresent                     |
+| `namespace`               | namespace that kube-monkey will be installed        | default                          |
+| `config.dryRun`           | Will not kill pods only logs                        | false                            |
+| `config.runHour`          | Schedule start time in 24hr format                  | 8                                |
+| `config.startHour`        | Pod killing start time  in 24hr format              | 10                               |
+| `config.endHour`          | Pod killing stop time  in 24hr format               | 16                               |
+| `config.endHour`      | Set Time Range to avoid actions (Optional)          | "" (Don't skip any times of day) |
+| `config.endHour.blacklistedNamespaces`      | Set Days of the Year to avoid actions (Optional)    | "" (Don't skip any days)         |
 | `priorityClassName`       | priorityClassName                                   | `nil`                            |
 | `rbac.create`             | create rbac service account and roles               | false                            |
 | `rbac.serviceAccountName` | name of serviceAccount to use when create is false  | default                          |
