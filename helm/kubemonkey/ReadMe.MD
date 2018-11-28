@@ -118,8 +118,8 @@ config:
   whitelistedNamespaces: namespace1,namespace2
   timeZone: America/New_York
   debug:
-   enabled: false # if you want to enable debugging and see how pods killed immediately set this to true
-   schedule_immediate_kill: false
+   enabled: true # if you want to enable debugging and see how pods killed immediately set this to true
+   schedule_immediate_kill: true
 args:
   logLevel: 5
   logDir: /var/log/kube-monkey
