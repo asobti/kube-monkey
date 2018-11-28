@@ -80,7 +80,7 @@ $ helm get manifest my-release
 | `rbac.enabled`            | rbac enabled or not                                 | true                             |
 | `image.tag.IfNotPresent`  | image pull logic                                    | IfNotPresent                     |
 | `namespace`               | namespace that kube-monkey will be installed        | default                          |
-| `config.dryRun`           | will not kill pods only logs                        | false                            |
+| `config.dryRun`           | will not kill pods, only logs behaviour             | false                            |
 | `config.runHour`          | schedule start time in 24hr format                  | 8                                |
 | `config.startHour`        | pod killing start time  in 24hr format              | 10                               |
 | `config.endHour`          | pod killing stop time  in 24hr format               | 16                               |
