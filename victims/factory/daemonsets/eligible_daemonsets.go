@@ -54,6 +54,15 @@ func (d *DaemonSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	return daemonset.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
+// Returns the selector associated with this daemonset
+func (d *DaemonSet) Selector(clientset kube.Interface) (*metav1.LabelSelector, error) {
+	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return daemonset.Spec.Selector, nil
+}
+
 // Returns current killtype config label for update
 func (d *DaemonSet) KillType(clientset kube.Interface) (string, error) {
 	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})

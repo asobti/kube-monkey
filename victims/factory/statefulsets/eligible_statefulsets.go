@@ -45,6 +45,15 @@ func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *me
 
 /* Below methods are used to verify the victim's attributes have not changed at the scheduled time of termination */
 
+// Returns the selector associated with this statefulset
+func (ss *StatefulSet) Selector(clientset kube.Interface) (*metav1.LabelSelector, error) {
+	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return statefulset.Spec.Selector, nil
+}
+
 // Checks if the statefulset is currently enrolled in kube-monkey
 func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})

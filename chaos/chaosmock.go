@@ -21,6 +21,12 @@ type victimMock struct {
 	victims.VictimBase
 }
 
+// Returns the selector associated with this statefulset
+func (vm *victimMock) Selector(clientset kube.Interface) (*metav1.LabelSelector, error) {
+	args := vm.Called(clientset)
+	return nil, args.Error(1)
+}
+
 func (vm *victimMock) IsEnrolled(clientset kube.Interface) (bool, error) {
 	args := vm.Called(clientset)
 	return args.Bool(0), args.Error(1)

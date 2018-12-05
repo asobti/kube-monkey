@@ -122,6 +122,17 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 			return err
 		}
 		return c.Victim().DeleteRandomPods(clientset, killNum)
+	case config.KillPodDisruptionBudgetLabelValue:
+		selector, err := c.victim.Selector(clientset)
+		if err != nil {
+			return err
+		}
+
+		killNum, err := c.Victim().KillNumberForKillingPodDisruptionBudget(clientset, killValue, selector)
+		if err != nil {
+			return err
+		}
+		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillRandomMaxLabelValue:
 		killNum, err := c.Victim().KillNumberForMaxPercentage(clientset, killValue)
 		if err != nil {
