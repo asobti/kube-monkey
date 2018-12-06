@@ -26,6 +26,22 @@ func newDaemonSet(name string, labels map[string]string) v1.DaemonSet {
 	}
 }
 
+func newDaemonSetWithSelector(name string, labels map[string]string, selectorMatchLabels map[string]string) v1.DaemonSet {
+
+	return v1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: NAMESPACE,
+			Labels:    labels,
+		},
+		Spec: v1.DaemonSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: selectorMatchLabels,
+			},
+		},
+	}
+}
+
 func TestNew(t *testing.T) {
 
 	v1ds := newDaemonSet(

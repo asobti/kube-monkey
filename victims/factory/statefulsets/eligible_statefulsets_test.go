@@ -16,12 +16,56 @@ func TestEligibleStatefulSets(t *testing.T) {
 			"kube-monkey/identifier": "1",
 			"kube-monkey/mtbf":       "1",
 		},
+		REPLICAS,
 	)
 
 	client := fake.NewSimpleClientset(&v1stfs)
 	victims, _ := EligibleStatefulSets(client, NAMESPACE, &metav1.ListOptions{})
 
 	assert.Len(t, victims, 1)
+}
+
+func TestSelector(t *testing.T) {
+	selectorMatchLabels := map[string]string{
+		"lorem": "ipsum",
+		"foo":   "bar",
+	}
+
+	v1stfs := newStatefulSetWithSelector(
+		NAME,
+		map[string]string{
+			config.IdentLabelKey: "1",
+			config.MtbfLabelKey:  "1",
+		},
+		selectorMatchLabels,
+	)
+
+	stfs, _ := New(&v1stfs)
+
+	client := fake.NewSimpleClientset(&v1stfs)
+
+	b, _ := stfs.Selector(client)
+
+	assert.Equal(t, b.MatchLabels, selectorMatchLabels, "Expected selector to match")
+}
+
+func TestDesiredNumberOfPods(t *testing.T) {
+	v1stfs := newStatefulSet(
+		NAME,
+		map[string]string{
+			config.IdentLabelKey: "1",
+			config.MtbfLabelKey:  "1",
+		},
+		5,
+	)
+
+	stfs, _ := New(&v1stfs)
+
+	client := fake.NewSimpleClientset(&v1stfs)
+
+	b, _ := stfs.DesiredNumberOfPods(client)
+
+	assert.Equal(t, b, 5, "Expected desired number of pods to match")
 }
 
 func TestIsEnrolled(t *testing.T) {
@@ -32,6 +76,7 @@ func TestIsEnrolled(t *testing.T) {
 			config.MtbfLabelKey:    "1",
 			config.EnabledLabelKey: config.EnabledLabelValue,
 		},
+		REPLICAS,
 	)
 
 	stfs, _ := New(&v1stfs)
@@ -51,6 +96,7 @@ func TestIsNotEnrolled(t *testing.T) {
 			config.MtbfLabelKey:    "1",
 			config.EnabledLabelKey: "x",
 		},
+		REPLICAS,
 	)
 
 	stfs, _ := New(&v1stfs)
@@ -74,6 +120,7 @@ func TestKillType(t *testing.T) {
 			config.IdentLabelKey: ident,
 			config.MtbfLabelKey:  mtbf,
 		},
+		REPLICAS,
 	)
 
 	stfs, _ := New(&v1stfs)
@@ -91,6 +138,7 @@ func TestKillType(t *testing.T) {
 			config.MtbfLabelKey:     mtbf,
 			config.KillTypeLabelKey: killMode,
 		},
+		REPLICAS,
 	)
 
 	client = fake.NewSimpleClientset(&v1stfs)
@@ -112,6 +160,7 @@ func TestKillValue(t *testing.T) {
 			config.IdentLabelKey: ident,
 			config.MtbfLabelKey:  mtbf,
 		},
+		REPLICAS,
 	)
 
 	stfs, _ := New(&v1stfs)
@@ -129,6 +178,7 @@ func TestKillValue(t *testing.T) {
 			config.MtbfLabelKey:      mtbf,
 			config.KillValueLabelKey: killValue,
 		},
+		REPLICAS,
 	)
 
 	client = fake.NewSimpleClientset(&v1stfs)
@@ -146,6 +196,7 @@ func TestKillValue(t *testing.T) {
 			config.MtbfLabelKey:      mtbf,
 			config.KillValueLabelKey: killValue,
 		},
+		REPLICAS,
 	)
 
 	client = fake.NewSimpleClientset(&v1stfs)

@@ -63,6 +63,11 @@ func (d *DaemonSet) Selector(clientset kube.Interface) (*metav1.LabelSelector, e
 	return daemonset.Spec.Selector, nil
 }
 
+// Returns the number of desired pods for this daemonset
+func (d *DaemonSet) DesiredNumberOfPods(clientset kube.Interface) (int, error) {
+	return 1, nil
+}
+
 // Returns current killtype config label for update
 func (d *DaemonSet) KillType(clientset kube.Interface) (string, error) {
 	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})

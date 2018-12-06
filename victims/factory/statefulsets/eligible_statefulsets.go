@@ -54,6 +54,15 @@ func (ss *StatefulSet) Selector(clientset kube.Interface) (*metav1.LabelSelector
 	return statefulset.Spec.Selector, nil
 }
 
+// Returns the number of desired pods for this statefulset
+func (ss *StatefulSet) DesiredNumberOfPods(clientset kube.Interface) (int, error) {
+	deployment, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	if err != nil {
+		return -1, err
+	}
+	return int(*deployment.Spec.Replicas), nil
+}
+
 // Checks if the statefulset is currently enrolled in kube-monkey
 func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})

@@ -62,6 +62,48 @@ func TestIsNotEnrolled(t *testing.T) {
 	assert.Equal(t, b, false, "Expected daemonset to not be enrolled")
 }
 
+func TestSelector(t *testing.T) {
+	selectorMatchLabels := map[string]string{
+		"lorem": "ipsum",
+		"foo":   "bar",
+	}
+
+	v1ds := newDaemonSetWithSelector(
+		NAME,
+		map[string]string{
+			config.IdentLabelKey: "1",
+			config.MtbfLabelKey:  "1",
+		},
+		selectorMatchLabels,
+	)
+
+	depl, _ := New(&v1ds)
+
+	client := fake.NewSimpleClientset(&v1ds)
+
+	b, _ := depl.Selector(client)
+
+	assert.Equal(t, b.MatchLabels, selectorMatchLabels, "Expected selector to match")
+}
+
+func TestDesiredNumberOfPods(t *testing.T) {
+	v1ds := newDaemonSet(
+		NAME,
+		map[string]string{
+			config.IdentLabelKey: "1",
+			config.MtbfLabelKey:  "1",
+		},
+	)
+
+	depl, _ := New(&v1ds)
+
+	client := fake.NewSimpleClientset(&v1ds)
+
+	b, _ := depl.DesiredNumberOfPods(client)
+
+	assert.Equal(t, b, 1, "Expected desired number of pods to match")
+}
+
 func TestKillType(t *testing.T) {
 
 	ident := "1"

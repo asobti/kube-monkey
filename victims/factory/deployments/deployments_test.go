@@ -13,15 +13,35 @@ const (
 	IDENTIFIER = "kube-monkey-id"
 	NAME       = "deployment_name"
 	NAMESPACE  = metav1.NamespaceDefault
+	REPLICAS   = 1
 )
 
-func newDeployment(name string, labels map[string]string) v1.Deployment {
+func newDeployment(name string, labels map[string]string, replicas int32) v1.Deployment {
 
 	return v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: NAMESPACE,
 			Labels:    labels,
+		},
+		Spec: v1.DeploymentSpec{
+			Replicas: &replicas,
+		},
+	}
+}
+
+func newDeploymentWithSelector(name string, labels map[string]string, selectorMatchLabels map[string]string) v1.Deployment {
+
+	return v1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: NAMESPACE,
+			Labels:    labels,
+		},
+		Spec: v1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: selectorMatchLabels,
+			},
 		},
 	}
 }
@@ -34,6 +54,7 @@ func TestNew(t *testing.T) {
 			config.IdentLabelKey: IDENTIFIER,
 			config.MtbfLabelKey:  "1",
 		},
+		REPLICAS,
 	)
 	depl, err := New(&v1depl)
 
@@ -51,6 +72,7 @@ func TestInvalidIdentifier(t *testing.T) {
 		map[string]string{
 			config.MtbfLabelKey: "1",
 		},
+		REPLICAS,
 	)
 	_, err := New(&v1depl)
 
@@ -63,6 +85,7 @@ func TestInvalidMtbf(t *testing.T) {
 		map[string]string{
 			config.IdentLabelKey: IDENTIFIER,
 		},
+		REPLICAS,
 	)
 	_, err := New(&v1depl)
 
@@ -74,6 +97,7 @@ func TestInvalidMtbf(t *testing.T) {
 			config.IdentLabelKey: IDENTIFIER,
 			config.MtbfLabelKey:  "string",
 		},
+		REPLICAS,
 	)
 	_, err = New(&v1depl)
 
@@ -85,6 +109,7 @@ func TestInvalidMtbf(t *testing.T) {
 			config.IdentLabelKey: IDENTIFIER,
 			config.MtbfLabelKey:  "0",
 		},
+		REPLICAS,
 	)
 	_, err = New(&v1depl)
 

@@ -182,6 +182,19 @@ func TestKillNumberForMaxPercentage(t *testing.T) {
 	assert.Truef(t, killNum >= 0 && killNum <= 50, "Expected kill number between 0 and 50 pods, got %d", killNum)
 }
 
+func TestKillNumberForPodDIsru(t *testing.T) {
+
+	v := newVictimBase()
+
+	pods := generateNRunningPods("app", 100)
+
+	client := fake.NewSimpleClientset(pods...)
+
+	killNum, err := v.KillNumberForMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
+	assert.Nil(t, err, "Expected err to be nil but got %v", err)
+	assert.Truef(t, killNum >= 0 && killNum <= 50, "Expected kill number between 0 and 50 pods, got %d", killNum)
+}
+
 func TestKillNumberForMaxPercentageInvalidValues(t *testing.T) {
 	type TestCase struct {
 		name          string

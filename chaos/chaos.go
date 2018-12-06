@@ -2,6 +2,7 @@ package chaos
 
 import (
 	"fmt"
+	"k8s.io/api/core/v1"
 	"time"
 
 	"github.com/pkg/errors"
@@ -123,12 +124,39 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 		}
 		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillPodDisruptionBudgetLabelValue:
-		selector, err := c.victim.Selector(clientset)
+		// TODO: cleanup this function. a lot of stuff happening here.
+
+		selector, err := c.Victim().Selector(clientset)
 		if err != nil {
 			return err
 		}
 
-		killNum, err := c.Victim().KillNumberForKillingPodDisruptionBudget(clientset, killValue, selector)
+		desiredNumberOfPods, err := c.Victim().DesiredNumberOfPods(clientset)
+		if err != nil {
+			return err
+		}
+
+		minAvailable, maxUnavailable, err := c.Victim().PodDisruptionBudget(clientset, selector)
+		if err != nil {
+			return err
+		}
+
+		// TODO: return error if the PDB is using arbitrary selectors/MatchExpressions
+		// see https://kubernetes.io/docs/tasks/run-application/configure-pdb/#arbitrary-controllers-and-selectors
+
+		podsManagedByThisPdb, err := c.Victim().PodsBySelector(clientset, selector)
+		if err != nil {
+			return err
+		}
+
+		numberOfHealthyPods := 0
+		for _, pod := range podsManagedByThisPdb {
+			if pod.Status.Phase == v1.PodRunning {
+				numberOfHealthyPods++
+			}
+		}
+
+		killNum, err := c.Victim().KillNumberForKillingPodDisruptionBudget(clientset, killValue, minAvailable, maxUnavailable, desiredNumberOfPods, numberOfHealthyPods)
 		if err != nil {
 			return err
 		}
