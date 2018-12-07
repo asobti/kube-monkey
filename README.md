@@ -171,9 +171,9 @@ A helm chart is provided that assumes you have already compiled and uploaded the
 
 Helm can then be executed using default values
 ```bash
-helm install $release helm/kubemonkey
+helm install --name $release helm/kubemonkey
 ```
-refer [kube-monkey helm chart ReadME.MD](https://github.com/prageethw/kube-monkey/blob/master/helm/kubemonkey/ReadMe.MD)
+refer [kube-monkey helm chart README.md](https://github.com/asobti/kube-monkey/blob/master/helm/kubemonkey/README.md)
 
 ## Logging
 
