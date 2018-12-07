@@ -46,6 +46,8 @@ $ helm install --name my-release kubemonkey \
                --set config.whitelistedNamespaces="namespace1\"\,\"namespace2\"\,\"namespace3"
 ```
 
+**Note: replace namespace with your real namespaces**
+
 If you want to see how kube-monkey kills pods immediatley in debub mode.
 
 ```console
