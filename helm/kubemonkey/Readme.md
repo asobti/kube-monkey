@@ -2,7 +2,7 @@
 
 [Kube-Monkey](https://github.com/asobti/kube-monkey) periodically kills pods in your Kubernetes cluster,that are opt-in based on their own rules.
 
-## Official Helm;
+## Official Helm
 
 TBA to official helm charts,There is no official helm chart yet for kube-monkey.
 
