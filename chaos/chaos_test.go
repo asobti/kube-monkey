@@ -2,12 +2,10 @@ package chaos
 
 import (
 	"errors"
-	"testing"
-	"time"
-
 	"github.com/asobti/kube-monkey/config"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"testing"
 
 	kube "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -146,10 +144,12 @@ func (s *ChaosTestSuite) TestGetKillValueReturnsError() {
 	s.NotNil(err)
 }
 
-func (s *ChaosTestSuite) TestDurationToKillTime() {
-	t := s.chaos.DurationToKillTime()
-	s.WithinDuration(s.chaos.KillAt(), time.Now(), t+time.Millisecond)
-}
+// Disabling test
+// See https://github.com/asobti/kube-monkey/issues/126
+//func (s *ChaosTestSuite) TestDurationToKillTime() {
+//	t := s.chaos.DurationToKillTime()
+//	s.WithinDuration(s.chaos.KillAt(), time.Now(), t+time.Millisecond)
+//}
 
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(ChaosTestSuite))
