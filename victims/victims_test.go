@@ -2,10 +2,10 @@ package victims
 
 import (
 	"fmt"
+	"k8s.io/api/policy/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"strings"
 	"testing"
-
-	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/asobti/kube-monkey/config"
 	"github.com/bouk/monkey"
@@ -39,6 +39,23 @@ func newPod(name string, status v1.PodPhase) v1.Pod {
 		},
 		Status: v1.PodStatus{
 			Phase: status,
+		},
+	}
+}
+
+func newPdb(name string, selector metav1.LabelSelector, expectedDesired int, expectedHealthy int) *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: metav1.NamespaceDefault,
+			Name:      name,
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &selector,
+		},
+		Status: v1beta1.PodDisruptionBudgetStatus{
+			CurrentHealthy: int32(expectedHealthy),
+			DesiredHealthy: int32(expectedDesired),
 		},
 	}
 }
@@ -105,6 +122,67 @@ func TestPods(t *testing.T) {
 	podList, _ := v.Pods(client)
 
 	assert.Lenf(t, podList, 2, "Expected 2 items in podList, got %d", len(podList))
+}
+
+func TestPodDisruptionBudget(t *testing.T) {
+	type TestCase struct {
+		controllerSelector map[string]string
+		expectedDesired    int
+		expectedHealthy    int
+		pdbs               []runtime.Object
+		error              error
+	}
+
+	tcs := []TestCase{
+		{
+			// multiple pdbs but only one is an exact match to the controller selector (ie, all labels are whitelisted)
+			controllerSelector: map[string]string{"app": "app1"},
+			expectedDesired:    3,
+			expectedHealthy:    2,
+			pdbs: append([]runtime.Object{},
+				newPdb("pdb1", metav1.LabelSelector{MatchLabels: map[string]string{"app": "app1"}}, 3, 2),
+				newPdb("pdb2", metav1.LabelSelector{MatchLabels: map[string]string{"app": "app2"}}, 99, 99),
+			),
+		},
+		{
+			// multiple pdbs but only one has all labels whitelisted
+			controllerSelector: map[string]string{"app": "app1", "extra": "label", "anotherExtra": "label"},
+			expectedDesired:    3,
+			expectedHealthy:    2,
+			pdbs: append([]runtime.Object{},
+				newPdb("pdb1", metav1.LabelSelector{MatchLabels: map[string]string{"app": "app1"}}, 3, 2),
+				newPdb("pdb2", metav1.LabelSelector{MatchLabels: map[string]string{"app": "app2"}}, 99, 99),
+			),
+		},
+		{
+			// none of the pdbs matches the controller selector
+			controllerSelector: map[string]string{"app": "app1", "lorem": "ipsum", "foo": "bar"},
+			pdbs: append([]runtime.Object{},
+				newPdb("pdb1", metav1.LabelSelector{MatchLabels: map[string]string{"app": "app2"}}, 3, 2),
+				newPdb("pdb2", metav1.LabelSelector{MatchLabels: map[string]string{"app": "app3"}}, 4, 5),
+			),
+			error: fmt.Errorf("unable to find a matching pdb for default/name"),
+		},
+	}
+
+	for _, tc := range tcs {
+		v := newVictimBase()
+
+		client := fake.NewSimpleClientset(tc.pdbs...)
+
+		controllerSelector := metav1.LabelSelector{
+			MatchLabels: tc.controllerSelector,
+		}
+		desired, healthy, err := v.PodDisruptionBudget(client, &controllerSelector)
+
+		if tc.error != nil {
+			assert.Error(t, tc.error)
+		} else {
+			assert.NoError(t, err)
+			assert.Equalf(t, desired, tc.expectedDesired, "Expected desired number of pods to match")
+			assert.Equalf(t, healthy, tc.expectedHealthy, "Expected healthy number of pods to match")
+		}
+	}
 }
 
 func TestDeletePod(t *testing.T) {
@@ -182,17 +260,14 @@ func TestKillNumberForMaxPercentage(t *testing.T) {
 	assert.Truef(t, killNum >= 0 && killNum <= 50, "Expected kill number between 0 and 50 pods, got %d", killNum)
 }
 
-func TestKillNumberForPodDIsru(t *testing.T) {
+func TestKillNumberForPodDisruptionBudget(t *testing.T) {
 
 	v := newVictimBase()
 
-	pods := generateNRunningPods("app", 100)
+	client := fake.NewSimpleClientset()
 
-	client := fake.NewSimpleClientset(pods...)
-
-	killNum, err := v.KillNumberForMaxPercentage(client, 50) // 50% means we kill between at most 50 pods of the 100 that are running
-	assert.Nil(t, err, "Expected err to be nil but got %v", err)
-	assert.Truef(t, killNum >= 0 && killNum <= 50, "Expected kill number between 0 and 50 pods, got %d", killNum)
+	killNum := v.KillNumberForKillingPodDisruptionBudget(client, 40, 50) // we only need 40 out of the 50 available pods so we can kill 10
+	assert.Truef(t, killNum == 10, "Expected kill number to be 10 pods, got %d", killNum)
 }
 
 func TestKillNumberForMaxPercentageInvalidValues(t *testing.T) {

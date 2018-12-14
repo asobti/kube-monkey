@@ -49,25 +49,6 @@ func TestSelector(t *testing.T) {
 	assert.Equal(t, b.MatchLabels, selectorMatchLabels, "Expected selector to match")
 }
 
-func TestDesiredNumberOfPods(t *testing.T) {
-	v1stfs := newStatefulSet(
-		NAME,
-		map[string]string{
-			config.IdentLabelKey: "1",
-			config.MtbfLabelKey:  "1",
-		},
-		5,
-	)
-
-	stfs, _ := New(&v1stfs)
-
-	client := fake.NewSimpleClientset(&v1stfs)
-
-	b, _ := stfs.DesiredNumberOfPods(client)
-
-	assert.Equal(t, b, 5, "Expected desired number of pods to match")
-}
-
 func TestIsEnrolled(t *testing.T) {
 	v1stfs := newStatefulSet(
 		NAME,

@@ -63,15 +63,6 @@ func (d *Deployment) Selector(clientset kube.Interface) (*metav1.LabelSelector, 
 	return deployment.Spec.Selector, nil
 }
 
-// Returns the number of desired pods for this deployment
-func (d *Deployment) DesiredNumberOfPods(clientset kube.Interface) (int, error) {
-	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
-	if err != nil {
-		return -1, err
-	}
-	return int(*deployment.Spec.Replicas), nil
-}
-
 // Returns current killtype config label for update
 func (d *Deployment) KillType(clientset kube.Interface) (string, error) {
 	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})

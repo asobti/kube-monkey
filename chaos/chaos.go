@@ -2,7 +2,6 @@ package chaos
 
 import (
 	"fmt"
-	"k8s.io/api/core/v1"
 	"time"
 
 	"github.com/pkg/errors"
@@ -108,8 +107,8 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 
 	killValue, err := c.getKillValue(clientset)
 
-	// KillAll is the only kill type that does not require a kill-value
-	if killType != config.KillAllLabelValue && err != nil {
+	// KillAll and KillPodDisruptionBudget are the only kill types that do not require a kill-value
+	if killType != config.KillAllLabelValue && killType != config.KillPodDisruptionBudgetLabelValue && err != nil {
 		return err
 	}
 
@@ -124,42 +123,19 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 		}
 		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillPodDisruptionBudgetLabelValue:
-		// TODO: cleanup this function. a lot of stuff happening here.
-
 		selector, err := c.Victim().Selector(clientset)
 		if err != nil {
 			return err
 		}
 
-		desiredNumberOfPods, err := c.Victim().DesiredNumberOfPods(clientset)
+		desiredNumberOfPods, numberOfHealthyPods, err := c.Victim().PodDisruptionBudget(clientset, selector)
+
 		if err != nil {
 			return err
 		}
 
-		minAvailable, maxUnavailable, err := c.Victim().PodDisruptionBudget(clientset, selector)
-		if err != nil {
-			return err
-		}
+		killNum := c.Victim().KillNumberForKillingPodDisruptionBudget(clientset, desiredNumberOfPods, numberOfHealthyPods)
 
-		// TODO: return error if the PDB is using arbitrary selectors/MatchExpressions
-		// see https://kubernetes.io/docs/tasks/run-application/configure-pdb/#arbitrary-controllers-and-selectors
-
-		podsManagedByThisPdb, err := c.Victim().PodsBySelector(clientset, selector)
-		if err != nil {
-			return err
-		}
-
-		numberOfHealthyPods := 0
-		for _, pod := range podsManagedByThisPdb {
-			if pod.Status.Phase == v1.PodRunning {
-				numberOfHealthyPods++
-			}
-		}
-
-		killNum, err := c.Victim().KillNumberForKillingPodDisruptionBudget(clientset, killValue, minAvailable, maxUnavailable, desiredNumberOfPods, numberOfHealthyPods)
-		if err != nil {
-			return err
-		}
 		return c.Victim().DeleteRandomPods(clientset, killNum)
 	case config.KillRandomMaxLabelValue:
 		killNum, err := c.Victim().KillNumberForMaxPercentage(clientset, killValue)

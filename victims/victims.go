@@ -2,11 +2,8 @@ package victims
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"math"
 	"math/rand"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/asobti/kube-monkey/config"
@@ -35,7 +32,6 @@ type VictimBaseTemplate interface {
 	Namespace() string
 	Identifier() string
 	Mtbf() int
-	PodDisruptionBudget(clientset kube.Interface, controllerSelector *metav1.LabelSelector) (*intstr.IntOrString, *intstr.IntOrString, error)
 
 	VictimAPICalls
 }
@@ -43,8 +39,7 @@ type VictimBaseTemplate interface {
 type VictimSpecificAPICalls interface {
 	// Depends on which version i.e. apps/v1 or extensions/v1beta2
 	IsEnrolled(kube.Interface) (bool, error)                // Get updated enroll status
-	Selector(kube.Interface) (*metav1.LabelSelector, error) // Get labels for this controller FIXME: rename to selector
-	DesiredNumberOfPods(kube.Interface) (int, error)        // Get labels for this controller FIXME: rename to selector
+	Selector(kube.Interface) (*metav1.LabelSelector, error) // Get label selector for this controller
 	KillType(kube.Interface) (string, error)                // Get updated kill config type
 	KillValue(kube.Interface) (int, error)                  // Get updated kill config value
 }
@@ -53,7 +48,7 @@ type VictimAPICalls interface {
 	// Exposed Api Calls
 	RunningPods(kube.Interface) ([]v1.Pod, error)
 	Pods(kube.Interface) ([]v1.Pod, error)
-	PodsBySelector(kube.Interface, *metav1.LabelSelector) ([]v1.Pod, error)
+	PodDisruptionBudget(kube.Interface, *metav1.LabelSelector) (int, int, error)
 	DeletePod(kube.Interface, string) error
 	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
 	DeleteRandomPods(kube.Interface, int) error
@@ -64,7 +59,7 @@ type VictimAPICalls interface {
 type VictimKillNumberGenerator interface {
 	KillNumberForMaxPercentage(kube.Interface, int) (int, error)
 	KillNumberForKillingAll(kube.Interface) (int, error)
-	KillNumberForKillingPodDisruptionBudget(kube.Interface, int, *intstr.IntOrString, *intstr.IntOrString, int, int) (int, error)
+	KillNumberForKillingPodDisruptionBudget(kube.Interface, int, int) int
 	KillNumberForFixedPercentage(kube.Interface, int) (int, error)
 }
 
@@ -132,69 +127,46 @@ func (v *VictimBase) Pods(clientset kube.Interface) ([]v1.Pod, error) {
 	return podlist.Items, nil
 }
 
-// Returns a list of pods based on a selector
-func (v *VictimBase) PodsBySelector(clientset kube.Interface, labelSelector *metav1.LabelSelector) ([]v1.Pod, error) {
-
-	// We don't support arbitrary selectors so we can query just by MatchLabels and ignore MatchExpressions
-	labelSelectorForListOptions := labels.Set(labelSelector.MatchLabels).String()
-
-	listOptions := &metav1.ListOptions{
-		LabelSelector: labelSelectorForListOptions,
-	}
-
-	podlist, err := clientset.CoreV1().Pods(v.namespace).List(*listOptions)
-	if err != nil {
-		return nil, err
-	}
-	return podlist.Items, nil
-}
-
 // Returns the pod disruption budget for this controller
-func (v *VictimBase) PodDisruptionBudget(clientset kube.Interface, controllerSelector *metav1.LabelSelector) (*intstr.IntOrString, *intstr.IntOrString, error) {
+func (v *VictimBase) PodDisruptionBudget(clientset kube.Interface, controllerSelector *metav1.LabelSelector) (int, int, error) {
 	labelFilter := &metav1.ListOptions{}
 
 	pdbs, err := clientset.PolicyV1beta1().PodDisruptionBudgets(v.namespace).List(*labelFilter)
 	if err != nil {
-		return nil, nil, err
+		return -1, -1, err
 	}
 
-	var controllerSelectorMatchLabels = controllerSelector.MatchLabels
-	var min *intstr.IntOrString
-	var max *intstr.IntOrString
+	var desiredHealthy int
+	var currentHealthy int
 
 	// A PDB is not directly associated with a controller.
-	// We need to iterate them and find one with a common selector to our controller.
+	// We need to iterate them and find one with a selector that matches the one in our controller.
 	var foundMatchingSelector bool
-	var matchingPdbs = 0
 	for _, element := range pdbs.Items {
-		var pdbSelectorMatchLabels = element.Spec.Selector.MatchLabels
+		selector := element.Spec.Selector
 
-		// assume we'll find one and set this to false when a label doesnt match
-		foundMatchingSelector = true
+		pdbSelectorAsMap, err := metav1.LabelSelectorAsMap(selector)
 
-		// check if labels match
-		for k, v := range pdbSelectorMatchLabels {
-			labelValue := controllerSelectorMatchLabels[k]
-
-			if v != labelValue {
-				foundMatchingSelector = false
-				continue
-			}
+		// Skip arbitrary selectors. See https://kubernetes.io/docs/tasks/run-application/configure-pdb/#arbitrary-controllers-and-selectors
+		if err != nil {
+			glog.V(6).Infof("Unsupported selector for pod disruption budget for %s %s, error=%s", v.kind, v.name, err)
+			continue
 		}
 
-		if foundMatchingSelector {
-			matchingPdbs++
-			min = element.Spec.MinAvailable
-			max = element.Spec.MaxUnavailable
+		if labels.AreLabelsInWhiteList(pdbSelectorAsMap, controllerSelector.MatchLabels) {
+			foundMatchingSelector = true
+			desiredHealthy = int(element.Status.DesiredHealthy)
+			currentHealthy = int(element.Status.CurrentHealthy)
+
+			glog.V(6).Infof("Found matching selector. minAvailable=%s, maxUnavailable=%s, err=%s", element.Spec.MinAvailable, element.Spec.MaxUnavailable, err)
+			break
 		}
 	}
 
 	if !foundMatchingSelector {
-		return nil, nil, errors.Wrapf(err, "unable to find a matching pdb for %s/%s", v.namespace, v.name)
-	} else if matchingPdbs > 1 {
-		return nil, nil, errors.Wrapf(err, "found multiple pdbs for %s/%s", v.namespace, v.name)
+		return -1, -1, fmt.Errorf("unable to find a matching pdb for %s/%s", v.namespace, v.name)
 	} else {
-		return min, max, nil
+		return desiredHealthy, currentHealthy, nil
 	}
 }
 
@@ -346,93 +318,10 @@ func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface) (int, err
 }
 
 // Returns the number of pods to kill based on the pod disruption budget
-func (v *VictimBase) KillNumberForKillingPodDisruptionBudget(clientset kube.Interface, killPercentage int, minAvailable *intstr.IntOrString, maxUnavailable *intstr.IntOrString, desiredPodsForPDB int, healthyPodsForPDB int) (int, error) {
-	var killNum int
-	if minAvailable != nil {
-		switch minAvailable.Type {
-		case intstr.Int:
-			minAvailablePods := int(minAvailable.IntVal)
-			// requiredPods: 10
-			// runningPods = 9
-			// minAvailable = 2
-			// killPercentage = 50%
-			// pdb needs 2 available pods and we can kill 50% of the remaining, which is 4 pods (out of 8), but since one is already dead then we can only kill 3
+func (v *VictimBase) KillNumberForKillingPodDisruptionBudget(clientset kube.Interface, desiredPodsForPDB int, healthyPodsForPDB int) int {
+	killNum := healthyPodsForPDB - desiredPodsForPDB
 
-			targetKillNum := killPercentage * (desiredPodsForPDB - minAvailablePods) / 100 // potentially kill 50% of (10 - 2) = 4
-			killNum = targetKillNum - (desiredPodsForPDB - healthyPodsForPDB)
-
-			glog.Warningf("### TEST ### case min int, minAvailablePods=%d, targetKillNum=%d, killNum=%d", minAvailablePods, targetKillNum, killNum)
-
-			if killNum <= 0 {
-				return 0, fmt.Errorf("%s %s is already at or below min pdb availability (runningPods=%d, minAvailable=%d)", v.kind, v.name, healthyPodsForPDB, minAvailablePods)
-			}
-		case intstr.String:
-			sanitizedMinAvailablePodsPercent := strings.Replace(minAvailable.StrVal, "%", "", -1)
-			minAvailablePodsPercent, err := strconv.Atoi(sanitizedMinAvailablePodsPercent)
-			if err != nil {
-				return 0, err
-			}
-
-			// requiredPods: 10
-			// runningPods = 9
-			// minValue = 50%
-			// killPercentage = 50%
-			// this means we can kill 50% of 50% of the deployment, which is 2.5 pods, but since one is already dead then we can only kill 1.5
-
-			targetKillPercentage := killPercentage * minAvailablePodsPercent / 100 // 50% of 50% = 25%
-			targetKillNum := targetKillPercentage * desiredPodsForPDB              // potentially kill 25% of 10 which is 2.5
-			killNum = targetKillNum - (desiredPodsForPDB - healthyPodsForPDB)      // in reality kill 2.5 - (1) = 1.5
-
-			glog.Warningf("### TEST ### case min string, targetKillPercentage=%d, targetKillNum=%d, killNum=%d", targetKillPercentage, targetKillNum, killNum)
-
-			if killNum <= 0 {
-				return 0, fmt.Errorf("%s %s is already at or below min pdb availability (runningPods=%d, minAvailablePercent=%d)", v.kind, v.name, healthyPodsForPDB, minAvailablePodsPercent)
-			}
-		}
-	} else if maxUnavailable != nil {
-		switch maxUnavailable.Type {
-		case intstr.Int:
-			maxUnavailablePods := int(maxUnavailable.IntVal)
-			// requiredPods: 10
-			// runningPods = 9
-			// maxUnavailable = 2
-			// killPercentage = 50%
-			// pdb can have at most 2 unavailable pods and we can kill 50% of those, which is 1 pods, but since one is already dead then we can only kill 3
-
-			targetKillNum := killPercentage * maxUnavailablePods / 100 // potentially kill 50% of (2) = 4
-			killNum = targetKillNum - (desiredPodsForPDB - healthyPodsForPDB)
-
-			glog.Warningf("### TEST ### case max int, maxUnavailablePods=%d, targetKillNum=%d, killNum=%d", maxUnavailablePods, targetKillNum, killNum)
-
-			if killNum <= 0 {
-				return 0, fmt.Errorf("%s %s is already at or above max pdb unavailability (runningPods=%d, maxUnavailable=%d)", v.kind, v.name, healthyPodsForPDB, maxUnavailablePods)
-			}
-		case intstr.String:
-			sanitizedMaxUnavailablePodsPercent := strings.Replace(maxUnavailable.StrVal, "%", "", -1)
-			maxUnavailablePodsPercent, err := strconv.Atoi(sanitizedMaxUnavailablePodsPercent)
-			if err != nil {
-				return 0, err
-			}
-
-			// requiredPods: 10
-			// runningPods = 9
-			// maxUnavailable = 50%
-			// killPercentage = 50%
-			// pdb can have at most 50% of pods unavailable and we want to kill 50% those, which is 25% of 10 or 2.5 pods, but since one is already dead then we can only kill 1.5
-
-			targetKillPercentage := killPercentage * maxUnavailablePodsPercent / 100 // 50% of 50% = 25%
-			targetKillNum := targetKillPercentage * desiredPodsForPDB                // potentially kill 25% of 10 which is 2.5
-			killNum = targetKillNum - (desiredPodsForPDB - healthyPodsForPDB)        // in reality kill 2.5 - (1) = 1.5
-
-			glog.Warningf("### TEST ### case max string, targetKillPercentage=%d, targetKillNum=%d, killNum=%d", targetKillPercentage, targetKillNum, killNum)
-
-			if killNum <= 0 {
-				return 0, fmt.Errorf("%s %s is already at or above max pdb unavailability (runningPods=%d, maxUnavailablePercent=%d)", v.kind, v.name, desiredPodsForPDB, maxUnavailablePodsPercent)
-			}
-		}
-	}
-
-	return killNum, nil
+	return killNum
 }
 
 // Returns the number of pods to kill based on a kill percentage and the number of running pods

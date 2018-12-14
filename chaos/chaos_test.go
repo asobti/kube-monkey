@@ -2,6 +2,7 @@ package chaos
 
 import (
 	"errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
 
@@ -110,37 +111,55 @@ func (s *ChaosTestSuite) TestTerminateKillRandomMaxPercentage() {
 	v.AssertExpectations(s.T())
 }
 
-//func (s *ChaosTestSuite) TestTerminateKillPodDisruptionBudget() {
-//	v := s.chaos.victim.(*victimMock)
-//	killValue := 1
-//
-//	v.On("Selector", s.client).Return(&v1.LabelSelector{}, nil)
-//	v.On("KillType", s.client).Return(config.KillPodDisruptionBudgetLabelValue, nil)
-//	v.On("KillValue", s.client).Return(killValue, nil)
-//	v.On("KillNumberForKillingPodDisruptionBudget", s.client, mock.AnythingOfType("int"), mock.Anything).Return(0, nil)
-//	v.On("DeleteRandomPods", s.client, 0).Return(nil)
-//	_ = s.chaos.terminate(s.client)
-//	v.AssertExpectations(s.T())
-//}
+func (s *ChaosTestSuite) TestTerminateKillPodDisruptionBudget() {
+	v := s.chaos.victim.(*victimMock)
+	killNumber := 5
+	desiredPods := 10
+	healthyPods := 15
+	labelSelector := v1.LabelSelector{
+		MatchLabels: map[string]string{"foo": "bar"},
+	}
 
-//func (s *ChaosTestSuite) TestTerminateKillPodDisruptionBudgetError() {
-//	v := s.chaos.victim.(*victimMock)
-//	killValue := 1
-//	desiredNumberOfPods := 2
-//
-//	errMsg := "Error Getting Selector"
-//	v.On("Selector", s.client).Return(&v1.LabelSelector{}, errors.New(errMsg))
-//	v.On("DesiredNumberOfPods", s.client).Return(desiredNumberOfPods, errors.New(errMsg))
-//	v.On("PodDisruptionBudget", s.client).Return(1, 2, errors.New(errMsg))
-//	v.On("PodsBySelector", s.client).Return(1, 2, errors.New(errMsg))
-//	v.On("KillType", s.client).Return(config.KillPodDisruptionBudgetLabelValue, nil)
-//	v.On("KillValue", s.client).Return(killValue, nil)
-//	v.On("KillNumberForKillingPodDisruptionBudget", s.client, mock.AnythingOfType("int"), mock.Anything).Return(0, nil)
-//	v.On("DeleteRandomPods", s.client, 0).Return(nil)
-//
-//	s.NotNil(s.chaos.terminate(s.client))
-//	v.AssertExpectations(s.T())
-//}
+	v.On("KillType", s.client).Return(config.KillPodDisruptionBudgetLabelValue, nil)
+	v.On("KillValue", s.client).Return(0, nil)
+	v.On("Selector", s.client).Return(labelSelector, nil)
+	v.On("PodDisruptionBudget", s.client, &labelSelector).Return(desiredPods, healthyPods, nil)
+	v.On("KillNumberForKillingPodDisruptionBudget", s.client, 10, 15, mock.Anything).Return(killNumber, nil)
+	v.On("DeleteRandomPods", s.client, 5).Return(nil)
+	_ = s.chaos.terminate(s.client)
+	v.AssertExpectations(s.T())
+}
+
+func (s *ChaosTestSuite) TestTerminateKillPodDisruptionBudgetErrorOnSelector() {
+	v := s.chaos.victim.(*victimMock)
+	labelSelector := v1.LabelSelector{
+		MatchLabels: map[string]string{"foo": "bar"},
+	}
+	errMsg := "Error Getting Selector"
+
+	v.On("KillType", s.client).Return(config.KillPodDisruptionBudgetLabelValue, nil)
+	v.On("KillValue", s.client).Return(0, nil)
+	v.On("Selector", s.client).Return(labelSelector, errors.New(errMsg))
+
+	s.NotNil(s.chaos.terminate(s.client))
+	v.AssertExpectations(s.T())
+}
+
+func (s *ChaosTestSuite) TestTerminateKillPodDisruptionBudgetErrorOnPodDisruptionBudget() {
+	v := s.chaos.victim.(*victimMock)
+	labelSelector := v1.LabelSelector{
+		MatchLabels: map[string]string{"foo": "bar"},
+	}
+	errMsg := "Error Getting Pod Disruption Budget"
+
+	v.On("KillType", s.client).Return(config.KillPodDisruptionBudgetLabelValue, nil)
+	v.On("KillValue", s.client).Return(0, nil)
+	v.On("Selector", s.client).Return(labelSelector, nil)
+	v.On("PodDisruptionBudget", s.client, &labelSelector).Return(-1, -1, errors.New(errMsg))
+
+	s.NotNil(s.chaos.terminate(s.client))
+	v.AssertExpectations(s.T())
+}
 
 func (s *ChaosTestSuite) TestTerminateKillFixedPercentage() {
 	v := s.chaos.victim.(*victimMock)

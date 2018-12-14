@@ -1,7 +1,6 @@
 package chaos
 
 import (
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"time"
 
 	"github.com/asobti/kube-monkey/victims"
@@ -22,17 +21,16 @@ type victimMock struct {
 	victims.VictimBase
 }
 
-// Returns the selector associated with this statefulset
 func (vm *victimMock) Selector(clientset kube.Interface) (*metav1.LabelSelector, error) {
 	args := vm.Called(clientset)
-	selector, _ := args.Get(0).(*metav1.LabelSelector)
-	return selector, args.Error(1)
+	selector, _ := args.Get(0).(metav1.LabelSelector)
+	return &selector, args.Error(1)
 }
 
 // Returns the selector associated with this statefulset
-func (vm *victimMock) DesiredNumberOfPods(clientset kube.Interface) (int, error) {
-	args := vm.Called(clientset)
-	return args.Int(0), args.Error(1)
+func (vm *victimMock) PodDisruptionBudget(clientset kube.Interface, selector *metav1.LabelSelector) (int, int, error) {
+	args := vm.Called(clientset, selector)
+	return args.Int(0), args.Int(1), args.Error(2)
 }
 
 func (vm *victimMock) IsEnrolled(clientset kube.Interface) (bool, error) {
@@ -70,9 +68,9 @@ func (vm *victimMock) KillNumberForMaxPercentage(clientset kube.Interface, killV
 	return args.Int(0), args.Error(1)
 }
 
-func (vm *victimMock) KillNumberForKillingPodDisruptionBudget(clientset kube.Interface, killValue int, minAvailable *intstr.IntOrString, maxUnavailable *intstr.IntOrString, desiredPodsForPDB int, healthyNumberOfPods int) (int, error) {
-	args := vm.Called(clientset, killValue, minAvailable, maxUnavailable)
-	return args.Int(0), args.Error(1)
+func (vm *victimMock) KillNumberForKillingPodDisruptionBudget(clientset kube.Interface, desiredPodsForPDB int, healthyNumberOfPods int) int {
+	args := vm.Called(clientset, desiredPodsForPDB, healthyNumberOfPods)
+	return args.Int(0)
 }
 
 func (vm *victimMock) KillNumberForFixedPercentage(clientset kube.Interface, killValue int) (int, error) {

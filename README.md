@@ -28,6 +28,7 @@ that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-
 * `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
 * `random-max-percent` to specify a maximum % with kill-value that can be killed. At the scheduled time, a uniform random specified % of the running pods will be terminated.
 * `fixed-percent` to specify a fixed % with kill-value that can be killed. At the scheduled time, a specified fixed % of the running pods will be terminated.
+* `pdb` if you want kube-monkey to kill as many pods as your pod disruption budget allows. Does not require kill-value. **This mode does not support arbitrary selectors.**
 
 
 **`kube-monkey/kill-value`**: Specify value for kill-mode
