@@ -81,7 +81,7 @@ $ helm get manifest my-release
 | `replicaCount`            | number of replicas to run                           | 1                                |
 | `rbac.enabled`            | rbac enabled or not                                 | true                             |
 | `image.tag.IfNotPresent`  | image pull logic                                    | IfNotPresent                     |
-| `namespace`               | namespace that kube-monkey will be installed        | default                          |
+| `namespace`               | namespace that kube-monkey will be installed        | kube-monkey                          |
 | `config.dryRun`           | will not kill pods, only logs behaviour             | false                            |
 | `config.runHour`          | schedule start time in 24hr format                  | 8                                |
 | `config.startHour`        | pod killing start time  in 24hr format              | 10                               |
