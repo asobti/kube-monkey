@@ -4,7 +4,11 @@ kind: ServiceAccount
 metadata:
   name: {{ template "kubemonkey.fullname" . }}
   namespace: {{ .Values.namespace }}
-
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1beta1
