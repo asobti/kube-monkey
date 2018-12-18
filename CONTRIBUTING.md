@@ -18,7 +18,8 @@ Make sure to test your branch from scratch and run `make test`! The make process
 ## Ways to contribute
 
 - Add unit [tests](https://golang.org/pkg/testing/)
-- Support more k8 types
+- Design us a cool logo!
+- Support more forms of Chaos
   - ~~deployments~~
   - ~~statefulsets~~
   - ~~dameonsets~~
@@ -28,7 +29,7 @@ Make sure to test your branch from scratch and run `make test`! The make process
   - Cordoning off Node (chaos-gorilla style)
   - Deleting Node (chaos-gorilla style)
   - etc
-- Enhance documentation for [Helm](https://github.com/linki/chaoskube#how)
+- ~~Enhance documentation for [Helm](https://github.com/linki/chaoskube#how)~~
 - Add [related projects](https://github.com/linki/chaoskube#related-work)
 - Convert from glide to dep
 - ~~Push image to dockerhub~~

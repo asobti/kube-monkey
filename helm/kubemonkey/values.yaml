@@ -11,16 +11,16 @@ image:
   tag: v0.3.0
   pullPolicy: IfNotPresent
 config:
-  dryRun: false  
+  dryRun: true  
   runHour: 8
   startHour: 10
   endHour: 16
-  blacklistedNamespaces: kube-system
-  whitelistedNamespaces:
+  blacklistedNamespaces: "kube-system"
+  whitelistedNamespaces:  #ex: "namespace1\",\"namespace2"
   timeZone: America/New_York
   debug:
-   enabled: false # if you want to enable debugging and see how pods killed immediately set this to true
-   schedule_immediate_kill: true
+   enabled: false # if you want to enable debugging and see how pods killed immediately set enabled and schedule_immediate_kill to true
+   schedule_immediate_kill: false
 args:
   logLevel: 5
   logDir: /var/log/kube-monkey

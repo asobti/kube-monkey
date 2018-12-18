@@ -2,6 +2,8 @@
 
 kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
 
+Join us at [#kube-monkey](https://kubernetes.slack.com/messages/kube-monkey) on Kubernetes Slack.
+
 ---
 
 kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
@@ -170,11 +172,11 @@ See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples
 **Helm Chart**  
 A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `ayushsobti/kube-monkey`.
 
-Helm can then be executed using
+Helm can then be executed using default values
 ```bash
-helm install $release helm/kubemonkey
+helm install --name $release helm/kubemonkey
 ```
-
+refer [kube-monkey helm chart README.md](https://github.com/asobti/kube-monkey/blob/master/helm/kubemonkey/README.md)
 
 ## Logging
 
