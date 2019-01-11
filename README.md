@@ -203,6 +203,21 @@ kube-monkey is built using v7.0 of [kubernetes/client-go](https://github.com/kub
 [Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which
 versions of Kubernetes are compatible.
 
+## Instructions on how to get this working on OpenShift 3.x
+
+```
+git clone https://github.com/asobti/kube-monkey.git
+cd examples
+oc login http://someserver/ -u system:admin
+oc project kube-system
+oc create -f configmap.yaml
+oc -n kube-system adm policy add-role-to-user -z deployer system:deployer
+oc -n kube-system adm policy add-role-to-user -z builder system:image-builder
+oc -n kube-system adm policy add-role-to-group system:image-puller system:serviceaccounts:kube-system
+oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.3.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
+oc volume dc/kube-monkey --add --name=kubeconfigmap -m /etc/kube-monkey -t configmap --configmap-name=kube-monkey-config-map
+```
+
 ## Ways to contribute
 
 See [How to Contribute](https://github.com/asobti/kube-monkey/blob/master/CONTRIBUTING.md)
