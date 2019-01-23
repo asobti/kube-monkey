@@ -54,7 +54,7 @@ spec:
         kube-monkey/identifier: monkey-victim
         kube-monkey/mtbf: '2'
         kube-monkey/kill-mode: "fixed"
-        kube-monkey/kill-value: 1
+        kube-monkey/kill-value: '1'
 [... omitted ...]
 ```
 
@@ -72,7 +72,7 @@ metadata:
     kube-monkey/identifier: monkey-victim
     kube-monkey/mtbf: '2'
     kube-monkey/kill-mode: "fixed"
-    kube-monkey/kill-value: 1
+    kube-monkey/kill-value: '1'
 spec:
   template:
     metadata:
