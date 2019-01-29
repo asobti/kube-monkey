@@ -97,7 +97,7 @@ $ helm get manifest my-release
 after all you can simply edit values.yaml with your prefered configs and run as below
 
 ```console
-$ helm install --name my-release kubemonkey
+$ helm install --name my-release kubemonkey --namespace=kube-monkey
 ```
 example of a modified values.yaml (only important parts are displayed)
 
