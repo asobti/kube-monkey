@@ -17,9 +17,9 @@ import (
 const (
 	Today         = "\t********** Today's schedule **********"
 	NoTermination = "No terminations scheduled"
-	HeaderRow     = "\tk8 Api Kind\tKind Name\t\tTermination Time"
-	SepRow        = "\t-----------\t---------\t\t----------------"
-	RowFormat     = "\t%s\t%s\t\t%s"
+	HeaderRow     = "\tk8 Api Kind\tKind Namespace\tKind Name\t\tTermination Time"
+	SepRow        = "\t-----------\t--------------\t---------\t\t----------------"
+	RowFormat     = "\t%s\t%s\t%s\t\t%s"
 	DateFormat    = "01/02/2006 15:04:05 -0700 MST"
 	End           = "\t********** End of schedule **********"
 )
@@ -45,7 +45,7 @@ func (s *Schedule) String() string {
 		schedString = append(schedString, fmt.Sprint(HeaderRow))
 		schedString = append(schedString, fmt.Sprint(SepRow))
 		for _, chaos := range s.entries {
-			schedString = append(schedString, fmt.Sprintf(RowFormat, chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat)))
+			schedString = append(schedString, fmt.Sprintf(RowFormat, chaos.Victim().Kind(), chaos.Victim().Namespace(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat)))
 		}
 	}
 	schedString = append(schedString, fmt.Sprint(End))
