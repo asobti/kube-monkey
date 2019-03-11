@@ -45,7 +45,7 @@ func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *me
 
 /* Below methods are used to verify the victim's attributes have not changed at the scheduled time of termination */
 
-// Checks if the statefulset is currently enrolled in kube-monkey
+// IsEnrolled checks if the statefulset is currently enrolled in kube-monkey
 func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -54,7 +54,7 @@ func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	return statefulset.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-// Returns current killtype config label for update
+// KillType returns current killtype config label for update
 func (ss *StatefulSet) KillType(clientset kube.Interface) (string, error) {
 	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -69,7 +69,7 @@ func (ss *StatefulSet) KillType(clientset kube.Interface) (string, error) {
 	return killType, nil
 }
 
-// Returns current killvalue config label for update
+// KillValue returns current killvalue config label for update
 func (ss *StatefulSet) KillValue(clientset kube.Interface) (int, error) {
 	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
