@@ -94,7 +94,7 @@ func (v *VictimBase) Mtbf() int {
 	return v.mtbf
 }
 
-// Returns a list of running pods for the victim
+// RunningPods returns a list of running pods for the victim
 func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []v1.Pod, err error) {
 	pods, err := v.Pods(clientset)
 	if err != nil {
@@ -110,7 +110,7 @@ func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []v1.Pod
 	return runningPods, nil
 }
 
-// Returns a list of pods under the victim
+// Pods returns a list of pods under the victim
 func (v *VictimBase) Pods(clientset kube.Interface) ([]v1.Pod, error) {
 	labelSelector, err := labelFilterForPods(v.identifier)
 	if err != nil {
@@ -124,7 +124,7 @@ func (v *VictimBase) Pods(clientset kube.Interface) ([]v1.Pod, error) {
 	return podlist.Items, nil
 }
 
-// Removes specified pod for victim
+// DeletePod removes specified pod for victim
 func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	if config.DryRun() {
 		glog.Infof("[DryRun Mode] Terminated pod %s for %s/%s", podName, v.namespace, v.name)
@@ -154,7 +154,7 @@ func (v *VictimBase) GetDeleteOptsForPod(pod *v1.Pod) *metav1.DeleteOptions {
 	}
 }
 
-// Removes specified number of random pods for the victim
+// DeleteRandomPods removes specified number of random pods for the victim
 func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) error {
 	// Pick a target pod to delete
 	pods, err := v.RunningPods(clientset)
@@ -218,7 +218,7 @@ func (v *VictimBase) DeleteRandomPod(clientset kube.Interface) error {
 	return v.DeletePod(clientset, targetPod)
 }
 
-// Check if this victim is blacklisted
+// IsBlacklisted checks if this victim is blacklisted
 func (v *VictimBase) IsBlacklisted() bool {
 	if config.BlacklistEnabled() {
 		blacklist := config.BlacklistedNamespaces()
@@ -227,7 +227,7 @@ func (v *VictimBase) IsBlacklisted() bool {
 	return false
 }
 
-// Check if this victim is whitelisted
+// IsWhitelisted checks if this victim is whitelisted
 func (v *VictimBase) IsWhitelisted() bool {
 	if config.WhitelistEnabled() {
 		whitelist := config.WhitelistedNamespaces()
@@ -261,7 +261,7 @@ func RandomPodName(pods []v1.Pod) string {
 	return pods[randIndex].Name
 }
 
-// Returns the number of pods to kill based on the number of all running pods
+// KillNumberForKillingAll returns the number of pods to kill based on the number of all running pods
 func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface) (int, error) {
 	killNum, err := v.numberOfRunningPods(clientset)
 	if err != nil {
@@ -271,7 +271,7 @@ func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface) (int, err
 	return killNum, nil
 }
 
-// Returns the number of pods to kill based on a kill percentage and the number of running pods
+// KillNumberForFixedPercentage returns the number of pods to kill based on a kill percentage and the number of running pods
 func (v *VictimBase) KillNumberForFixedPercentage(clientset kube.Interface, killPercentage int) (int, error) {
 	if killPercentage == 0 {
 		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0\n", v.kind, v.name)
@@ -293,7 +293,7 @@ func (v *VictimBase) KillNumberForFixedPercentage(clientset kube.Interface, kill
 	return killNum, nil
 }
 
-// Returns a number of pods to kill based on a a random kill percentage (between 0 and maxPercentage) and the number of running pods
+// KillNumberForMaxPercentage returns a number of pods to kill based on a a random kill percentage (between 0 and maxPercentage) and the number of running pods
 func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPercentage int) (int, error) {
 	if maxPercentage == 0 {
 		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0", v.kind, v.name)
