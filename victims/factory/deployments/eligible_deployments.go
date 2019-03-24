@@ -45,7 +45,7 @@ func EligibleDeployments(clientset kube.Interface, namespace string, filter *met
 
 /* Below methods are used to verify the victim's attributes have not changed at the scheduled time of termination */
 
-// Checks if the deployment is currently enrolled in kube-monkey
+// IsEnrolled checks if the deployment is currently enrolled in kube-monkey
 func (d *Deployment) IsEnrolled(clientset kube.Interface) (bool, error) {
 	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -54,7 +54,7 @@ func (d *Deployment) IsEnrolled(clientset kube.Interface) (bool, error) {
 	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-// Returns the selector associated with this deployment
+// Selector returns the selector associated with this deployment
 func (d *Deployment) Selector(clientset kube.Interface) (*metav1.LabelSelector, error) {
 	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -63,7 +63,7 @@ func (d *Deployment) Selector(clientset kube.Interface) (*metav1.LabelSelector, 
 	return deployment.Spec.Selector, nil
 }
 
-// Returns current killtype config label for update
+// KillType returns current killtype config label for update
 func (d *Deployment) KillType(clientset kube.Interface) (string, error) {
 	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -78,7 +78,7 @@ func (d *Deployment) KillType(clientset kube.Interface) (string, error) {
 	return killType, nil
 }
 
-// Returns current killvalue config label for update
+// KillValue returns current killvalue config label for update
 func (d *Deployment) KillValue(clientset kube.Interface) (int, error) {
 	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {

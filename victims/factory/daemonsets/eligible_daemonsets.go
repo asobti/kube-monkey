@@ -45,7 +45,7 @@ func EligibleDaemonSets(clientset kube.Interface, namespace string, filter *meta
 
 /* Below methods are used to verify the victim's attributes have not changed at the scheduled time of termination */
 
-// Checks if the daemonset is currently enrolled in kube-monkey
+// IsEnrolled checks if the daemonset is currently enrolled in kube-monkey
 func (d *DaemonSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -54,7 +54,7 @@ func (d *DaemonSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	return daemonset.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-// Returns the selector associated with this daemonset
+// Selector returns the selector associated with this daemonset
 func (d *DaemonSet) Selector(clientset kube.Interface) (*metav1.LabelSelector, error) {
 	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -63,7 +63,8 @@ func (d *DaemonSet) Selector(clientset kube.Interface) (*metav1.LabelSelector, e
 	return daemonset.Spec.Selector, nil
 }
 
-// Returns current killtype config label for update
+
+// KillType returns current killtype config label for update
 func (d *DaemonSet) KillType(clientset kube.Interface) (string, error) {
 	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
@@ -78,7 +79,7 @@ func (d *DaemonSet) KillType(clientset kube.Interface) (string, error) {
 	return killType, nil
 }
 
-// Returns current killvalue config label for update
+// KillValue returns current killvalue config label for update
 func (d *DaemonSet) KillValue(clientset kube.Interface) (int, error) {
 	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
