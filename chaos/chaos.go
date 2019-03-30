@@ -41,12 +41,12 @@ func (c *Chaos) Schedule(resultchan chan<- *Result) {
 	c.Execute(resultchan)
 }
 
-// Calculates the duration from now until Chaos.killAt
+// DurationToKillTime calculates the duration from now until Chaos.killAt
 func (c *Chaos) DurationToKillTime() time.Duration {
 	return time.Until(c.killAt)
 }
 
-// Exposed function that calls the actual execution of the chaos, i.e. termination of pods
+// Execute exposed function that calls the actual execution of the chaos, i.e. termination of pods
 // The result is sent back over the channel provided
 func (c *Chaos) Execute(resultchan chan<- *Result) {
 	// Create kubernetes clientset
@@ -154,7 +154,7 @@ func (c *Chaos) terminatePod(clientset kube.Interface) error {
 	return c.Victim().DeleteRandomPod(clientset)
 }
 
-// Create a ChaosResult instance
+// NewResult creates a ChaosResult instance
 func (c *Chaos) NewResult(e error) *Result {
 	return &Result{
 		chaos: c,
