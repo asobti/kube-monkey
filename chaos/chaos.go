@@ -107,6 +107,7 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 
 	killValue, err := c.getKillValue(clientset)
 
+	// TODO: refactor this logic if we add more kill types. This if condition is getting too big.
 	// KillAll and KillPodDisruptionBudget are the only kill types that do not require a kill-value
 	if killType != config.KillAllLabelValue && killType != config.KillPodDisruptionBudgetLabelValue && err != nil {
 		return err
