@@ -49,7 +49,7 @@ func EligibleDeployments(clientset kube.Interface, namespace string, filter *met
 func (d *Deployment) IsEnrolled(clientset kube.Interface) (bool, error) {
 	deployment, err := clientset.AppsV1().Deployments(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	return deployment.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
