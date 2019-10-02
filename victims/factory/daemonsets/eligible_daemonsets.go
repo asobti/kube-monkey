@@ -49,7 +49,7 @@ func EligibleDaemonSets(clientset kube.Interface, namespace string, filter *meta
 func (d *DaemonSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	return daemonset.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }

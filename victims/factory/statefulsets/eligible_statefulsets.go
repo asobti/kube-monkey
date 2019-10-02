@@ -49,7 +49,7 @@ func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *me
 func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	return statefulset.Labels[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
