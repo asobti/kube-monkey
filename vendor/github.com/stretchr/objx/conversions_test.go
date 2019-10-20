@@ -18,6 +18,20 @@ func TestConversionJSON(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, jsonString, result)
 	assert.Equal(t, jsonString, o.MustJSON())
+
+	i := objx.Map{
+		"a": map[interface{}]interface{}{"b": objx.Map{"c": map[interface{}]interface{}{"d": "e"}},
+			"f": []objx.Map{{"g": map[interface{}]interface{}{"h": "i"}}},
+			"j": []map[string]interface{}{{"k": map[interface{}]interface{}{"l": "m"}}},
+			"n": []interface{}{objx.Map{"o": "p"}},
+		},
+	}
+
+	jsonString = `{"a":{"b":{"c":{"d":"e"}},"f":[{"g":{"h":"i"}}],"j":[{"k":{"l":"m"}}],"n":[{"o":"p"}]}}`
+	result, err = i.JSON()
+	require.NoError(t, err)
+	assert.Equal(t, jsonString, result)
+	assert.Equal(t, jsonString, i.MustJSON())
 }
 
 func TestConversionJSONWithError(t *testing.T) {
@@ -93,6 +107,11 @@ func TestConversionURLValues(t *testing.T) {
 		"bools[]":            []string{"true", "false"},
 		"mapSlice[][age]":    []string{"40"},
 		"mapSlice[][height]": []string{"152"},
+		"msiData[age]":       []string{"30"},
+		"msiData[height]":    []string{"162"},
+		"msiData[arr][]":     []string{"1", "2"},
+		"msiSlice[][age]":    []string{"40"},
+		"msiSlice[][height]": []string{"152"},
 	}, u)
 }
 
@@ -107,12 +126,13 @@ func TestConversionURLQuery(t *testing.T) {
 	assert.Nil(t, err)
 	require.NotNil(t, ue)
 
-	assert.Equal(t, "abc=123&bools[]=true&bools[]=false&data[age]=30&data[arr][]=1&data[arr][]=2&data[height]=162&mapSlice[][age]=40&mapSlice[][height]=152&name=Mat&stats[]=1&stats[]=2", ue)
+	assert.Equal(t, "abc=123&bools[]=true&bools[]=false&data[age]=30&data[arr][]=1&data[arr][]=2&data[height]=162&mapSlice[][age]=40&mapSlice[][height]=152&msiData[age]=30&msiData[arr][]=1&msiData[arr][]=2&msiData[height]=162&msiSlice[][age]=40&msiSlice[][height]=152&name=Mat&stats[]=1&stats[]=2", ue)
 }
 
 func TestConversionURLQueryNoSliceKeySuffix(t *testing.T) {
 	m := getURLQueryMap()
-	objx.URLValuesSliceKeySuffix = ""
+	err := objx.SetURLValuesSliceKeySuffix(objx.URLValuesSliceKeySuffixEmpty)
+	require.Nil(t, err)
 	u, err := m.URLQuery()
 
 	assert.Nil(t, err)
@@ -122,7 +142,35 @@ func TestConversionURLQueryNoSliceKeySuffix(t *testing.T) {
 	assert.Nil(t, err)
 	require.NotNil(t, ue)
 
-	assert.Equal(t, "abc=123&bools=true&bools=false&data[age]=30&data[arr]=1&data[arr]=2&data[height]=162&mapSlice[age]=40&mapSlice[height]=152&name=Mat&stats=1&stats=2", ue)
+	assert.Equal(t, "abc=123&bools=true&bools=false&data[age]=30&data[arr]=1&data[arr]=2&data[height]=162&mapSlice[age]=40&mapSlice[height]=152&msiData[age]=30&msiData[arr]=1&msiData[arr]=2&msiData[height]=162&msiSlice[age]=40&msiSlice[height]=152&name=Mat&stats=1&stats=2", ue)
+}
+
+func TestConversionURLQueryIndexSliceKeySuffix(t *testing.T) {
+	m := getURLQueryMap()
+	m.Set("mapSlice", []objx.Map{{"age": 40, "sex": "male"}, {"height": 152}})
+	err := objx.SetURLValuesSliceKeySuffix(objx.URLValuesSliceKeySuffixIndex)
+	require.Nil(t, err)
+	u, err := m.URLQuery()
+
+	assert.Nil(t, err)
+	require.NotNil(t, u)
+
+	ue, err := url.QueryUnescape(u)
+	assert.Nil(t, err)
+	require.NotNil(t, ue)
+
+	assert.Equal(t, "abc=123&bools[0]=true&bools[1]=false&data[age]=30&data[arr][0]=1&data[arr][1]=2&data[height]=162&mapSlice[0][age]=40&mapSlice[0][sex]=male&mapSlice[1][height]=152&msiData[age]=30&msiData[arr][0]=1&msiData[arr][1]=2&msiData[height]=162&msiSlice[0][age]=40&msiSlice[1][height]=152&name=Mat&stats[0]=1&stats[1]=2", ue)
+}
+
+func TestValidityURLQuerySliceKeySuffix(t *testing.T) {
+	err := objx.SetURLValuesSliceKeySuffix("")
+	assert.Nil(t, err)
+	err = objx.SetURLValuesSliceKeySuffix("[]")
+	assert.Nil(t, err)
+	err = objx.SetURLValuesSliceKeySuffix("[i]")
+	assert.Nil(t, err)
+	err = objx.SetURLValuesSliceKeySuffix("{}")
+	assert.Error(t, err)
 }
 
 func getURLQueryMap() objx.Map {
@@ -131,6 +179,8 @@ func getURLQueryMap() objx.Map {
 		"name":     "Mat",
 		"data":     objx.Map{"age": 30, "height": 162, "arr": []int{1, 2}},
 		"mapSlice": []objx.Map{{"age": 40}, {"height": 152}},
+		"msiData":  map[string]interface{}{"age": 30, "height": 162, "arr": []int{1, 2}},
+		"msiSlice": []map[string]interface{}{{"age": 40}, {"height": 152}},
 		"stats":    []string{"1", "2"},
 		"bools":    []bool{true, false},
 	}

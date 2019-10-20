@@ -32,6 +32,7 @@ func (i *TestExampleImplementation) TheExampleMethod(a, b, c int) (int, error) {
 	return args.Int(0), errors.New("Whoops")
 }
 
+//go:noinline
 func (i *TestExampleImplementation) TheExampleMethod2(yesorno bool) {
 	i.Called(yesorno)
 }
@@ -739,6 +740,16 @@ func Test_Mock_findExpectedCall_Respects_Repeatability(t *testing.T) {
 		}
 	}
 
+	c = m.On("Once", 1).Return("one").Once()
+	c.Repeatability = -1
+	f, c = m.findExpectedCall("Once", 1)
+	if assert.Equal(t, -1, f) {
+		if assert.NotNil(t, c) {
+			assert.Equal(t, "Once", c.Method)
+			assert.Equal(t, 1, c.Arguments[0])
+			assert.Equal(t, "one", c.ReturnArguments[0])
+		}
+	}
 }
 
 func Test_callString(t *testing.T) {
@@ -1187,8 +1198,8 @@ func Test_Arguments_Diff(t *testing.T) {
 	diff, count = args.Diff([]interface{}{"Hello World", 456, "false"})
 
 	assert.Equal(t, 2, count)
-	assert.Contains(t, diff, `%!s(int=456) != %!s(int=123)`)
-	assert.Contains(t, diff, `false != %!s(bool=true)`)
+	assert.Contains(t, diff, `(int=456) != (int=123)`)
+	assert.Contains(t, diff, `(string=false) != (bool=true)`)
 
 }
 
@@ -1200,7 +1211,7 @@ func Test_Arguments_Diff_DifferentNumberOfArgs(t *testing.T) {
 	diff, count = args.Diff([]interface{}{"string", 456, "false", "extra"})
 
 	assert.Equal(t, 3, count)
-	assert.Contains(t, diff, `extra != (Missing)`)
+	assert.Contains(t, diff, `(string=extra) != (Missing)`)
 
 }
 
@@ -1242,7 +1253,7 @@ func Test_Arguments_Diff_WithAnythingOfTypeArgument_Failing(t *testing.T) {
 	diff, count = args.Diff([]interface{}{"string", 123, true})
 
 	assert.Equal(t, 1, count)
-	assert.Contains(t, diff, `string != type int - %!s(int=123)`)
+	assert.Contains(t, diff, `string != type int - (int=123)`)
 
 }
 
@@ -1254,14 +1265,14 @@ func Test_Arguments_Diff_WithArgMatcher(t *testing.T) {
 
 	diff, count := args.Diff([]interface{}{"string", 124, true})
 	assert.Equal(t, 1, count)
-	assert.Contains(t, diff, `%!s(int=124) not matched by func(int) bool`)
+	assert.Contains(t, diff, `(int=124) not matched by func(int) bool`)
 
 	diff, count = args.Diff([]interface{}{"string", false, true})
 	assert.Equal(t, 1, count)
-	assert.Contains(t, diff, `%!s(bool=false) not matched by func(int) bool`)
+	assert.Contains(t, diff, `(bool=false) not matched by func(int) bool`)
 
 	diff, count = args.Diff([]interface{}{"string", 123, false})
-	assert.Contains(t, diff, `%!s(int=123) matched by func(int) bool`)
+	assert.Contains(t, diff, `(int=123) matched by func(int) bool`)
 
 	diff, count = args.Diff([]interface{}{"string", 123, true})
 	assert.Equal(t, 0, count)
@@ -1460,7 +1471,7 @@ func TestArgumentMatcherToPrintMismatch(t *testing.T) {
 func TestClosestCallMismatchedArgumentInformationShowsTheClosest(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
-			matchingExp := regexp.MustCompile(unexpectedCallRegex(`TheExampleMethod(int,int,int)`, `0: 1\s+1: 1\s+2: 2`, `0: 1\s+1: 1\s+2: 1`, `0: PASS:  %!s\(int=1\) == %!s\(int=1\)\s+1: PASS:  %!s\(int=1\) == %!s\(int=1\)\s+2: FAIL:  %!s\(int=2\) != %!s\(int=1\)`))
+			matchingExp := regexp.MustCompile(unexpectedCallRegex(`TheExampleMethod(int,int,int)`, `0: 1\s+1: 1\s+2: 2`, `0: 1\s+1: 1\s+2: 1`, `0: PASS:  \(int=1\) == \(int=1\)\s+1: PASS:  \(int=1\) == \(int=1\)\s+2: FAIL:  \(int=2\) != \(int=1\)`))
 			assert.Regexp(t, matchingExp, r)
 		}
 	}()
@@ -1475,7 +1486,7 @@ func TestClosestCallMismatchedArgumentInformationShowsTheClosest(t *testing.T) {
 func TestClosestCallMismatchedArgumentValueInformation(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
-			matchingExp := regexp.MustCompile(unexpectedCallRegex(`GetTime(int)`, "0: 1", "0: 999", `0: FAIL:  %!s\(int=1\) != %!s\(int=999\)`))
+			matchingExp := regexp.MustCompile(unexpectedCallRegex(`GetTime(int)`, "0: 1", "0: 999", `0: FAIL:  \(int=1\) != \(int=999\)`))
 			assert.Regexp(t, matchingExp, r)
 		}
 	}()
@@ -1492,6 +1503,7 @@ func unexpectedCallRegex(method, calledArg, expectedArg, diff string) string {
 		rMethod, calledArg, rMethod, expectedArg, diff)
 }
 
+//go:noinline
 func ConcurrencyTestMethod(m *Mock) {
 	m.Called()
 }

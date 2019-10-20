@@ -79,7 +79,7 @@ zyx = 42`)
 	if err == nil {
 		t.Error("Error should have been returned.")
 	}
-	if err.Error() != "(1, 4): unexpected token" {
+	if err.Error() != "(1, 4): parsing error: keys cannot contain ] character" {
 		t.Error("Bad error message:", err.Error())
 	}
 }
@@ -222,6 +222,13 @@ func TestDateNano(t *testing.T) {
 	tree, err := Load("a = 1979-05-27T00:32:00.999999999-07:00")
 	assertTree(t, tree, err, map[string]interface{}{
 		"a": time.Date(1979, time.May, 27, 0, 32, 0, 999999999, time.FixedZone("", -7*60*60)),
+	})
+}
+
+func TestDateSpaceDelimiter(t *testing.T) {
+	tree, err := Load("odt4 = 1979-05-27 07:32:00Z")
+	assertTree(t, tree, err, map[string]interface{}{
+		"odt4": time.Date(1979, time.May, 27, 7, 32, 0, 0, time.UTC),
 	})
 }
 
@@ -581,7 +588,7 @@ func TestDuplicateKeys(t *testing.T) {
 
 func TestEmptyIntermediateTable(t *testing.T) {
 	_, err := Load("[foo..bar]")
-	if err.Error() != "(1, 2): invalid table array key: empty table key" {
+	if err.Error() != "(1, 2): invalid table array key: expecting key part after dot" {
 		t.Error("Bad error message:", err.Error())
 	}
 }
@@ -895,5 +902,45 @@ func TestInvalidFloatParsing(t *testing.T) {
 	_, err = Load("a=_1_2")
 	if err.Error() != "(1, 3): cannot start number with underscore" {
 		t.Error("Bad error message:", err.Error())
+	}
+}
+
+func TestMapKeyIsNum(t *testing.T) {
+	_, err := Load("table={2018=1,2019=2}")
+	if err != nil {
+		t.Error("should be passed")
+	}
+	_, err = Load(`table={"2018"=1,"2019"=2}`)
+	if err != nil {
+		t.Error("should be passed")
+	}
+}
+
+func TestDottedKeys(t *testing.T) {
+	tree, err := Load(`
+name = "Orange"
+physical.color = "orange"
+physical.shape = "round"
+site."google.com" = true`)
+
+	assertTree(t, tree, err, map[string]interface{}{
+		"name": "Orange",
+		"physical": map[string]interface{}{
+			"color": "orange",
+			"shape": "round",
+		},
+		"site": map[string]interface{}{
+			"google.com": true,
+		},
+	})
+}
+
+func TestInvalidDottedKeyEmptyGroup(t *testing.T) {
+	_, err := Load(`a..b = true`)
+	if err == nil {
+		t.Fatal("should return an error")
+	}
+	if err.Error() != "(1, 1): invalid key: expecting key part after dot" {
+		t.Fatalf("invalid error message: %s", err)
 	}
 }

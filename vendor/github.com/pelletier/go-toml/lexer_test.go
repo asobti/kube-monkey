@@ -299,6 +299,9 @@ func TestDateRegexp(t *testing.T) {
 	if dateRegexp.FindString("1979-05-27T00:32:00.999999-07:00") == "" {
 		t.Error("nano precision lexing")
 	}
+	if dateRegexp.FindString("1979-05-27 07:32:00Z") == "" {
+		t.Error("space delimiter lexing")
+	}
 }
 
 func TestKeyEqualDate(t *testing.T) {
@@ -319,6 +322,12 @@ func TestKeyEqualDate(t *testing.T) {
 		{Position{1, 5}, tokenEqual, "="},
 		{Position{1, 7}, tokenDate, "1979-05-27T00:32:00.999999-07:00"},
 		{Position{1, 39}, tokenEOF, ""},
+	})
+	testFlow(t, "foo = 1979-05-27 07:32:00Z", []token{
+		{Position{1, 1}, tokenKey, "foo"},
+		{Position{1, 5}, tokenEqual, "="},
+		{Position{1, 7}, tokenDate, "1979-05-27 07:32:00Z"},
+		{Position{1, 27}, tokenEOF, ""},
 	})
 }
 
@@ -690,7 +699,7 @@ func TestKeyGroupArray(t *testing.T) {
 
 func TestQuotedKey(t *testing.T) {
 	testFlow(t, "\"a b\" = 42", []token{
-		{Position{1, 1}, tokenKey, "a b"},
+		{Position{1, 1}, tokenKey, "\"a b\""},
 		{Position{1, 7}, tokenEqual, "="},
 		{Position{1, 9}, tokenInteger, "42"},
 		{Position{1, 11}, tokenEOF, ""},

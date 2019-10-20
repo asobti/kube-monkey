@@ -175,6 +175,8 @@ func TestIsType(t *testing.T) {
 
 }
 
+type myType string
+
 func TestEqual(t *testing.T) {
 
 	mockT := new(testing.T)
@@ -200,12 +202,41 @@ func TestEqual(t *testing.T) {
 	if !Equal(mockT, uint64(123), uint64(123)) {
 		t.Error("Equal should return true")
 	}
+	if !Equal(mockT, myType("1"), myType("1")) {
+		t.Error("Equal should return true")
+	}
 	if !Equal(mockT, &struct{}{}, &struct{}{}) {
 		t.Error("Equal should return true (pointer equality is based on equality of underlying value)")
 	}
 	var m map[string]interface{}
 	if Equal(mockT, m["bar"], "something") {
 		t.Error("Equal should return false")
+	}
+	if Equal(mockT, myType("1"), myType("2")) {
+		t.Error("Equal should return false")
+	}
+}
+
+func TestSame(t *testing.T) {
+
+	mockT := new(testing.T)
+
+	ptr := func(i int) *int {
+		return &i
+	}
+
+	if Same(mockT, ptr(1), ptr(1)) {
+		t.Error("Same should return false")
+	}
+	if Same(mockT, 1, 1) {
+		t.Error("Same should return false")
+	}
+	p := ptr(2)
+	if Same(mockT, p, *p) {
+		t.Error("Same should return false")
+	}
+	if !Same(mockT, p, p) {
+		t.Error("Same should return true")
 	}
 }
 
@@ -251,6 +282,21 @@ func (t *bufferT) Errorf(format string, args ...interface{}) {
 	t.buf.WriteString(decorate(fmt.Sprintf(format, args...)))
 }
 
+func TestStringEqual(t *testing.T) {
+	for i, currCase := range []struct {
+		equalWant  string
+		equalGot   string
+		msgAndArgs []interface{}
+		want       string
+	}{
+		{equalWant: "hi, \nmy name is", equalGot: "what,\nmy name is", want: "\tassertions.go:\\d+: \n\t+Error Trace:\t\n\t+Error:\\s+Not equal:\\s+\n\\s+expected: \"hi, \\\\nmy name is\"\n\\s+actual\\s+: \"what,\\\\nmy name is\"\n\\s+Diff:\n\\s+-+ Expected\n\\s+\\++ Actual\n\\s+@@ -1,2 \\+1,2 @@\n\\s+-hi, \n\\s+\\+what,\n\\s+my name is"},
+	} {
+		mockT := &bufferT{}
+		Equal(mockT, currCase.equalWant, currCase.equalGot, currCase.msgAndArgs...)
+		Regexp(t, regexp.MustCompile(currCase.want), mockT.buf.String(), "Case %d", i)
+	}
+}
+
 func TestEqualFormatting(t *testing.T) {
 	for i, currCase := range []struct {
 		equalWant  string
@@ -258,8 +304,10 @@ func TestEqualFormatting(t *testing.T) {
 		msgAndArgs []interface{}
 		want       string
 	}{
-		{equalWant: "want", equalGot: "got", want: "\tassertions.go:[0-9]+: \n\t\t\tError Trace:\t\n\t\t\tError:      \tNot equal: \n\t\t\t            \texpected: \"want\"\n\t\t\t            \tactual  : \"got\"\n"},
-		{equalWant: "want", equalGot: "got", msgAndArgs: []interface{}{"hello, %v!", "world"}, want: "\tassertions.go:[0-9]+: \n\t\t\tError Trace:\t\n\t\t\tError:      \tNot equal: \n\t\t\t            \texpected: \"want\"\n\t\t\t            \tactual  : \"got\"\n\t\t\tMessages:   \thello, world!\n"},
+		{equalWant: "want", equalGot: "got", want: "\tassertions.go:\\d+: \n\t+Error Trace:\t\n\t+Error:\\s+Not equal:\\s+\n\\s+expected: \"want\"\n\\s+actual\\s+: \"got\"\n\\s+Diff:\n\\s+-+ Expected\n\\s+\\++ Actual\n\\s+@@ -1 \\+1 @@\n\\s+-want\n\\s+\\+got\n"},
+		{equalWant: "want", equalGot: "got", msgAndArgs: []interface{}{"hello, %v!", "world"}, want: "\tassertions.go:[0-9]+: \n\t+Error Trace:\t\n\t+Error:\\s+Not equal:\\s+\n\\s+expected: \"want\"\n\\s+actual\\s+: \"got\"\n\\s+Diff:\n\\s+-+ Expected\n\\s+\\++ Actual\n\\s+@@ -1 \\+1 @@\n\\s+-want\n\\s+\\+got\n\\s+Messages:\\s+hello, world!\n"},
+		{equalWant: "want", equalGot: "got", msgAndArgs: []interface{}{123}, want: "\tassertions.go:[0-9]+: \n\t+Error Trace:\t\n\t+Error:\\s+Not equal:\\s+\n\\s+expected: \"want\"\n\\s+actual\\s+: \"got\"\n\\s+Diff:\n\\s+-+ Expected\n\\s+\\++ Actual\n\\s+@@ -1 \\+1 @@\n\\s+-want\n\\s+\\+got\n\\s+Messages:\\s+123\n"},
+		{equalWant: "want", equalGot: "got", msgAndArgs: []interface{}{struct{ a string }{"hello"}}, want: "\tassertions.go:[0-9]+: \n\t+Error Trace:\t\n\t+Error:\\s+Not equal:\\s+\n\\s+expected: \"want\"\n\\s+actual\\s+: \"got\"\n\\s+Diff:\n\\s+-+ Expected\n\\s+\\++ Actual\n\\s+@@ -1 \\+1 @@\n\\s+-want\n\\s+\\+got\n\\s+Messages:\\s+{a:hello}\n"},
 	} {
 		mockT := &bufferT{}
 		Equal(mockT, currCase.equalWant, currCase.equalGot, currCase.msgAndArgs...)
@@ -682,13 +730,13 @@ func TestCondition(t *testing.T) {
 
 func TestDidPanic(t *testing.T) {
 
-	if funcDidPanic, _ := didPanic(func() {
+	if funcDidPanic, _, _ := didPanic(func() {
 		panic("Panic!")
 	}); !funcDidPanic {
 		t.Error("didPanic should return true")
 	}
 
-	if funcDidPanic, _ := didPanic(func() {
+	if funcDidPanic, _, _ := didPanic(func() {
 	}); funcDidPanic {
 		t.Error("didPanic should return false")
 	}
@@ -1395,6 +1443,81 @@ func TestJSONEq_ArraysOfDifferentOrder(t *testing.T) {
 	False(t, JSONEq(mockT, `["foo", {"hello": "world", "nested": "hash"}]`, `[{ "hello": "world", "nested": "hash"}, "foo"]`))
 }
 
+func TestYAMLEq_EqualYAMLString(t *testing.T) {
+	mockT := new(testing.T)
+	True(t, YAMLEq(mockT, `{"hello": "world", "foo": "bar"}`, `{"hello": "world", "foo": "bar"}`))
+}
+
+func TestYAMLEq_EquivalentButNotEqual(t *testing.T) {
+	mockT := new(testing.T)
+	True(t, YAMLEq(mockT, `{"hello": "world", "foo": "bar"}`, `{"foo": "bar", "hello": "world"}`))
+}
+
+func TestYAMLEq_HashOfArraysAndHashes(t *testing.T) {
+	mockT := new(testing.T)
+	expected := `
+numeric: 1.5
+array:
+  - foo: bar
+  - 1
+  - "string"
+  - ["nested", "array", 5.5]
+hash:
+  nested: hash
+  nested_slice: [this, is, nested]
+string: "foo"
+`
+
+	actual := `
+numeric: 1.5
+hash:
+  nested: hash
+  nested_slice: [this, is, nested]
+string: "foo"
+array:
+  - foo: bar
+  - 1
+  - "string"
+  - ["nested", "array", 5.5]
+`
+	True(t, YAMLEq(mockT, expected, actual))
+}
+
+func TestYAMLEq_Array(t *testing.T) {
+	mockT := new(testing.T)
+	True(t, YAMLEq(mockT, `["foo", {"hello": "world", "nested": "hash"}]`, `["foo", {"nested": "hash", "hello": "world"}]`))
+}
+
+func TestYAMLEq_HashAndArrayNotEquivalent(t *testing.T) {
+	mockT := new(testing.T)
+	False(t, YAMLEq(mockT, `["foo", {"hello": "world", "nested": "hash"}]`, `{"foo": "bar", {"nested": "hash", "hello": "world"}}`))
+}
+
+func TestYAMLEq_HashesNotEquivalent(t *testing.T) {
+	mockT := new(testing.T)
+	False(t, YAMLEq(mockT, `{"foo": "bar"}`, `{"foo": "bar", "hello": "world"}`))
+}
+
+func TestYAMLEq_ActualIsSimpleString(t *testing.T) {
+	mockT := new(testing.T)
+	False(t, YAMLEq(mockT, `{"foo": "bar"}`, "Simple String"))
+}
+
+func TestYAMLEq_ExpectedIsSimpleString(t *testing.T) {
+	mockT := new(testing.T)
+	False(t, YAMLEq(mockT, "Simple String", `{"foo": "bar", "hello": "world"}`))
+}
+
+func TestYAMLEq_ExpectedAndActualSimpleString(t *testing.T) {
+	mockT := new(testing.T)
+	True(t, YAMLEq(mockT, "Simple String", "Simple String"))
+}
+
+func TestYAMLEq_ArraysOfDifferentOrder(t *testing.T) {
+	mockT := new(testing.T)
+	False(t, YAMLEq(mockT, `["foo", {"hello": "world", "nested": "hash"}]`, `[{ "hello": "world", "nested": "hash"}, "foo"]`))
+}
+
 func TestDiff(t *testing.T) {
 	expected := `
 
@@ -1775,4 +1898,26 @@ func TestErrorAssertionFunc(t *testing.T) {
 			tt.assertion(t, tt.err)
 		})
 	}
+}
+
+func TestEventuallyFalse(t *testing.T) {
+	mockT := new(testing.T)
+
+	condition := func() bool {
+		return false
+	}
+
+	False(t, Eventually(mockT, condition, 100*time.Millisecond, 20*time.Millisecond))
+}
+
+func TestEventuallyTrue(t *testing.T) {
+	state := 0
+	condition := func() bool {
+		defer func() {
+			state = state + 1
+		}()
+		return state == 2
+	}
+
+	True(t, Eventually(t, condition, 100*time.Millisecond, 20*time.Millisecond))
 }

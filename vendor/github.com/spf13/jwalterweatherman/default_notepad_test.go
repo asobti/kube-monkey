@@ -59,11 +59,16 @@ func TestDefaultLogging(t *testing.T) {
 }
 
 func TestLogCounter(t *testing.T) {
+	assert := require.New(t)
+
 	defaultNotepad.logHandle = ioutil.Discard
 	defaultNotepad.outHandle = ioutil.Discard
 
+	errorCounter := &Counter{}
+
 	SetLogThreshold(LevelTrace)
 	SetStdoutThreshold(LevelTrace)
+	SetLogListeners(LogCounter(errorCounter, LevelError))
 
 	FATAL.Println("fatal err")
 	CRITICAL.Println("critical err")
@@ -82,8 +87,7 @@ func TestLogCounter(t *testing.T) {
 			for j := 0; j < 10; j++ {
 				ERROR.Println("error", j)
 				// check for data races
-				require.True(t, LogCountForLevel(LevelError) > uint64(j))
-				require.True(t, LogCountForLevelsGreaterThanorEqualTo(LevelError) > uint64(j))
+				assert.True(errorCounter.Count() > uint64(j))
 			}
 		}()
 
@@ -91,12 +95,5 @@ func TestLogCounter(t *testing.T) {
 
 	wg.Wait()
 
-	require.Equal(t, uint64(1), LogCountForLevel(LevelFatal))
-	require.Equal(t, uint64(1), LogCountForLevel(LevelCritical))
-	require.Equal(t, uint64(2), LogCountForLevel(LevelWarn))
-	require.Equal(t, uint64(1), LogCountForLevel(LevelInfo))
-	require.Equal(t, uint64(1), LogCountForLevel(LevelDebug))
-	require.Equal(t, uint64(1), LogCountForLevel(LevelTrace))
-	require.Equal(t, uint64(100), LogCountForLevel(LevelError))
-	require.Equal(t, uint64(102), LogCountForLevelsGreaterThanorEqualTo(LevelError))
+	assert.Equal(uint64(102), errorCounter.Count())
 }

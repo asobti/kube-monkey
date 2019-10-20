@@ -7,6 +7,8 @@ package jwalterweatherman
 
 import (
 	"bytes"
+	"io"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +17,9 @@ import (
 func TestNotepad(t *testing.T) {
 	var logHandle, outHandle bytes.Buffer
 
-	n := NewNotepad(LevelCritical, LevelError, &outHandle, &logHandle, "TestNotePad", 0)
+	errorCounter := &Counter{}
+
+	n := NewNotepad(LevelCritical, LevelError, &outHandle, &logHandle, "TestNotePad", 0, LogCounter(errorCounter, LevelError))
 
 	require.Equal(t, LevelCritical, n.GetStdoutThreshold())
 	require.Equal(t, LevelError, n.GetLogThreshold())
@@ -29,9 +33,48 @@ func TestNotepad(t *testing.T) {
 	require.NotContains(t, outHandle.String(), "Some error")
 	require.Contains(t, outHandle.String(), "Some critical error")
 
-	require.Equal(t, n.LogCountForLevel(LevelError), uint64(1))
-	require.Equal(t, n.LogCountForLevel(LevelDebug), uint64(1))
-	require.Equal(t, n.LogCountForLevel(LevelTrace), uint64(0))
+	// 1 error + 1 critical
+	require.Equal(t, errorCounter.Count(), uint64(2))
+}
+
+func TestNotepadLogListener(t *testing.T) {
+	assert := require.New(t)
+
+	var errorBuff, infoBuff bytes.Buffer
+
+	errorCapture := func(t Threshold) io.Writer {
+		if t != LevelError {
+			// Only interested in ERROR
+			return nil
+		}
+
+		return &errorBuff
+	}
+
+	infoCapture := func(t Threshold) io.Writer {
+		if t != LevelInfo {
+			return nil
+		}
+
+		return &infoBuff
+	}
+
+	n := NewNotepad(LevelCritical, LevelError, ioutil.Discard, ioutil.Discard, "TestNotePad", 0, infoCapture, errorCapture)
+
+	n.DEBUG.Println("Some debug")
+	n.INFO.Println("Some info")
+	n.INFO.Println("Some more info")
+	n.ERROR.Println("Some error")
+	n.CRITICAL.Println("Some critical error")
+	n.ERROR.Println("Some more error")
+
+	assert.Equal(`[TestNotePad] ERROR Some error
+[TestNotePad] ERROR Some more error
+`, errorBuff.String())
+	assert.Equal(`[TestNotePad] INFO Some info
+[TestNotePad] INFO Some more info
+`, infoBuff.String())
+
 }
 
 func TestThresholdString(t *testing.T) {
