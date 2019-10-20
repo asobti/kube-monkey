@@ -10,8 +10,8 @@ data:
       run_hour = {{ .Values.config.runHour }}
       start_hour = {{ .Values.config.startHour }}
       end_hour = {{ .Values.config.endHour }}
-      blacklisted_namespaces = ["{{ .Values.config.blacklistedNamespaces }}"]
-      whitelisted_namespaces = ["{{ .Values.config.whitelistedNamespaces }}"]
+      blacklisted_namespaces = [ {{ .Values.config.blacklistedNamespaces }} ]
+      whitelisted_namespaces = [ {{ .Values.config.whitelistedNamespaces }} ]
       time_zone = "{{ .Values.config.timeZone }}"
       [debug]
       enabled= {{ .Values.config.debug.enabled }}
