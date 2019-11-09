@@ -2,6 +2,8 @@
 
 kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
 
+Join us at [#kube-monkey](https://kubernetes.slack.com/messages/kube-monkey) on Kubernetes Slack.
+
 ---
 
 kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
@@ -52,7 +54,7 @@ spec:
         kube-monkey/identifier: monkey-victim
         kube-monkey/mtbf: '2'
         kube-monkey/kill-mode: "fixed"
-        kube-monkey/kill-value: 1
+        kube-monkey/kill-value: '1'
 [... omitted ...]
 ```
 
@@ -70,7 +72,7 @@ metadata:
     kube-monkey/identifier: monkey-victim
     kube-monkey/mtbf: '2'
     kube-monkey/kill-mode: "fixed"
-    kube-monkey/kill-value: 1
+    kube-monkey/kill-value: '1'
 spec:
   template:
     metadata:
@@ -145,7 +147,12 @@ KUBEMONKEY_END_HOUR=16
 KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
-
+#### Example Config to test kube-monkey works by enabeling debug mode
+```toml
+[debug]
+enabled= true
+schedule_immediate_kill= true
+```
 
 ## Deploying
 
@@ -158,13 +165,17 @@ KUBEMONKEY_TIME_ZONE=America/New_York
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
-**Helm Chart**  
-A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit `$PROJECT/helm/kubemonkey/values.yaml` and update the value of `image.repository` to point at the location of your container.
+3. You should be able to see debug logs by `kubectl logs -f deployment.apps/kube-monkey --namespace=kube-system`  here the `deployment.apps/kube-monkey` is the k8s deployment for kube monkey.
 
-Helm can then be executed using
+
+**Helm Chart**  
+A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `ayushsobti/kube-monkey`.
+
+Helm can then be executed using default values
 ```bash
-helm install $release helm/kubemonkey
+helm install --name $release helm/kubemonkey
 ```
+refer [kube-monkey helm chart README.md](https://github.com/asobti/kube-monkey/blob/master/helm/kubemonkey/README.md)
 
 ## Logging
 
@@ -191,6 +202,21 @@ More resources: See the [k8s logging page](https://kubernetes.io/docs/concepts/c
 kube-monkey is built using v7.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the
 [Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which
 versions of Kubernetes are compatible.
+
+## Instructions on how to get this working on OpenShift 3.x
+
+```
+git clone https://github.com/asobti/kube-monkey.git
+cd examples
+oc login http://someserver/ -u system:admin
+oc project kube-system
+oc create -f configmap.yaml
+oc -n kube-system adm policy add-role-to-user -z deployer system:deployer
+oc -n kube-system adm policy add-role-to-user -z builder system:image-builder
+oc -n kube-system adm policy add-role-to-group system:image-puller system:serviceaccounts:kube-system
+oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.3.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
+oc volume dc/kube-monkey --add --name=kubeconfigmap -m /etc/kube-monkey -t configmap --configmap-name=kube-monkey-config-map
+```
 
 ## Ways to contribute
 

@@ -46,19 +46,19 @@ func (vm *victimMock) DeleteRandomPods(clientset kube.Interface, killValue int) 
 	return args.Error(0)
 }
 
-func (vm *victimMock) KillNumberForKillingAll(clientset kube.Interface, killValue int) int {
-	args := vm.Called(clientset, killValue)
-	return args.Int(0)
+func (vm *victimMock) KillNumberForKillingAll(clientset kube.Interface) (int, error) {
+	args := vm.Called(clientset)
+	return args.Int(0), args.Error(1)
 }
 
-func (vm *victimMock) KillNumberForMaxPercentage(clientset kube.Interface, killValue int) int {
+func (vm *victimMock) KillNumberForMaxPercentage(clientset kube.Interface, killValue int) (int, error) {
 	args := vm.Called(clientset, killValue)
-	return args.Int(0)
+	return args.Int(0), args.Error(1)
 }
 
-func (vm *victimMock) KillNumberForFixedPercentage(clientset kube.Interface, killValue int) int {
+func (vm *victimMock) KillNumberForFixedPercentage(clientset kube.Interface, killValue int) (int, error) {
 	args := vm.Called(clientset, killValue)
-	return args.Int(0)
+	return args.Int(0), args.Error(1)
 }
 
 func (vm *victimMock) IsBlacklisted() bool {

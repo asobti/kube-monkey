@@ -2,6 +2,7 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: {{ template "kubemonkey.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "kubemonkey.name" . }}
     chart: {{ template "kubemonkey.chart" . }}
@@ -26,15 +27,16 @@ spec:
           command:
              - "/kube-monkey"
           args: ["-v={{ .Values.args.logLevel }}", "-log_dir={{ .Values.args.logDir }}"]
+          resources:
+{{- toYaml .Values.resources | trimSuffix "\n" | nindent 12 }}
           volumeMounts:
              - name: config-volume
                mountPath: "/etc/kube-monkey"
+      serviceAccountName: {{ template "kubemonkey.fullname" . }} 
       volumes:
         - name: config-volume
           configMap:
             name: {{ template "kubemonkey.fullname" . }}
-          resources:
-{{ toYaml .Values.resources | indent 12 }}
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

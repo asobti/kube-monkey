@@ -56,7 +56,7 @@ func TestStringWithEntries(t *testing.T) {
 	schedString = append(schedString, fmt.Sprint(HeaderRow))
 	schedString = append(schedString, fmt.Sprint(SepRow))
 	for _, chaos := range s.entries {
-		schedString = append(schedString, fmt.Sprintf(RowFormat, chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat)))
+		schedString = append(schedString, fmt.Sprintf(RowFormat, chaos.Victim().Kind(), chaos.Victim().Namespace(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat)))
 	}
 	schedString = append(schedString, fmt.Sprint(End))
 
