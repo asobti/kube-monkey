@@ -131,23 +131,14 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 		return nil
 	}
 
-	pod, err := clientset.CoreV1().Pods(v.namespace).Get(podName, metav1.GetOptions{})
-	if err != nil {
-		return errors.Wrapf(err, "unable to get pod %s for %s/%s", podName, v.namespace, v.name)
-	}
-
-	deleteOpts := v.GetDeleteOptsForPod(pod)
+	deleteOpts := v.GetDeleteOptsForPod()
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteOpts)
 }
 
-// Creates the DeleteOptions object for the pod. Grace period is calculated as the higher
-// of configured grace period and termination grace period set on the pod
-func (v *VictimBase) GetDeleteOptsForPod(pod *v1.Pod) *metav1.DeleteOptions {
+// Creates the DeleteOptions object
+// Grace period is derived from config
+func (v *VictimBase) GetDeleteOptsForPod() *metav1.DeleteOptions {
 	gracePeriodSec := config.GracePeriodSeconds()
-
-	if pod.Spec.TerminationGracePeriodSeconds != nil && *pod.Spec.TerminationGracePeriodSeconds > *gracePeriodSec {
-		gracePeriodSec = pod.Spec.TerminationGracePeriodSeconds
-	}
 
 	return &metav1.DeleteOptions{
 		GracePeriodSeconds: gracePeriodSec,
