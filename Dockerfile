@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:19.04
 RUN if (dpkg -l | grep -cq tzdata); then \
         echo "tzdata package already installed! Skipping tzdata installation"; \
     else \
