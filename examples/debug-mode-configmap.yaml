@@ -12,7 +12,7 @@ data:
     start_hour = 21
     end_hour = 23
     blacklisted_namespaces = ["kube-system"]
-    whitelisted_namespaces = ["default"]
+    whitelisted_namespaces = [ "default", "test-kill-namespace" ]
     time_zone = "Australia/Melbourne"
     graceperiod_sec= 10
     [debug]
