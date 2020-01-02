@@ -72,7 +72,7 @@ func (vm *victimMock) IsWhitelisted() bool {
 }
 
 func newVictimMock() *victimMock {
-	v := victims.New(KIND, NAME, NAMESPACE, IDENTIFIER, 1)
+	v := victims.New(KIND, NAME, NAMESPACE, IDENTIFIER, "1h")
 	return &victimMock{
 		VictimBase: *v,
 	}

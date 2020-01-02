@@ -72,17 +72,16 @@ func New() (*Schedule, error) {
 	}
 
 	for _, victim := range victims {
-		killtime := CalculateKillTime()
+		killtime := CalculateKillTime(victim.Mtbf())
 
-		if ShouldScheduleChaos(victim.Mtbf()) {
-			schedule.Add(chaos.New(killtime, victim))
-		}
+		schedule.Add(chaos.New(killtime, victim))
+
 	}
 
 	return schedule, nil
 }
 
-func CalculateKillTime() time.Time {
+func CalculateKillTime(mtbf string) time.Time {
 	loc := config.Timezone()
 	if config.DebugEnabled() && config.DebugScheduleImmediateKill() {
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -90,7 +89,7 @@ func CalculateKillTime() time.Time {
 		secOffset := r.Intn(60)
 		return time.Now().In(loc).Add(time.Duration(secOffset) * time.Second)
 	}
-	return calendar.RandomTimeInRange(config.StartHour(), config.EndHour(), loc)
+	return calendar.CustzRandomTimeInRange(mtbf, config.StartHour(), config.EndHour(), loc)
 }
 
 func ShouldScheduleChaos(mtbf int) bool {
