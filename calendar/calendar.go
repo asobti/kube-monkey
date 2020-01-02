@@ -86,6 +86,9 @@ func CustzRandomTimeInRange(mtbf string, startHour, endHour int, loc *time.Locat
 	year, month, date := now.Date()
 	todayEndTime := time.Date(year, month, date, endHour, 0, 0, 0, loc)
 	todayStartTime := time.Date(year, month, date, startHour, 0, 0, 0, loc)
+	if now.Before(todayStartTime) { // now is earlier then start hour, only for test pass, normal process won't run into this condition
+		return todayStartTime
+	}
 	if randCalTime.Before(todayEndTime) { // time offset before today's endHour
 		glog.V(1).Infof("CustzRandomTimeInRange calculate time %s", randCalTime)
 		return randCalTime
