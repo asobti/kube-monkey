@@ -138,7 +138,7 @@ func TestDeletePodDryRun(t *testing.T) {
 	assert.Lenf(t, podList, 1, "Expected 1 item in podList, got %d", len(podList))
 }
 
-func TestDeleteRandomPods(t *testing.T) {
+func TestHarmRandomPods(t *testing.T) {
 
 	v := newVictimBase()
 	pod1 := newPod("app1", v1.PodRunning)
@@ -149,23 +149,23 @@ func TestDeleteRandomPods(t *testing.T) {
 	podList := getPodList(client).Items
 	assert.Lenf(t, podList, 3, "Expected 3 items in podList, got %d", len(podList))
 
-	err := v.DeleteRandomPods(client, 0)
+	err := v.HarmRandomPods(client, 0)
 	assert.NotNil(t, err, "expected err for killNum=0 but got nil")
 
-	err = v.DeleteRandomPods(client, -1)
+	err = v.HarmRandomPods(client, -1)
 	assert.NotNil(t, err, "expected err for negative terminations but got nil")
 
-	_ = v.DeleteRandomPods(client, 1)
+	_ = v.HarmRandomPods(client, 1)
 	podList = getPodList(client).Items
 	assert.Lenf(t, podList, 2, "Expected 2 items in podList, got %d", len(podList))
 
-	_ = v.DeleteRandomPods(client, 2)
+	_ = v.HarmRandomPods(client, 2)
 	podList = getPodList(client).Items
 	assert.Lenf(t, podList, 1, "Expected 1 item in podList, got %d", len(podList))
 	name := podList[0].GetName()
 	assert.Equalf(t, name, "app2", "Expected not running pods not be deleted")
 
-	err = v.DeleteRandomPods(client, 2)
+	err = v.HarmRandomPods(client, 2)
 	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 
@@ -307,7 +307,7 @@ func TestDeleteRandomPod(t *testing.T) {
 	podList := getPodList(client).Items
 	assert.Len(t, podList, 1)
 
-	err := v.DeleteRandomPods(client, 2)
+	err := v.HarmRandomPods(client, 2)
 	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 

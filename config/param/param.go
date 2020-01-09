@@ -6,6 +6,19 @@ const (
 	// Default: true
 	DryRun = "kubemonkey.dry_run"
 
+	// HarmMode specifies how monkey do harmful work in the cluster
+	// Type: string
+	// Default: delete_pod
+	// Available values: delete_pod, exec_pod
+	// delete_pod: monkey will kill pod in cluster
+	// exec_pod: monkey will exec command specified in harm_value in pod
+	HarmType = "kubemonkey.harm_type"
+
+	// HarmValue specifies the command to execute in pod
+	// Type: string
+	// Default: ""
+	HarmValue = "kubemonkey.harm_value"
+
 	// Timezone specifies the timezone to use when
 	// scheduling Pod terminations
 	// Type: string
