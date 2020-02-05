@@ -82,7 +82,7 @@ $ helm get manifest my-release
 | `replicaCount`            | number of replicas to run                           | 1                                |
 | `rbac.enabled`            | rbac enabled or not                                 | true                             |
 | `image.tag.IfNotPresent`  | image pull logic                                    | IfNotPresent                     |
-| `config.dryRun`           | will not kill pods, only logs behaviour             | false                            |
+| `config.dryRun`           | will not kill pods, only logs behaviour             | true                            |
 | `config.runHour`          | schedule start time in 24hr format                  | 8                                |
 | `config.startHour`        | pod killing start time  in 24hr format              | 10                               |
 | `config.endHour`          | pod killing stop time  in 24hr format               | 16                               |
