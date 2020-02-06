@@ -119,6 +119,7 @@ Clone the repository and build the container.
 ```bash
 go get github.com/asobti/kube-monkey
 cd $GOPATH/src/github.com/asobti/kube-monkey
+make build
 make container
 ```
 
