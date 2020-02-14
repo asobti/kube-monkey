@@ -52,7 +52,7 @@ func (s *ConfigTestSuite) TestTimezone() {
 
 	// avoid Exit(255) on glog.Fatal
 	monkey.Patch(glog.Fatal, func(a ...interface{}) {
-		s.Contains(a[0], "cannot find nolnexistent in zip file")
+		s.Contains(a[0], "nolnexistent")
 	})
 	defer func() { monkey.Unpatch(glog.Fatal) }()
 	s.Equal((*time.Location)(nil), Timezone())
