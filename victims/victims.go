@@ -50,7 +50,7 @@ type VictimAPICalls interface {
 	RunningPods(kube.Interface) ([]v1.Pod, error)
 	Pods(kube.Interface) ([]v1.Pod, error)
 	DeletePod(kube.Interface, string) error
-	ExecPod(kube.Interface, string, string) error
+	ExecPod(kube.Interface, string, string, string) error
 	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
 	HarmRandomPods(kube.Interface, int) error
 	IsBlacklisted() bool
