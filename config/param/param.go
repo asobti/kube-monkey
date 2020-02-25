@@ -14,11 +14,6 @@ const (
 	// exec_pod: monkey will exec command specified in harm_value in pod
 	HarmType = "kubemonkey.harm_type"
 
-	// HarmValue specifies the command to execute in pod
-	// Type: string
-	// Default: ""
-	HarmValue = "kubemonkey.harm_value"
-
 	// Timezone specifies the timezone to use when
 	// scheduling Pod terminations
 	// Type: string

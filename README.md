@@ -39,6 +39,9 @@ that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-
 
 **`kube-monkey/container-name`**: Specify container for monkey to execute command in, default value is the first container
 
+**`kube-monkey/container-name`**:When harm_type is 'exec_pod', command to execute is set on this pod annotation
+
+
 #### Example of opted-in Deployment killing one pod per purge
 
 ```yaml
@@ -134,7 +137,6 @@ Configuration keys and descriptions can be found in [`config/param/param.go`](ht
 [kubemonkey]
 dry_run = true                           # Terminations are only logged
 harm_type = "exec_pod"                   # Monkey's behavior is to execute command in containers. Default value is "delete_pod", which represents deleting pods
-harm_value = "reboot"                    # Specify the command to execute
 run_hour = 8                             # Run scheduling at 8am on weekdays
 start_hour = 10                          # Don't schedule any pod deaths before 10am
 end_hour = 16                            # Don't schedule any pod deaths after 4pm

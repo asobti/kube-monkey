@@ -18,7 +18,6 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -139,12 +138,11 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteOpts)
 }
 
-func (v *VictimBase) ExecPod(clientset kube.Interface, podName, containerName string) error {
+func (v *VictimBase) ExecPod(clientset kube.Interface, podName, containerName, execCmd string) error {
 	if config.DryRun() {
-		glog.Infof("[DryRun Mode] exec command in pod %s for %s/%s : %s", podName, v.namespace, v.name, config.HarmValue())
+		glog.Infof("[DryRun Mode] exec command in pod %s for %s/%s : %s", podName, v.namespace, v.name, execCmd)
 		return nil
 	}
-	execCmd := config.HarmValue()
 	stdout, stderr, err := kubernetes.ExecCommandInContainerWithFullOutput(
 		clientset,
 		podName,
@@ -154,8 +152,8 @@ func (v *VictimBase) ExecPod(clientset kube.Interface, podName, containerName st
 	if err != nil {
 		return fmt.Errorf("unexpected error for exec cmd %s in pod %s: %s", execCmd, podName, err)
 	}
-	glog.Infof("Execute command %s in pod %s output: %s", config.HarmValue(), podName, stdout)
-	glog.Infof("Execute command %s in pod %s errbytes: %s", config.HarmValue(), podName, stderr)
+	glog.Infof("Execute command %s in pod %s output: %s", execCmd, podName, stdout)
+	glog.Infof("Execute command %s in pod %s errbytes: %s", execCmd, podName, stderr)
 	return nil
 }
 
@@ -210,7 +208,14 @@ func (v *VictimBase) HarmRandomPods(clientset kube.Interface, killNum int) error
 			if specifiedContainerName, ok := pods[victimIndex].Labels[config.ContainerNameKey]; ok {
 				containerName = specifiedContainerName
 			}
-			err = v.ExecPod(clientset, targetPod, containerName)
+			var execCmd string
+			if setCmd, ok := pods[victimIndex].Annotations[config.ExecCmdKey]; ok {
+				execCmd = setCmd
+			} else {
+				glog.Warningf("command to execute is not set , excepted to set on annotation %s", config.ExecCmdKey)
+				continue
+			}
+			err = v.ExecPod(clientset, targetPod, containerName, execCmd)
 		default:
 			err = v.DeletePod(clientset, targetPod)
 
