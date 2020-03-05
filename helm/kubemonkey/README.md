@@ -68,6 +68,17 @@ $ helm install --name my-release kubemonkey \
                --set config.startHour=11 \
                --set config.endHour=17 
 ```
+If you want to enable attacks notifications.
+
+```console
+$ helm install --name my-release kubemonkey \
+               --set config.dryRun=false \
+               --set config.whitelistedNamespaces="namespace1\"\,\"namespace2\"\,\"namespace3" \
+               --set config.notifications.enabled=true \
+               --set config.notifications[0].endpoint=http://localhost:8080/path \
+               --set config.notifications[0].message="{\"foo\":\"bar\"}" \
+               --set config.notifications[0].headers="Content-Type:application/json\"\,\"client-id:kubemonkey"
+```
 If you want validate intended values passed in to configmap .
 
 ```console
@@ -75,24 +86,26 @@ $ helm get manifest my-release
 ```
 ## Configurations
 
-| Parameter                 | Description                                         | Default                          |
-|---------------------------|-----------------------------------------------------|----------------------------------|
-| `image.repository`        | docker image repo                                   | ayushsobti/kube-monkey           |
-| `image.tag`               | docker image tag                                    | v0.3.0                           |
-| `replicaCount`            | number of replicas to run                           | 1                                |
-| `rbac.enabled`            | rbac enabled or not                                 | true                             |
-| `image.tag.IfNotPresent`  | image pull logic                                    | IfNotPresent                     |
-| `config.dryRun`           | will not kill pods, only logs behaviour             | true                            |
-| `config.runHour`          | schedule start time in 24hr format                  | 8                                |
-| `config.startHour`        | pod killing start time  in 24hr format              | 10                               |
-| `config.endHour`          | pod killing stop time  in 24hr format               | 16                               |
-| `config.whitelistedNamespaces`| pods in this namespace that opt-in will be killed|                                 |
-| `config.endHour.blacklistedNamespaces`| pods in this namespace will not be killed| kube-system                     |
-| `config.timeZone`         | time zone in DZ format                              | America/New_York                 |
-| `config.debug.enabled`    | debug mode,need to be enabled to see debuging behaviour| false                         |
-| `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time| false            |
-| `args.logLevel`           | go log level                                        | 5                                |
-| `args.logDir`             | log directory                                       | /var/log/kube-monkey             |
+| Parameter                              | Description                                                          | Default                          |
+|----------------------------------------|----------------------------------------------------------------------|----------------------------------|
+| `image.repository`                     | docker image repo                                                    | ayushsobti/kube-monkey           |
+| `image.tag`                            | docker image tag                                                     | v0.3.0                           |
+| `replicaCount`                         | number of replicas to run                                            | 1                                |
+| `rbac.enabled`                         | rbac enabled or not                                                  | true                             |
+| `image.tag.IfNotPresent`               | image pull logic                                                     | IfNotPresent                     |
+| `config.dryRun`                        | will not kill pods, only logs behaviour                              | true                             |
+| `config.runHour`                       | schedule start time in 24hr format                                   | 8                                |
+| `config.startHour`                     | pod killing start time  in 24hr format                               | 10                               |
+| `config.endHour`                       | pod killing stop time  in 24hr format                                | 16                               |
+| `config.whitelistedNamespaces`         | pods in this namespace that opt-in will be killed                    |                                  |
+| `config.blacklistedNamespaces`         | pods in this namespace will not be killed                            | kube-system                      |
+| `config.timeZone`                      | time zone in DZ format                                               | America/New_York                 |
+| `config.debug.enabled`                 | debug mode,need to be enabled to see debuging behaviour              | false                            |
+| `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time              | false                            |
+| `config.notifications.enabled`         | enables reporting of attacks to an HTTP endpoint                    | false                            |
+| `config.notifications.attacks`         | list of (endpoint,message,headers) where attacks will be reported to | []                               |
+| `args.logLevel`                        | go log level                                                         | 5                                |
+| `args.logDir`                          | log directory                                                        | /var/log/kube-monkey             |
 
 after all you can simply edit values.yaml with your prefered configs and run as below
 

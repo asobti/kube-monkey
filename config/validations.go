@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/asobti/kube-monkey/config/param"
 )
@@ -35,9 +36,26 @@ func ValidateConfigs() error {
 		return fmt.Errorf("RunHour: %s should be less than %s", param.RunHour, param.StartHour)
 	}
 
+	notificationsReceivers := NotificationsAttacks()
+
+	// Notification headers should be in a valid format
+	for _, receiver := range notificationsReceivers {
+		for _, header := range receiver.Headers {
+			if !isValidHeader(header) {
+				return fmt.Errorf("Header: %s is not in valid format", header)
+			}
+		}
+	}
+
 	return nil
 }
 
 func IsValidHour(hour int) bool {
 	return hour >= 0 && hour < 24
+}
+
+func isValidHeader(header string) bool {
+	re := regexp.MustCompile("^(.+:.+)$")
+
+	return re.MatchString(header)
 }

@@ -71,7 +71,7 @@ func (vm *victimMock) IsWhitelisted() bool {
 	return args.Bool(0)
 }
 
-func newVictimMock() *victimMock {
+func NewVictimMock() *victimMock {
 	v := victims.New(KIND, NAME, NAMESPACE, IDENTIFIER, 1)
 	return &victimMock{
 		VictimBase: *v,
@@ -81,6 +81,6 @@ func newVictimMock() *victimMock {
 func NewMock() *Chaos {
 	return &Chaos{
 		killAt: time.Now(),
-		victim: newVictimMock(),
+		victim: NewVictimMock(),
 	}
 }
