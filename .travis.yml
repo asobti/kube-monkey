@@ -11,7 +11,7 @@ git:
   depth: 1
 
 env:
-- GOLANGCI_RELEASE="v1.4.1"
+- GOLANGCI_RELEASE="v1.26.0"
 
 script:
 - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s ${GOLANGCI_RELEASE}
