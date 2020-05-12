@@ -40,7 +40,7 @@ func NewInClusterClient() (*kube.Clientset, error) {
 	}
 
 	if apiserverHost, override := cfg.ClusterAPIServerHost(); override {
-		glog.V(5).Infof("API server host overriden to: %s\n", apiserverHost)
+		glog.V(5).Infof("API server host overridden to: %s\n", apiserverHost)
 		config.Host = apiserverHost
 	}
 
