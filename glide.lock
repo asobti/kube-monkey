@@ -1,10 +1,14 @@
-hash: e56fcf28477adcc67f88451b2203f51e22e8ac6b73b3ab3ac9a97270b05af4bf
-updated: 2018-06-18T14:07:20.918876-07:00
+hash: 1a8f062e05f16eb6357866ed7ac9ca868a1d73a5f72066809dd35adaa151b802
+updated: 2020-01-09T15:05:48.278448+08:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
   subpackages:
   - spew
+- name: github.com/docker/spdystream
+  version: 449fdfce4d962303d702fec724ef0ad181c92528
+  subpackages:
+  - spdy
 - name: github.com/fsnotify/fsnotify
   version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: github.com/ghodss/yaml
@@ -26,8 +30,6 @@ imports:
   - ptypes/timestamp
 - name: github.com/google/gofuzz
   version: 44d81051d367757e1c7c6a5a86423ece9afcf63c
-- name: github.com/pkg/errors
-  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/googleapis/gnostic
   version: 0c5108395e2debce0d731cf0287ddf7242066aba
   subpackages:
@@ -54,6 +56,8 @@ imports:
   version: bb74f1db0675b241733089d5a1faa5dd8b0ef57b
 - name: github.com/pelletier/go-toml
   version: c01d1270ff3e442a8a57cddc1c92dc1138598194
+- name: github.com/pkg/errors
+  version: ba968bfe8b2f7e042a574c888954fccecfa385b4
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
@@ -171,9 +175,12 @@ imports:
   - pkg/util/clock
   - pkg/util/errors
   - pkg/util/framer
+  - pkg/util/httpstream
+  - pkg/util/httpstream/spdy
   - pkg/util/intstr
   - pkg/util/json
   - pkg/util/net
+  - pkg/util/remotecommand
   - pkg/util/runtime
   - pkg/util/sets
   - pkg/util/validation
@@ -182,6 +189,7 @@ imports:
   - pkg/util/yaml
   - pkg/version
   - pkg/watch
+  - third_party/forked/golang/netutil
   - third_party/forked/golang/reflect
 - name: k8s.io/client-go
   version: 23781f4d6632d88e869066eaebb743857aa1ef9b
@@ -257,8 +265,11 @@ imports:
   - tools/clientcmd/api
   - tools/metrics
   - tools/reference
+  - tools/remotecommand
   - transport
+  - transport/spdy
   - util/cert
+  - util/exec
   - util/flowcontrol
   - util/integer
 testImports:

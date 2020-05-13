@@ -1,6 +1,6 @@
 # kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey) [![Go Report](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
 
-kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
+kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods or introduces failure by executing command in containers in the cluster encouraging and validating the development of failure-resilient services.
 
 Join us at [#kube-monkey](https://kubernetes.slack.com/messages/kube-monkey) on Kubernetes Slack.
 
@@ -36,6 +36,11 @@ that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-
 * if `fixed`, provide an integer of pods to kill
 * if `random-max-percent`, provide a number from 0-100 to specify the max % of pods kube-monkey can kill
 * if `fixed-percent`, provide a number from 0-100 to specify the % of pods to kill
+
+**`kube-monkey/container-name`**: Specify container for monkey to execute command in, default value is the first container
+
+**`kube-monkey/container-name`**:When harm_type is 'exec_pod', command to execute is set on this pod annotation
+
 
 #### Example of opted-in Deployment killing one pod per purge
 
@@ -131,6 +136,7 @@ Configuration keys and descriptions can be found in [`config/param/param.go`](ht
 ```toml
 [kubemonkey]
 dry_run = true                           # Terminations are only logged
+harm_type = "exec_pod"                   # Monkey's behavior is to execute command in containers. Default value is "delete_pod", which represents deleting pods
 run_hour = 8                             # Run scheduling at 8am on weekdays
 start_hour = 10                          # Don't schedule any pod deaths before 10am
 end_hour = 16                            # Don't schedule any pod deaths after 4pm

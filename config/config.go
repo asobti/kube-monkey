@@ -33,6 +33,8 @@ const (
 	KillFixedPercentageLabelValue = "fixed-percent"
 	KillFixedLabelValue           = "fixed"
 	KillAllLabelValue             = "kill-all"
+	ContainerNameKey              = "kube-monkey/container-name"
+	ExecCmdKey                    = "kube-monkey/exec-cmd"
 )
 
 func SetDefaults() {
@@ -47,6 +49,7 @@ func SetDefaults() {
 	viper.SetDefault(param.GracePeriodSec, 5)
 	viper.SetDefault(param.BlacklistedNamespaces, []string{metav1.NamespaceSystem})
 	viper.SetDefault(param.WhitelistedNamespaces, []string{metav1.NamespaceAll})
+	viper.SetDefault(param.HarmType, "delete_pod")
 
 	viper.SetDefault(param.DebugEnabled, false)
 	viper.SetDefault(param.DebugScheduleDelay, 30)
@@ -95,6 +98,10 @@ func Timezone() *time.Location {
 		glog.Fatal(err.Error())
 	}
 	return location
+}
+
+func HarmType() string {
+	return viper.GetString(param.HarmType)
 }
 
 func RunHour() int {

@@ -2,6 +2,9 @@ package victims
 
 import (
 	"fmt"
+	"github.com/asobti/kube-monkey/kubernetes"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"math"
 	"math/rand"
 	"time"
@@ -14,8 +17,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
+
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -48,8 +50,9 @@ type VictimAPICalls interface {
 	RunningPods(kube.Interface) ([]v1.Pod, error)
 	Pods(kube.Interface) ([]v1.Pod, error)
 	DeletePod(kube.Interface, string) error
+	ExecPod(kube.Interface, string, string, string) error
 	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
-	DeleteRandomPods(kube.Interface, int) error
+	HarmRandomPods(kube.Interface, int) error
 	IsBlacklisted() bool
 	IsWhitelisted() bool
 }
@@ -135,6 +138,25 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteOpts)
 }
 
+func (v *VictimBase) ExecPod(clientset kube.Interface, podName, containerName, execCmd string) error {
+	if config.DryRun() {
+		glog.Infof("[DryRun Mode] exec command in pod %s for %s/%s : %s", podName, v.namespace, v.name, execCmd)
+		return nil
+	}
+	stdout, stderr, err := kubernetes.ExecCommandInContainerWithFullOutput(
+		clientset,
+		podName,
+		containerName,
+		v.namespace,
+		[]string{"/bin/sh", "-c", execCmd}...)
+	if err != nil {
+		return fmt.Errorf("unexpected error for exec cmd %s in pod %s: %s", execCmd, podName, err)
+	}
+	glog.Infof("Execute command %s in pod %s output: %s", execCmd, podName, stdout)
+	glog.Infof("Execute command %s in pod %s errbytes: %s", execCmd, podName, stderr)
+	return nil
+}
+
 // Creates the DeleteOptions object
 // Grace period is derived from config
 func (v *VictimBase) GetDeleteOptsForPod() *metav1.DeleteOptions {
@@ -145,8 +167,8 @@ func (v *VictimBase) GetDeleteOptsForPod() *metav1.DeleteOptions {
 	}
 }
 
-// DeleteRandomPods removes specified number of random pods for the victim
-func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) error {
+// HarmRandomPods removes or execute harmful command in specified number of random pods for the victim  in pods
+func (v *VictimBase) HarmRandomPods(clientset kube.Interface, killNum int) error {
 	// Pick a target pod to delete
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
@@ -180,7 +202,24 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 
 		glog.V(6).Infof("Terminating pod %s for %s %s/%s\n", targetPod, v.kind, v.namespace, v.name)
 
-		err = v.DeletePod(clientset, targetPod)
+		switch config.HarmType() {
+		case "exec_pod":
+			containerName := pods[victimIndex].Spec.Containers[0].Name
+			if specifiedContainerName, ok := pods[victimIndex].Labels[config.ContainerNameKey]; ok {
+				containerName = specifiedContainerName
+			}
+			var execCmd string
+			if setCmd, ok := pods[victimIndex].Annotations[config.ExecCmdKey]; ok {
+				execCmd = setCmd
+			} else {
+				glog.Warningf("command to execute is not set , excepted to set on annotation %s", config.ExecCmdKey)
+				continue
+			}
+			err = v.ExecPod(clientset, targetPod, containerName, execCmd)
+		default:
+			err = v.DeletePod(clientset, targetPod)
+
+		}
 		if err != nil {
 			return err
 		}

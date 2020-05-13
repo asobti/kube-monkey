@@ -115,25 +115,25 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 	// Validate killtype
 	switch killType {
 	case config.KillFixedLabelValue:
-		return c.Victim().DeleteRandomPods(clientset, killValue)
+		return c.Victim().HarmRandomPods(clientset, killValue)
 	case config.KillAllLabelValue:
 		killNum, err := c.Victim().KillNumberForKillingAll(clientset)
 		if err != nil {
 			return err
 		}
-		return c.Victim().DeleteRandomPods(clientset, killNum)
+		return c.Victim().HarmRandomPods(clientset, killNum)
 	case config.KillRandomMaxLabelValue:
 		killNum, err := c.Victim().KillNumberForMaxPercentage(clientset, killValue)
 		if err != nil {
 			return err
 		}
-		return c.Victim().DeleteRandomPods(clientset, killNum)
+		return c.Victim().HarmRandomPods(clientset, killNum)
 	case config.KillFixedPercentageLabelValue:
 		killNum, err := c.Victim().KillNumberForFixedPercentage(clientset, killValue)
 		if err != nil {
 			return err
 		}
-		return c.Victim().DeleteRandomPods(clientset, killNum)
+		return c.Victim().HarmRandomPods(clientset, killNum)
 	default:
 		return fmt.Errorf("failed to recognize KillType label for %s %s", c.Victim().Kind(), c.Victim().Name())
 	}

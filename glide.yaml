@@ -3,6 +3,7 @@ import:
 - package: github.com/fsnotify/fsnotify
 - package: github.com/golang/glog
 - package: github.com/spf13/viper
+- package: github.com/docker/spdystream
 - package: github.com/stretchr/testify
   subpackages:
   - mock
