@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "kubemonkey.fullname" . }}
@@ -32,7 +32,7 @@ spec:
           volumeMounts:
              - name: config-volume
                mountPath: "/etc/kube-monkey"
-      serviceAccountName: {{ template "kubemonkey.fullname" . }} 
+      serviceAccountName: {{ template "kubemonkey.fullname" . }}
       volumes:
         - name: config-volume
           configMap:

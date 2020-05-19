@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/asobti/kube-monkey/config/param"
-	"github.com/bouk/monkey"
-	"github.com/golang/glog"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,14 +46,6 @@ func (s *ConfigTestSuite) TestDryRun() {
 }
 
 func (s *ConfigTestSuite) TestTimezone() {
-	viper.Set(param.Timezone, "nolnexistent")
-
-	// avoid Exit(255) on glog.Fatal
-	monkey.Patch(glog.Fatal, func(a ...interface{}) {
-		s.Contains(a[0], "cannot find nolnexistent in zip file")
-	})
-	defer func() { monkey.Unpatch(glog.Fatal) }()
-	s.Equal((*time.Location)(nil), Timezone())
 	viper.Set(param.Timezone, "UTC")
 	s.Equal(Timezone().String(), "UTC")
 }
