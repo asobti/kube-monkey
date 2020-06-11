@@ -49,7 +49,7 @@ $ helm install --name my-release kubemonkey \
 
 **Note: replace namespace with your real namespaces**
 
-If you want to see how kube-monkey kills pods immediatley in debug mode.
+If you want to see how kube-monkey kills pods immediately in debug mode.
 
 ```console
 $ helm install --name my-release kubemonkey \
