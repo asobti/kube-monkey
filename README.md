@@ -179,7 +179,7 @@ refer [kube-monkey helm chart README.md](https://github.com/asobti/kube-monkey/b
 
 ## Logging
 
-kube-monkey uses glog and supports all command-line features for glog. To specify a custom v level or a custom log directory on the pod, see  `args: ["-v=5", "-log_dir=/path/to/custom/log"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
+kube-monkey uses [glog](github.com/golang/glog) and supports all command-line features for glog. To specify a custom v level or a custom log directory on the pod, see  `args: ["-v=5", "-log_dir=/path/to/custom/log"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
 
 > **Standardized glog levels `grep -r V\([0-9]\) *`**
 >
