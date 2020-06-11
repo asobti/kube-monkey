@@ -15,7 +15,7 @@ $ git clone https://github.com/asobti/kube-monkey
 $ cd kube-monkey/helm
 $ helm install --name my-release kubemonkey
 ```
-**Note:** by default kube-monkey installed in default namespace, which can be overriden by passing --namespace=name
+**Note:** by default kube-monkey installed in default namespace, which can be overridden by passing --namespace=name
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
 
