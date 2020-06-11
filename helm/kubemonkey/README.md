@@ -89,7 +89,7 @@ $ helm get manifest my-release
 | `config.whitelistedNamespaces`| pods in this namespace that opt-in will be killed|                                 |
 | `config.endHour.blacklistedNamespaces`| pods in this namespace will not be killed| kube-system                     |
 | `config.timeZone`         | time zone in DZ format                              | America/New_York                 |
-| `config.debug.enabled`    | debug mode,need to be enabled to see debuging behaviour| false                         |
+| `config.debug.enabled`    | debug mode, need to be enabled to see debugging behaviour| false                       |
 | `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time| false            |
 | `args.logLevel`           | go log level                                        | 5                                |
 | `args.logDir`             | log directory                                       | /var/log/kube-monkey             |
