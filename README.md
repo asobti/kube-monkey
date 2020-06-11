@@ -147,7 +147,7 @@ KUBEMONKEY_END_HOUR=16
 KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
-#### Example Config to test kube-monkey works by enabeling debug mode
+#### Example Config to test kube-monkey works by enabling debug mode
 ```toml
 [debug]
 enabled= true
