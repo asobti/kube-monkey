@@ -52,7 +52,7 @@ const (
 	// Default: [ "default" ]
 	WhitelistedNamespaces = "kubemonkey.whitelisted_namespaces"
 
-	// BlacklistedNamespaces specifiesd a list of namespaces
+	// BlacklistedNamespaces specifies a list of namespaces
 	// for which terminations should never
 	// be carried out.
 	// Default is defined by metav1.NamespaceSystem
