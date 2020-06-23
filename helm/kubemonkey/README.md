@@ -15,7 +15,7 @@ $ git clone https://github.com/asobti/kube-monkey
 $ cd kube-monkey/helm
 $ helm install --name my-release kubemonkey
 ```
-**Note:** by default kube-monkey installed in default namespace, which can be overriden by passing --namespace=name
+**Note:** by default kube-monkey installed in default namespace, which can be overridden by passing --namespace=name
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
 
@@ -49,7 +49,7 @@ $ helm install --name my-release kubemonkey \
 
 **Note: replace namespace with your real namespaces**
 
-If you want to see how kube-monkey kills pods immediatley in debub mode.
+If you want to see how kube-monkey kills pods immediately in debug mode.
 
 ```console
 $ helm install --name my-release kubemonkey \
@@ -89,7 +89,7 @@ $ helm get manifest my-release
 | `config.whitelistedNamespaces`| pods in this namespace that opt-in will be killed|                                 |
 | `config.endHour.blacklistedNamespaces`| pods in this namespace will not be killed| kube-system                     |
 | `config.timeZone`         | time zone in DZ format                              | America/New_York                 |
-| `config.debug.enabled`    | debug mode,need to be enabled to see debuging behaviour| false                         |
+| `config.debug.enabled`    | debug mode, need to be enabled to see debugging behaviour| false                       |
 | `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time| false            |
 | `args.logLevel`           | go log level                                        | 5                                |
 | `args.logDir`             | log directory                                       | /var/log/kube-monkey             |

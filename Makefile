@@ -28,7 +28,7 @@ ifdef https_proxy
 docker_args+= --build-arg https_proxy=$(https_proxy)
 endif
 
-# Supressing docker build avoids printing the env variables
+# Suppressing docker build avoids printing the env variables
 container:
 	@echo "Running docker with '$(docker_args)'"
 	@docker build $(docker_args) -t kube-monkey:$(TAG) .
