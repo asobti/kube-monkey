@@ -146,7 +146,7 @@ func (s *ConfigTestSuite) TestDebugForceShouldKill() {
 	s.True(DebugForceShouldKill())
 }
 
-func (s *ConfigTestSuite) TestDebugInmediateKill() {
+func (s *ConfigTestSuite) TestDebugImmediateKill() {
 	viper.Set(param.DebugScheduleImmediateKill, true)
 	s.True(DebugScheduleImmediateKill())
 }

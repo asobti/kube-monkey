@@ -40,7 +40,7 @@ func TestIsEnrolled(t *testing.T) {
 
 	b, _ := depl.IsEnrolled(client)
 
-	assert.Equal(t, b, true, "Expected daemoset to be enrolled")
+	assert.Equal(t, b, true, "Expected daemonset to be enrolled")
 }
 
 func TestIsNotEnrolled(t *testing.T) {
