@@ -30,3 +30,10 @@ Create chart name and version as used by the chart label.
 {{- define "kubemonkey.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+The name of the Service Account to use
+*/}}
+{{- define "kubemonkey.serviceAccountName" -}}
+{{- default (include "kubemonkey.fullname" .) .Values.serviceAccount.name -}}
+{{- end -}}
