@@ -24,6 +24,6 @@ roleRef:
   name: edit
 subjects:
   - kind: ServiceAccount
-    name: {{ template "kubemonkey.fullname" . }}
+    name: {{ include "kubemonkey.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end -}}
