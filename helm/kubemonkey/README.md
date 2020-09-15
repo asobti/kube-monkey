@@ -15,7 +15,7 @@ $ git clone https://github.com/asobti/kube-monkey
 $ cd kube-monkey/helm
 $ helm install --name my-release kubemonkey
 ```
-**Note:** by default kube-monkey installed in default namespace, which can be overriden by passing --namespace=name
+**Note:** by default kube-monkey installed in default namespace, which can be overridden by passing --namespace=name
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
 
@@ -44,17 +44,17 @@ If you're confident you want to enable it in real, run `helm` with:
 ```console
 $ helm install --name my-release kubemonkey \
                --set config.dryRun=false \
-               --set config.whitelistedNamespaces="namespace1\"\,\"namespace2\"\,\"namespace3"
+               --set config.whitelistedNamespaces="{namespace1,namespace2namespace3}"
 ```
 
 **Note: replace namespace with your real namespaces**
 
-If you want to see how kube-monkey kills pods immediatley in debub mode.
+If you want to see how kube-monkey kills pods immediately in debug mode.
 
 ```console
 $ helm install --name my-release kubemonkey \
                --set config.dryRun=false \
-               --set config.whitelistedNamespaces="namespace1\"\,\"namespace2\"\,\"namespace3" \
+               --set config.whitelistedNamespaces="{namespace1,namespace2namespace3}"
                --set config.debug.enabled=true \
                --set config.debug.schedule_immediate_kill=true
 ```
@@ -63,7 +63,7 @@ If you want change time kube-monkey wakesup and start and end killing pods.
 ```console
 $ helm install --name my-release kubemonkey \
                --set config.dryRun=false \
-               --set config.whitelistedNamespaces="namespace1\"\,\"namespace2\"\,\"namespace3" \
+               --set config.whitelistedNamespaces="{namespace1,namespace2namespace3}"
                --set config.runHour=10 \
                --set config.startHour=11 \
                --set config.endHour=17 
@@ -107,7 +107,7 @@ $ helm get manifest my-release
 | `args.logLevel`                        | go log level                                                         | 5                                |
 | `args.logDir`                          | log directory                                                        | /var/log/kube-monkey             |
 
-after all you can simply edit values.yaml with your prefered configs and run as below
+after all you can simply edit values.yaml with your preferred configs and run as below
 
 ```console
 $ helm install --name my-release kubemonkey --namespace=kube-monkey
@@ -128,8 +128,8 @@ config:
   runHour: 8
   startHour: 10
   endHour: 16
-  blacklistedNamespaces: kube-system
-  whitelistedNamespaces: namespace1,namespace2
+  blacklistedNamespaces: [ "kube-system" ]
+  whitelistedNamespaces: [ "namespace1", "namespace2" ]
   timeZone: America/New_York
   debug:
    enabled: true # if you want to enable debugging and see how pods killed immediately set this to true

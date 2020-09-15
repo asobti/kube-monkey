@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// CreateClient creates, verifes and returns an instance of k8 clientset
+// CreateClient creates, verifies and returns an instance of k8 clientset
 func CreateClient() (*kube.Clientset, error) {
 	client, err := NewInClusterClient()
 	if err != nil {
@@ -40,7 +40,7 @@ func NewInClusterClient() (*kube.Clientset, error) {
 	}
 
 	if apiserverHost, override := cfg.ClusterAPIServerHost(); override {
-		glog.V(5).Infof("API server host overriden to: %s\n", apiserverHost)
+		glog.V(5).Infof("API server host overridden to: %s\n", apiserverHost)
 		config.Host = apiserverHost
 	}
 

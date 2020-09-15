@@ -1,19 +1,23 @@
-sudo: false
+os: linux
+distro: xenial
 language: go
 
+go_import_path: github.com/asobti/kube-monkey
+
 go:
-- "1.10.x"
-- "1.11.x"
+- "1.12.x"
+- "1.13.x"
+- "1.14.x"
 
 # Only clone the most recent commit.
 git:
   depth: 1
 
 env:
-- GOLANGCI_RELEASE="v1.4.1"
+- GOLANGCI_RELEASE="v1.26.0"
 
 script:
 - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s ${GOLANGCI_RELEASE}
-- make
+- make test lint
 # See https://github.com/asobti/kube-monkey/issues/120
 # - .travis/check_workspace.sh
