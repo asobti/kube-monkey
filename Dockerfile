@@ -3,10 +3,8 @@
 ########################
 FROM golang:latest as builder
 
-RUN curl https://glide.sh/get | sh
 COPY . /go/src/github.com/asobti/kube-monkey
 WORKDIR /go/src/github.com/asobti/kube-monkey
-RUN glide install
 RUN make build
 
 ########################
