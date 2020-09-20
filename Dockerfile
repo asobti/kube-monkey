@@ -12,5 +12,4 @@ WORKDIR /kube-monkey
 FROM scratch
 COPY --from=builder /kube-monkey/kube-monkey /kube-monkey
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-WORKDIR /app
 ENTRYPOINT ["/kube-monkey"]
