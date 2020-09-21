@@ -34,11 +34,11 @@ container:
 	@docker build $(docker_args) -t kube-monkey:$(TAG) .
 
 gofmt:
-	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % gofmt -s -w %
+	gofmt -s -w .
 
 # Same as gofmt, but also orders imports
 goimports:
-	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % goimports -w %
+	goimports -s -w .
 
 clean:
 	rm -f kube-monkey
