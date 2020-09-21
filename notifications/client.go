@@ -29,8 +29,7 @@ func CreateClient() Client {
 
 // Request sends an http request and returns error also if response code is NOT 2XX
 func (c Client) Request(endpoint string, requestBody string, headers map[string]string) error {
-	var body io.Reader
-	body = bytes.NewBufferString(requestBody)
+	body := bytes.NewBufferString(requestBody)
 
 	req, err := http.NewRequest("POST", endpoint, body)
 	if err != nil {

@@ -33,24 +33,13 @@ func toHeaders(headersArray []string) map[string]string {
 }
 
 func ReplacePlaceholders(msg string, name string, kind string, namespace string, err string, attackTime time.Time) string {
-	if strings.Contains(msg, Name) {
-		msg = strings.Replace(msg, Name, name, -1)
-	}
-	if strings.Contains(msg, Kind) {
-		msg = strings.Replace(msg, Kind, kind, -1)
-	}
-	if strings.Contains(msg, Namespace) {
-		msg = strings.Replace(msg, Namespace, namespace, -1)
-	}
-	if strings.Contains(msg, Timestamp) {
-		msg = strings.Replace(msg, Timestamp, timeToEpoch(attackTime), -1)
-	}
-	if strings.Contains(msg, Date) {
-		msg = strings.Replace(msg, Date, timeToDate(attackTime), -1)
-	}
-	if strings.Contains(msg, Error) {
-		msg = strings.Replace(msg, Error, err, -1)
-	}
+	msg = strings.Replace(msg, Name, name, -1)
+	msg = strings.Replace(msg, Kind, kind, -1)
+	msg = strings.Replace(msg, Namespace, namespace, -1)
+	msg = strings.Replace(msg, Timestamp, timeToEpoch(attackTime), -1)
+	msg = strings.Replace(msg, Date, timeToDate(attackTime), -1)
+	msg = strings.Replace(msg, Error, err, -1)
+
 	return msg
 }
 
