@@ -27,7 +27,7 @@ func TestRequestSuccess(t *testing.T) {
 func TestRequestFails(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(403)
-		rw.Write([]byte("Unauthorized"))
+		_, _ = rw.Write([]byte("Unauthorized"))
 	}))
 	defer server.Close()
 

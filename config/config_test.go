@@ -36,7 +36,7 @@ func (s *ConfigTestSuite) TestSetDefaults() {
 	s.False(viper.GetBool(param.DebugForceShouldKill))
 	s.False(viper.GetBool(param.DebugScheduleImmediateKill))
 	s.False(viper.GetBool(param.NotificationsEnabled))
-	s.Equal([]Receiver{}, viper.Get(param.NotificationsAttacks))
+	s.Equal(Receiver{}, viper.Get(param.NotificationsAttacks))
 }
 
 func (s *ConfigTestSuite) TestDryRun() {
@@ -158,23 +158,18 @@ func (s *ConfigTestSuite) TestNotificationsEnabled() {
 }
 
 func (s *ConfigTestSuite) TestNotificationsAttacks() {
-	var receivers []map[string]interface{}
 	headers := []string{"header1Key:header1Value", "header2Key:header2Value"}
-	rec1 := map[string]interface{}{"endpoint": "endpoint1", "message": "message1", "headers": headers}
-	headers = []string{"header3Key:header3Value", "header4Key:header4Value"}
-	rec2 := map[string]interface{}{"endpoint": "endpoint1", "message": "message1", "headers": headers}
-	receivers = append(receivers, rec1, rec2)
-	viper.Set(param.NotificationsAttacks, receivers)
+	receiver := map[string]interface{}{"endpoint": "endpoint1", "message": "message1", "headers": headers}
+	viper.Set(param.NotificationsAttacks, receiver)
 	actual := NotificationsAttacks()
-	s.Len(actual, len(receivers))
 
-	s.Equal(receivers[0]["endpoint"], actual[0].Endpoint)
-	s.Equal(receivers[0]["message"], actual[0].Message)
-	s.Equal(receivers[0]["headers"], actual[0].Headers)
+	s.Equal(receiver["endpoint"], actual.Endpoint)
+	s.Equal(receiver["message"], actual.Message)
+	s.Equal(receiver["headers"], actual.Headers)
 
-	s.Equal(receivers[1]["endpoint"], actual[1].Endpoint)
-	s.Equal(receivers[1]["message"], actual[1].Message)
-	s.Equal(receivers[1]["headers"], actual[1].Headers)
+	s.Equal(receiver["endpoint"], actual.Endpoint)
+	s.Equal(receiver["message"], actual.Message)
+	s.Equal(receiver["headers"], actual.Headers)
 }
 
 func TestSuite(t *testing.T) {

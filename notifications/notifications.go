@@ -19,17 +19,17 @@ func Send(client Client, endpoint string, msg string, headers map[string]string)
 func ReportAttack(client Client, result *chaos.Result, time time.Time) bool {
 	success := true
 
-	for _, receivers := range config.NotificationsAttacks() {
-		errorString := ""
-		if result.Error() != nil {
-			errorString = result.Error().Error()
-		}
-		msg := ReplacePlaceholders(receivers.Message, result.Victim().Name(), result.Victim().Kind(), result.Victim().Namespace(), errorString, time)
-		glog.V(1).Infof("reporting attack for %s %s to %s with message %s\n", result.Victim().Kind(), result.Victim().Name(), receivers.Endpoint, msg)
-		if err := Send(client, receivers.Endpoint, msg, toHeaders(receivers.Headers)); err != nil {
-			glog.Errorf("error reporting attack for %s %s to %s with message %s, error: %v\n", result.Victim().Kind(), result.Victim().Name(), receivers.Endpoint, msg, err)
-			success = false
-		}
+	receiver := config.NotificationsAttacks()
+	errorString := ""
+	if result.Error() != nil {
+		errorString = result.Error().Error()
 	}
+	msg := ReplacePlaceholders(receiver.Message, result.Victim().Name(), result.Victim().Kind(), result.Victim().Namespace(), errorString, time)
+	glog.V(1).Infof("reporting attack for %s %s to %s with message %s\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg)
+	if err := Send(client, receiver.Endpoint, msg, toHeaders(receiver.Headers)); err != nil {
+		glog.Errorf("error reporting attack for %s %s to %s with message %s, error: %v\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg, err)
+		success = false
+	}
+
 	return success
 }

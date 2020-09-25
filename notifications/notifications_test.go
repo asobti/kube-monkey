@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"bou.ke/monkey"
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
-	"github.com/bouk/monkey"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -41,7 +41,7 @@ func (s *NotificationsTestSuite) TestReportSuccessfulAttack() {
 	//mock Receiver
 	endpoint := s.server.URL + "/path"
 	receiver := config.NewReceiver(endpoint, "message", []string{"header1Key:header1Value", "header2Key:header2Value"})
-	monkey.Patch(config.NotificationsAttacks, func() []config.Receiver { return []config.Receiver{receiver} })
+	monkey.Patch(config.NotificationsAttacks, func() config.Receiver { return receiver })
 	defer monkey.Unpatch(config.NotificationsAttacks)
 
 	success := ReportAttack(s.client, s.result, s.currentTime)
@@ -52,37 +52,11 @@ func (s *NotificationsTestSuite) TestReportUnsuccessfulAttack() {
 	//mock Receiver
 	endpoint := s.server.URL + "/path"
 	receiver := config.NewReceiver(endpoint, "message", []string{"header1Key:header1Value", "header2Key:header2Value"})
-	monkey.Patch(config.NotificationsAttacks, func() []config.Receiver { return []config.Receiver{receiver} })
+	monkey.Patch(config.NotificationsAttacks, func() config.Receiver { return receiver })
 	defer monkey.Unpatch(config.NotificationsAttacks)
 
 	success := ReportAttack(s.client, s.result, s.currentTime)
 	s.Assert().True(success)
-}
-
-func (s *NotificationsTestSuite) TestReportMultipleReceiversSuccess() {
-	//mock Receivers
-	endpoint1 := s.server.URL + "/path1"
-	receiver1 := config.NewReceiver(endpoint1, "message", []string{"header1Key:header1Value", "header2Key:header2Value"})
-	endpoint2 := s.server.URL + "/path2"
-	receiver2 := config.NewReceiver(endpoint2, "message", []string{"header1Key:header1Value", "header2Key:header2Value"})
-	monkey.Patch(config.NotificationsAttacks, func() []config.Receiver { return []config.Receiver{receiver1, receiver2} })
-	defer monkey.Unpatch(config.NotificationsAttacks)
-
-	success := ReportAttack(s.client, s.result, s.currentTime)
-	s.Assert().True(success)
-}
-
-func (s *NotificationsTestSuite) TestReportMultipleReceiversFailure() {
-	//mock Receivers
-	validEndpoint := s.server.URL + "/path1"
-	receiver1 := config.NewReceiver(validEndpoint, "message", []string{"header1Key:header1Value", "header2Key:header2Value"})
-	invalidEndpoint := "/path2"
-	receiver2 := config.NewReceiver(invalidEndpoint, "message", []string{"header1Key:header1Value", "header2Key:header2Value"})
-	monkey.Patch(config.NotificationsAttacks, func() []config.Receiver { return []config.Receiver{receiver1, receiver2} })
-	defer monkey.Unpatch(config.NotificationsAttacks)
-
-	success := ReportAttack(s.client, s.result, s.currentTime)
-	s.Assert().False(success)
 }
 
 func TestSuite(t *testing.T) {

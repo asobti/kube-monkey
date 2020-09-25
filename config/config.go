@@ -69,7 +69,7 @@ func SetDefaults() {
 	viper.SetDefault(param.DebugScheduleImmediateKill, false)
 
 	viper.SetDefault(param.NotificationsEnabled, false)
-	viper.SetDefault(param.NotificationsAttacks, []Receiver{})
+	viper.SetDefault(param.NotificationsAttacks, Receiver{})
 }
 
 func setupWatch() {
@@ -180,11 +180,11 @@ func NotificationsEnabled() bool {
 	return viper.GetBool(param.NotificationsEnabled)
 }
 
-func NotificationsAttacks() []Receiver {
-	var receivers []Receiver
-	err := viper.UnmarshalKey(param.NotificationsAttacks, &receivers)
+func NotificationsAttacks() Receiver {
+	var receiver Receiver
+	err := viper.UnmarshalKey(param.NotificationsAttacks, &receiver)
 	if err != nil {
 		glog.Errorf("Failed to parse notifications.attacks %v", err)
 	}
-	return receivers
+	return receiver
 }

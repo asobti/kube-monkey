@@ -105,7 +105,7 @@ const (
 	NotificationsEnabled = "notifications.enabled"
 
 	// NotificationsAttacks reports attacks to an HTTP endpoint
-	// Type: list
-	// Default: []
+	// Type: config.Receiver struct
+	// Default: Receiver{}
 	NotificationsAttacks = "notifications.attacks"
 )

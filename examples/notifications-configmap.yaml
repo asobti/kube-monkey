@@ -17,11 +17,7 @@
         graceperiod_sec= 10
         [notifications]
           enabled = true
-          [[notifications.attacks]]
+          [notifications.attacks]
             endpoint = "test1"
             message = '''{"foo":"bar","bar":"foo"}'''
             headers = ["header1Key:header1Value", "header2Key:header2Value" ]
-          [[notifications.attacks]]
-            endpoint = "test2"
-            message = '''{"foo":"bar"}'''
-    

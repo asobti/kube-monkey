@@ -157,13 +157,10 @@ schedule_immediate_kill= true
 ```toml
 [notifications]
   enabled = true
-  [[notifications.attacks]]		 
+  [notifications.attacks]
     endpoint = "http://url1"
     message = "message1"
     headers = ["header1Key:header1Value","header2Key:header2/Value"]
-  [[notifications.attacks]]
-    endpoint = "http://url2"
-    message = "message2"
 ```
 
 ## Deploying

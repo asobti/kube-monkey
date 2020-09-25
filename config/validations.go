@@ -36,14 +36,12 @@ func ValidateConfigs() error {
 		return fmt.Errorf("RunHour: %s should be less than %s", param.RunHour, param.StartHour)
 	}
 
-	notificationsReceivers := NotificationsAttacks()
+	notificationsReceiver := NotificationsAttacks()
 
 	// Notification headers should be in a valid format
-	for _, receiver := range notificationsReceivers {
-		for _, header := range receiver.Headers {
-			if !isValidHeader(header) {
-				return fmt.Errorf("Header: %s is not in valid format", header)
-			}
+	for _, header := range notificationsReceiver.Headers {
+		if !isValidHeader(header) {
+			return fmt.Errorf("Header: %s is not in valid format", header)
 		}
 	}
 
