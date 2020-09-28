@@ -7,10 +7,10 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"bou.ke/monkey"
 	"github.com/asobti/kube-monkey/config"
-	"github.com/bouk/monkey"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kube "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -23,9 +23,9 @@ const (
 	NAME       = "name"
 )
 
-func newPod(name string, status v1.PodPhase) v1.Pod {
+func newPod(name string, status corev1.PodPhase) corev1.Pod {
 
-	return v1.Pod{
+	return corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
 			APIVersion: "v1",
@@ -37,13 +37,13 @@ func newPod(name string, status v1.PodPhase) v1.Pod {
 				"kube-monkey/identifier": IDENTIFIER,
 			},
 		},
-		Status: v1.PodStatus{
+		Status: corev1.PodStatus{
 			Phase: status,
 		},
 	}
 }
 
-func generateNPods(namePrefix string, n int, status v1.PodPhase) []runtime.Object {
+func generateNPods(namePrefix string, n int, status corev1.PodPhase) []runtime.Object {
 	var pods []runtime.Object
 	for i := 0; i < n; i++ {
 		pod := newPod(fmt.Sprintf("%s%d", namePrefix, i), status)
@@ -54,14 +54,14 @@ func generateNPods(namePrefix string, n int, status v1.PodPhase) []runtime.Objec
 }
 
 func generateNRunningPods(namePrefix string, n int) []runtime.Object {
-	return generateNPods(namePrefix, n, v1.PodRunning)
+	return generateNPods(namePrefix, n, corev1.PodRunning)
 }
 
 func newVictimBase() *VictimBase {
 	return New(KIND, NAME, NAMESPACE, IDENTIFIER, 1)
 }
 
-func getPodList(client kube.Interface) *v1.PodList {
+func getPodList(client kube.Interface) *corev1.PodList {
 	podList, _ := client.CoreV1().Pods(NAMESPACE).List(metav1.ListOptions{})
 	return podList
 }
@@ -80,8 +80,8 @@ func TestVictimBaseTemplateGetters(t *testing.T) {
 func TestRunningPods(t *testing.T) {
 
 	v := newVictimBase()
-	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending)
+	pod1 := newPod("app1", corev1.PodRunning)
+	pod2 := newPod("app2", corev1.PodPending)
 
 	client := fake.NewSimpleClientset(&pod1, &pod2)
 
@@ -97,8 +97,8 @@ func TestRunningPods(t *testing.T) {
 func TestPods(t *testing.T) {
 
 	v := newVictimBase()
-	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending)
+	pod1 := newPod("app1", corev1.PodRunning)
+	pod2 := newPod("app2", corev1.PodPending)
 
 	client := fake.NewSimpleClientset(&pod1, &pod2)
 
@@ -110,7 +110,7 @@ func TestPods(t *testing.T) {
 func TestDeletePod(t *testing.T) {
 
 	v := newVictimBase()
-	pod := newPod("app", v1.PodRunning)
+	pod := newPod("app", corev1.PodRunning)
 
 	client := fake.NewSimpleClientset(&pod)
 
@@ -127,7 +127,7 @@ func TestDeletePodDryRun(t *testing.T) {
 	defer monkey.Unpatch(config.DryRun)
 
 	v := newVictimBase()
-	pod := newPod("app", v1.PodRunning)
+	pod := newPod("app", corev1.PodRunning)
 
 	client := fake.NewSimpleClientset(&pod)
 
@@ -141,9 +141,9 @@ func TestDeletePodDryRun(t *testing.T) {
 func TestDeleteRandomPods(t *testing.T) {
 
 	v := newVictimBase()
-	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending)
-	pod3 := newPod("app3", v1.PodRunning)
+	pod1 := newPod("app1", corev1.PodRunning)
+	pod2 := newPod("app2", corev1.PodPending)
+	pod3 := newPod("app3", corev1.PodRunning)
 
 	client := fake.NewSimpleClientset(&pod1, &pod2, &pod3)
 	podList := getPodList(client).Items
@@ -272,8 +272,8 @@ func TestDeletePodsFixedPercentage(t *testing.T) {
 			name:           "does not count pending pods when calculating num of pods to kill",
 			killPercentage: 80,
 			pods: append(
-				generateNPods("running", 1, v1.PodRunning),
-				generateNPods("pending", 1, v1.PodPending)...),
+				generateNPods("running", 1, corev1.PodRunning),
+				generateNPods("pending", 1, corev1.PodPending)...),
 			expectedNum: 0,
 			expectedErr: false,
 		},
@@ -298,8 +298,8 @@ func TestDeletePodsFixedPercentage(t *testing.T) {
 func TestDeleteRandomPod(t *testing.T) {
 
 	v := newVictimBase()
-	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending)
+	pod1 := newPod("app1", corev1.PodRunning)
+	pod2 := newPod("app2", corev1.PodPending)
 
 	client := fake.NewSimpleClientset(&pod1, &pod2)
 
@@ -338,10 +338,10 @@ func TestIsWhitelisted(t *testing.T) {
 
 func TestRandomPodName(t *testing.T) {
 
-	pod1 := newPod("app1", v1.PodRunning)
-	pod2 := newPod("app2", v1.PodPending)
+	pod1 := newPod("app1", corev1.PodRunning)
+	pod2 := newPod("app2", corev1.PodPending)
 
-	name := RandomPodName([]v1.Pod{pod1, pod2})
+	name := RandomPodName([]corev1.Pod{pod1, pod2})
 	assert.Truef(t, strings.HasPrefix(name, "app"), "Pod name %s should start with 'app'", name)
 }
 

@@ -52,7 +52,7 @@ const (
 	// Default: [ "default" ]
 	WhitelistedNamespaces = "kubemonkey.whitelisted_namespaces"
 
-	// BlacklistedNamespaces specifiesd a list of namespaces
+	// BlacklistedNamespaces specifies a list of namespaces
 	// for which terminations should never
 	// be carried out.
 	// Default is defined by metav1.NamespaceSystem
@@ -65,7 +65,7 @@ const (
 	// cluster APIServer. Use this config if the apiserver IP
 	// address provided by in-cluster config
 	// does not work for you because your certificate does not
-	// conatain the right SAN
+	// contain the right SAN
 	// Type: string
 	// Default: No default. If not specified, URL provided
 	// by in-cluster config is used
@@ -98,4 +98,14 @@ const (
 	// Type: bool
 	// Default: false
 	DebugScheduleImmediateKill = "debug.schedule_immediate_kill"
+
+	// NotificationsEnabled enables reporting of attacks to an HTTP endpoint
+	// Type: bool
+	// Default: false
+	NotificationsEnabled = "notifications.enabled"
+
+	// NotificationsAttacks reports attacks to an HTTP endpoint
+	// Type: config.Receiver struct
+	// Default: Receiver{}
+	NotificationsAttacks = "notifications.attacks"
 )
