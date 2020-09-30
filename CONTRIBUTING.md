@@ -1,5 +1,5 @@
 ## Git Flow for Dev Work
-Install go 1.10
+Install go 1.15
 
 Fork the project on github and install golang
 ```bash
