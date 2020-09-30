@@ -9,4 +9,3 @@ if [ "$(git status --porcelain | wc -l)" -ne "0" ]; then
 else
   exit 0
 fi
-
