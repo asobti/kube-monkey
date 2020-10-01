@@ -1,8 +1,0 @@
-*.iml
-.idea/
-build/
-RPMS/
-kube-monkey
-bin/
-.vscode/
-.DS_Store
