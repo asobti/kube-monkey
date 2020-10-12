@@ -9,6 +9,7 @@ image:
   repository: ayushsobti/kube-monkey
   tag: v0.3.0
   pullPolicy: IfNotPresent
+imagePullSecrets: {}
 config:
   dryRun: true  
   runHour: 8
