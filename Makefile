@@ -1,7 +1,6 @@
 all: test
 
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-TAG := $(shell cat VERSION)
 GOLANGCI_INSTALLED := $(shell which bin/golangci-lint)
 
 
@@ -31,14 +30,14 @@ endif
 # Suppressing docker build avoids printing the env variables
 container:
 	@echo "Running docker with '$(docker_args)'"
-	@docker build $(docker_args) -t kube-monkey:$(TAG) .
+	@docker build $(docker_args) -t kube-monkey:latest .
 
 gofmt:
-	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % gofmt -s -w %
+	gofmt -s -w .
 
 # Same as gofmt, but also orders imports
 goimports:
-	find . -path ./vendor -prune -o -name '*.go' -print | xargs -L 1 -I % goimports -w %
+	goimports -s -w .
 
 clean:
 	rm -f kube-monkey

@@ -98,4 +98,14 @@ const (
 	// Type: bool
 	// Default: false
 	DebugScheduleImmediateKill = "debug.schedule_immediate_kill"
+
+	// NotificationsEnabled enables reporting of attacks to an HTTP endpoint
+	// Type: bool
+	// Default: false
+	NotificationsEnabled = "notifications.enabled"
+
+	// NotificationsAttacks reports attacks to an HTTP endpoint
+	// Type: config.Receiver struct
+	// Default: Receiver{}
+	NotificationsAttacks = "notifications.attacks"
 )

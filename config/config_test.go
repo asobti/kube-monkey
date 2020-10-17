@@ -35,7 +35,8 @@ func (s *ConfigTestSuite) TestSetDefaults() {
 	s.Equal(viper.GetInt(param.DebugScheduleDelay), 30)
 	s.False(viper.GetBool(param.DebugForceShouldKill))
 	s.False(viper.GetBool(param.DebugScheduleImmediateKill))
-
+	s.False(viper.GetBool(param.NotificationsEnabled))
+	s.Equal(Receiver{}, viper.Get(param.NotificationsAttacks))
 }
 
 func (s *ConfigTestSuite) TestDryRun() {
@@ -149,6 +150,26 @@ func (s *ConfigTestSuite) TestDebugForceShouldKill() {
 func (s *ConfigTestSuite) TestDebugImmediateKill() {
 	viper.Set(param.DebugScheduleImmediateKill, true)
 	s.True(DebugScheduleImmediateKill())
+}
+
+func (s *ConfigTestSuite) TestNotificationsEnabled() {
+	viper.Set(param.NotificationsEnabled, true)
+	s.True(NotificationsEnabled())
+}
+
+func (s *ConfigTestSuite) TestNotificationsAttacks() {
+	headers := []string{"header1Key:header1Value", "header2Key:header2Value"}
+	receiver := map[string]interface{}{"endpoint": "endpoint1", "message": "message1", "headers": headers}
+	viper.Set(param.NotificationsAttacks, receiver)
+	actual := NotificationsAttacks()
+
+	s.Equal(receiver["endpoint"], actual.Endpoint)
+	s.Equal(receiver["message"], actual.Message)
+	s.Equal(receiver["headers"], actual.Headers)
+
+	s.Equal(receiver["endpoint"], actual.Endpoint)
+	s.Equal(receiver["message"], actual.Message)
+	s.Equal(receiver["headers"], actual.Headers)
 }
 
 func TestSuite(t *testing.T) {
