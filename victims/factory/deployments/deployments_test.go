@@ -5,7 +5,7 @@ import (
 
 	"github.com/asobti/kube-monkey/config"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -15,9 +15,9 @@ const (
 	NAMESPACE  = metav1.NamespaceDefault
 )
 
-func newDeployment(name string, labels map[string]string) v1.Deployment {
+func newDeployment(name string, labels map[string]string) appsv1.Deployment {
 
-	return v1.Deployment{
+	return appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: NAMESPACE,

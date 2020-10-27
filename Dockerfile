@@ -1,11 +1,16 @@
-FROM ubuntu
-RUN if (dpkg -l | grep -cq tzdata); then \
-        echo "tzdata package already installed! Skipping tzdata installation"; \
-    else \
-        echo "Installing tzdata to avoid go panic caused by missing timezone data"; \
-        apt-get update && apt-get install -y --no-install-recommends \
-		apt-utils \
-		tzdata \
-	&& rm -rf /var/lib/apt/lists/*; \
-    fi
-COPY kube-monkey /kube-monkey
+########################
+### Builder          ###
+########################
+FROM golang:1.15 as builder
+RUN mkdir -p /kube-monkey
+COPY ./ /kube-monkey/
+WORKDIR /kube-monkey
+RUN make build
+
+########################
+### Final            ###
+########################
+FROM scratch
+COPY --from=builder /kube-monkey/kube-monkey /kube-monkey
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+ENTRYPOINT ["/kube-monkey"]

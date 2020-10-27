@@ -7,7 +7,7 @@ import (
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/victims"
 
-	"k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 type DaemonSet struct {
@@ -15,7 +15,7 @@ type DaemonSet struct {
 }
 
 // New creates a new instance of DaemonSet
-func New(dep *v1.DaemonSet) (*DaemonSet, error) {
+func New(dep *appsv1.DaemonSet) (*DaemonSet, error) {
 	ident, err := identifier(dep)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func New(dep *v1.DaemonSet) (*DaemonSet, error) {
 // This label should be unique to a DaemonSet, and is used to
 // identify the pods that belong to this DaemonSet, as pods
 // inherit labels from the DaemonSet
-func identifier(kubekind *v1.DaemonSet) (string, error) {
+func identifier(kubekind *appsv1.DaemonSet) (string, error) {
 	identifier, ok := kubekind.Labels[config.IdentLabelKey]
 	if !ok {
 		return "", fmt.Errorf("%T %s does not have %s label", kubekind, kubekind.Name, config.IdentLabelKey)
@@ -44,7 +44,7 @@ func identifier(kubekind *v1.DaemonSet) (string, error) {
 
 // Read the mean-time-between-failures value defined by the DaemonSet
 // in the label defined by config.MtbfLabelKey
-func meanTimeBetweenFailures(kubekind *v1.DaemonSet) (int, error) {
+func meanTimeBetweenFailures(kubekind *appsv1.DaemonSet) (int, error) {
 	mtbf, ok := kubekind.Labels[config.MtbfLabelKey]
 	if !ok {
 		return -1, fmt.Errorf("%T %s does not have %s label", kubekind, kubekind.Name, config.MtbfLabelKey)

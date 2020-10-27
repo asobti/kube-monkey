@@ -148,12 +148,6 @@ func (c *Chaos) getKillValue(clientset kube.Interface) (int, error) {
 	return killValue, nil
 }
 
-// Redundant for DeleteRandomPods(clientset,1) but DeleteRandomPod is faster
-// Terminates one random pod
-func (c *Chaos) terminatePod(clientset kube.Interface) error {
-	return c.Victim().DeleteRandomPod(clientset)
-}
-
 // NewResult creates a ChaosResult instance
 func (c *Chaos) NewResult(e error) *Result {
 	return &Result{

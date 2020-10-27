@@ -35,6 +35,21 @@ const (
 	KillAllLabelValue             = "kill-all"
 )
 
+type Receiver struct {
+	Endpoint string   `mapstructure:"endpoint"`
+	Message  string   `mapstructure:"message"`
+	Headers  []string `mapstructure:"headers"`
+}
+
+// NewReceiver creates a new Receiver instance
+func NewReceiver(endpoint string, message string, headers []string) Receiver {
+	return Receiver{
+		Endpoint: endpoint,
+		Message:  message,
+		Headers:  headers,
+	}
+}
+
 func SetDefaults() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
@@ -52,6 +67,9 @@ func SetDefaults() {
 	viper.SetDefault(param.DebugScheduleDelay, 30)
 	viper.SetDefault(param.DebugForceShouldKill, false)
 	viper.SetDefault(param.DebugScheduleImmediateKill, false)
+
+	viper.SetDefault(param.NotificationsEnabled, false)
+	viper.SetDefault(param.NotificationsAttacks, Receiver{})
 }
 
 func setupWatch() {
@@ -156,4 +174,17 @@ func DebugForceShouldKill() bool {
 
 func DebugScheduleImmediateKill() bool {
 	return viper.GetBool(param.DebugScheduleImmediateKill)
+}
+
+func NotificationsEnabled() bool {
+	return viper.GetBool(param.NotificationsEnabled)
+}
+
+func NotificationsAttacks() Receiver {
+	var receiver Receiver
+	err := viper.UnmarshalKey(param.NotificationsAttacks, &receiver)
+	if err != nil {
+		glog.Errorf("Failed to parse notifications.attacks %v", err)
+	}
+	return receiver
 }
