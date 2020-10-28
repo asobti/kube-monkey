@@ -73,13 +73,13 @@ func SetDefaults() {
 }
 
 func setupWatch() {
-	// TODO: This does not appear to be working
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		glog.V(4).Info("Config change detected")
 		if err := ValidateConfigs(); err != nil {
 			panic(err)
 		}
+		glog.V(4).Info("Successfully reloaded configs")
 	})
 }
 
