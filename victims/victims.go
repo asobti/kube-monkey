@@ -12,7 +12,7 @@ import (
 
 	kube "k8s.io/client-go/kubernetes"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -45,8 +45,8 @@ type VictimSpecificAPICalls interface {
 
 type VictimAPICalls interface {
 	// Exposed Api Calls
-	RunningPods(kube.Interface) ([]v1.Pod, error)
-	Pods(kube.Interface) ([]v1.Pod, error)
+	RunningPods(kube.Interface) ([]corev1.Pod, error)
+	Pods(kube.Interface) ([]corev1.Pod, error)
 	DeletePod(kube.Interface, string) error
 	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
 	DeleteRandomPods(kube.Interface, int) error
@@ -95,14 +95,14 @@ func (v *VictimBase) Mtbf() string {
 }
 
 // RunningPods returns a list of running pods for the victim
-func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []v1.Pod, err error) {
+func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []corev1.Pod, err error) {
 	pods, err := v.Pods(clientset)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, pod := range pods {
-		if pod.Status.Phase == v1.PodRunning {
+		if pod.Status.Phase == corev1.PodRunning {
 			runningPods = append(runningPods, pod)
 		}
 	}
@@ -111,7 +111,7 @@ func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []v1.Pod
 }
 
 // Pods returns a list of pods under the victim
-func (v *VictimBase) Pods(clientset kube.Interface) ([]v1.Pod, error) {
+func (v *VictimBase) Pods(clientset kube.Interface) ([]corev1.Pod, error) {
 	labelSelector, err := labelFilterForPods(v.identifier)
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func labelRequirementForPods(identifier string) (*labels.Requirement, error) {
 }
 
 // RandomPodName picks a random pod name from a list of Pods
-func RandomPodName(pods []v1.Pod) string {
+func RandomPodName(pods []corev1.Pod) string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randIndex := r.Intn(len(pods))
 	return pods[randIndex].Name

@@ -6,8 +6,8 @@ Join us at [#kube-monkey](https://kubernetes.slack.com/messages/kube-monkey) on 
 
 ---
 
-kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8am) on weekdays, and builds a schedule of deployments that will face a random
-Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and defaults to 10am to 4pm.
+kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8 am) on weekdays, and builds a schedule of deployments that will face a random
+Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and defaults to 10 am to 4 pm.
 
 kube-monkey can be configured with a list of namespaces
 * to blacklist (any deployments within a blacklisted namespace will not be touched)
@@ -24,18 +24,18 @@ Opt-in is done by setting the following labels on a k8s app:
 **`kube-monkey/mtbf`**: Mean time between failure (in hours/minutes etc. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".). For example, if set to **`"3h"`**, the k8s app can expect to have a Pod
 killed approximately every 3 hours. 
 **`kube-monkey/identifier`**: A unique identifier for the k8s apps. This is used to identify the pods
-that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. Recommendation is to set this value to be the same as the app's name.  
+that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. The recommendation is to set this value to be the same as the app's name.  
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
-* `"kill-all"` if you want kube-monkey to kill ALL of your pods regardless of status (not ready or not running pods included). Does not require kill-value. **Use this label carefully.**
-* `fixed` if you want to kill a specific number of running pods with kill-value. If you overspecify, it will kill all running pods and issue a warning.
-* `random-max-percent` to specify a maximum % with kill-value that can be killed. At the scheduled time, a uniform random specified % of the running pods will be terminated.
-* `fixed-percent` to specify a fixed % with kill-value that can be killed. At the scheduled time, a specified fixed % of the running pods will be terminated.
+* `kill-all` if you want kube-monkey to kill **ALL** of your pods regardless of status (including not ready and not running pods). Does not require `kill-value`. **Use this label carefully.**
+* `fixed` if you want to kill a specific number of running pods with `kill-value`. If you overspecify, it will kill **all** running pods and issue a warning.
+* `random-max-percent` to specify a *maximum* `%` with `kill-value` that can be killed. At the scheduled time, a uniform *random specified* `%` of the running pods will be terminated.
+* `fixed-percent` to specify a *fixed* `%` with `kill-value` that can be killed. At the scheduled time, a specified *fixed* `%` of the running pods will be terminated.
 
 
 **`kube-monkey/kill-value`**: Specify value for kill-mode
 * if `fixed`, provide an integer of pods to kill
-* if `random-max-percent`, provide a number from 0-100 to specify the max % of pods kube-monkey can kill
-* if `fixed-percent`, provide a number from 0-100 to specify the % of pods to kill
+* if `random-max-percent`, provide a number from `0`-`100` to specify the max `%` of pods kube-monkey can kill
+* if `fixed-percent`, provide a number from `0`-`100` to specify the `%` of pods to kill
 
 #### Example of opted-in Deployment killing one pod per purge
 
@@ -119,11 +119,12 @@ Clone the repository and build the container.
 ```bash
 go get github.com/asobti/kube-monkey
 cd $GOPATH/src/github.com/asobti/kube-monkey
+make build
 make container
 ```
 
 ## Configuring
-kube-monkey is configured by environment variables or a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before the kubemonkey deployment.
+kube-monkey is configured by environment variables or a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before the kube-monkey deployment.
 
 Configuration keys and descriptions can be found in [`config/param/param.go`](https://github.com/asobti/kube-monkey/blob/master/config/param/param.go)
 
@@ -147,17 +148,26 @@ KUBEMONKEY_END_HOUR=16
 KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
-#### Example Config to test kube-monkey works by enabeling debug mode
+#### Example Config to test kube-monkey works by enabling debug mode
 ```toml
 [debug]
 enabled= true
 schedule_immediate_kill= true
 ```
+#### Example Config for posting attack notifications to an HTTP endpoint
+```toml
+[notifications]
+  enabled = true
+  [notifications.attacks]
+    endpoint = "http://url1"
+    message = "message1"
+    headers = ["header1Key:header1Value","header2Key:header2/Value"]
+```
 
 ## Deploying
 
 **Manually**
-1. First deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml`
+1. First, deploy the expected `kube-monkey-config-map` configmap in the namespace you intend to run kube-monkey in (for example, the `kube-system` namespace). Make sure to define the keyname as `config.toml`
 
 > For example `kubectl create configmap km-config --from-file=config.toml=km-config.toml` or `kubectl apply -f km-config.yaml`
 
@@ -165,7 +175,7 @@ schedule_immediate_kill= true
 
 See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples) for example Kubernetes yaml files.
 
-3. You should be able to see debug logs by `kubectl logs -f deployment.apps/kube-monkey --namespace=kube-system`  here the `deployment.apps/kube-monkey` is the k8s deployment for kube monkey.
+3. You should be able to see debug logs by `kubectl logs -f deployment.apps/kube-monkey --namespace=kube-system`  here the `deployment.apps/kube-monkey` is the k8s deployment for kube-monkey.
 
 
 **Helm Chart**  
@@ -179,7 +189,7 @@ refer [kube-monkey helm chart README.md](https://github.com/asobti/kube-monkey/b
 
 ## Logging
 
-kube-monkey uses glog and supports all command-line features for glog. To specify a custom v level or a custom log directory on the pod, see  `args: ["-v=5", "-log_dir=/path/to/custom/log"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
+kube-monkey uses [glog](github.com/golang/glog) and supports all command-line features for glog. To specify a custom v level or a custom log directory on the pod, see  `args: ["-v=5", "-log_dir=/path/to/custom/log"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
 
 > **Standardized glog levels `grep -r V\([0-9]\) *`**
 >

@@ -10,7 +10,7 @@ import (
 )
 
 func TestEligibleDeployments(t *testing.T) {
-	v1deplepl := newDeployment(
+	v1depl := newDeployment(
 		NAME,
 		map[string]string{
 			"kube-monkey/identifier": "1",
@@ -18,14 +18,14 @@ func TestEligibleDeployments(t *testing.T) {
 		},
 	)
 
-	client := fake.NewSimpleClientset(&v1deplepl)
+	client := fake.NewSimpleClientset(&v1depl)
 	victims, _ := EligibleDeployments(client, NAMESPACE, &metav1.ListOptions{})
 
 	assert.Len(t, victims, 1)
 }
 
 func TestIsEnrolled(t *testing.T) {
-	v1deplepl := newDeployment(
+	v1depl := newDeployment(
 		NAME,
 		map[string]string{
 			config.IdentLabelKey:   "1",
@@ -34,9 +34,9 @@ func TestIsEnrolled(t *testing.T) {
 		},
 	)
 
-	depl, _ := New(&v1deplepl)
+	depl, _ := New(&v1depl)
 
-	client := fake.NewSimpleClientset(&v1deplepl)
+	client := fake.NewSimpleClientset(&v1depl)
 
 	b, _ := depl.IsEnrolled(client)
 
@@ -44,7 +44,7 @@ func TestIsEnrolled(t *testing.T) {
 }
 
 func TestIsNotEnrolled(t *testing.T) {
-	v1deplepl := newDeployment(
+	v1depl := newDeployment(
 		NAME,
 		map[string]string{
 			config.IdentLabelKey:   "1",
@@ -53,9 +53,9 @@ func TestIsNotEnrolled(t *testing.T) {
 		},
 	)
 
-	depl, _ := New(&v1deplepl)
+	depl, _ := New(&v1depl)
 
-	client := fake.NewSimpleClientset(&v1deplepl)
+	client := fake.NewSimpleClientset(&v1depl)
 
 	b, _ := depl.IsEnrolled(client)
 

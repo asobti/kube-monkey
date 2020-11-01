@@ -40,7 +40,7 @@ func TestIsEnrolled(t *testing.T) {
 
 	b, _ := stfs.IsEnrolled(client)
 
-	assert.Equal(t, b, true, "Expected stfsoyment to be enrolled")
+	assert.Equal(t, b, true, "Expected statefulset to be enrolled")
 }
 
 func TestIsNotEnrolled(t *testing.T) {
@@ -59,7 +59,7 @@ func TestIsNotEnrolled(t *testing.T) {
 
 	b, _ := stfs.IsEnrolled(client)
 
-	assert.Equal(t, b, false, "Expected stfsoyment to not be enrolled")
+	assert.Equal(t, b, false, "Expected statefulset to not be enrolled")
 }
 
 func TestKillType(t *testing.T) {
