@@ -39,7 +39,7 @@ func Test_ToHeadersEnvVariablePlaceholder(t *testing.T) {
 }
 
 func Test_ToHeadersEnvVariablePlaceholderNotExiting(t *testing.T) {
-	headersArray := []string{"Content-Type:application/json", "api-key:{$env:API_KEY}"}
+	headersArray := []string{"Content-Type:application/json", "api-key:{$env:VARIABLE_NOT_SET}"}
 
 	headers := toHeaders(headersArray)
 
