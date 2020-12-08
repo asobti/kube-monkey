@@ -1,6 +1,8 @@
 package notifications
 
 import (
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -9,6 +11,10 @@ import (
 )
 
 const (
+	// header
+	EnvVariableRegex = "^{\\$env:.*\\}$"
+
+	// body (message)
 	Name      = "{$name}"
 	Kind      = "{$kind}"
 	Namespace = "{$namespace}"
@@ -27,9 +33,18 @@ func toHeaders(headersArray []string) map[string]string {
 			headersMap[strings.TrimSpace(kv[0])] = ""
 			continue
 		}
-		headersMap[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		headersMap[strings.TrimSpace(kv[0])] = ReplaceEnvVariablePlaceholder(strings.TrimSpace(kv[1]))
 	}
 	return headersMap
+}
+
+func ReplaceEnvVariablePlaceholder(value string) string {
+	envVariableRegex := regexp.MustCompile(EnvVariableRegex)
+	if envVariableRegex.MatchString(value) {
+		envVariableName := value[6 : len(value)-1]
+		value = envVariableRegex.ReplaceAllString(value, os.Getenv(envVariableName))
+	}
+	return value
 }
 
 func ReplacePlaceholders(msg string, name string, kind string, namespace string, err string, attackTime time.Time) string {

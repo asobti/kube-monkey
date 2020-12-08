@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -24,6 +25,17 @@ func Test_ToHeadersMultiple(t *testing.T) {
 	assert.Equal(t, 2, len(headers))
 	assert.Equal(t, "application/json", headers["Content-Type"])
 	assert.Equal(t, "localhost", headers["Host"])
+}
+
+func Test_ToHeadersEnvVariablePlaceholder(t *testing.T) {
+	headersArray := []string{"Content-Type:application/json", "api-key:{$env:API_KEY}"}
+	os.Setenv("API_KEY", "123456")
+
+	headers := toHeaders(headersArray)
+
+	assert.Equal(t, 2, len(headers))
+	assert.Equal(t, "application/json", headers["Content-Type"])
+	assert.Equal(t, "123456", headers["api-key"])
 }
 
 func Test_NamePlaceholder(t *testing.T) {
