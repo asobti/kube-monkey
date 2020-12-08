@@ -43,7 +43,11 @@ func ReplaceEnvVariablePlaceholder(value string) string {
 	if envVariableRegex.MatchString(value) {
 		prefix, _ := envVariableRegex.LiteralPrefix()
 		envVariableName := value[len(prefix) : len(value)-1]
-		value = envVariableRegex.ReplaceAllString(value, os.Getenv(envVariableName))
+		envVariableValue := os.Getenv(envVariableName)
+		if len(envVariableValue) == 0 {
+			glog.Errorf("Cannot find environment variable %s", envVariableName)
+		}
+		value = envVariableRegex.ReplaceAllString(value, envVariableValue)
 	}
 	return value
 }
