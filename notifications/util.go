@@ -12,7 +12,7 @@ import (
 
 const (
 	// header
-	EnvVariableRegex = "^{\\$env:.*\\}$"
+	EnvVariableRegex = "^{\\$env:\\w+\\}$"
 
 	// body (message)
 	Name      = "{$name}"
@@ -41,7 +41,8 @@ func toHeaders(headersArray []string) map[string]string {
 func ReplaceEnvVariablePlaceholder(value string) string {
 	envVariableRegex := regexp.MustCompile(EnvVariableRegex)
 	if envVariableRegex.MatchString(value) {
-		envVariableName := value[6 : len(value)-1]
+		prefix, _ := envVariableRegex.LiteralPrefix()
+		envVariableName := value[len(prefix) : len(value)-1]
 		value = envVariableRegex.ReplaceAllString(value, os.Getenv(envVariableName))
 	}
 	return value
