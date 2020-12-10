@@ -33,12 +33,12 @@ func toHeaders(headersArray []string) map[string]string {
 			headersMap[strings.TrimSpace(kv[0])] = ""
 			continue
 		}
-		headersMap[strings.TrimSpace(kv[0])] = ReplaceEnvVariablePlaceholder(strings.TrimSpace(kv[1]))
+		headersMap[strings.TrimSpace(kv[0])] = replaceEnvVariablePlaceholder(strings.TrimSpace(kv[1]))
 	}
 	return headersMap
 }
 
-func ReplaceEnvVariablePlaceholder(value string) string {
+func replaceEnvVariablePlaceholder(value string) string {
 	envVariableRegex := regexp.MustCompile(EnvVariableRegex)
 	if envVariableRegex.MatchString(value) {
 		prefix, _ := envVariableRegex.LiteralPrefix()
