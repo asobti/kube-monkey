@@ -198,7 +198,7 @@ headers = ["api-key:{$env:API_TOKEN}", "Content-Type:application/json"]
 
 `{$env:API_TOKEN}` will be replaced by the environment variable `API_TOKEN` value.
 
-Note if the environment variable does not exist, the notification call will NOT be cancelled. The value will be empty and we will add a warning in the logs. 
+Note if the environment variable does not exist, the notification call will NOT be cancelled. The value will resolve to an empty string, and a warning will show up in the logs. 
 
 ## Deploying
 
