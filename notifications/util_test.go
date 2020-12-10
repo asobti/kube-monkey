@@ -38,7 +38,7 @@ func Test_ToHeadersEnvVariablePlaceholder(t *testing.T) {
 	assert.Equal(t, "123456", headers["api-key"])
 }
 
-func Test_ToHeadersEnvVariablePlaceholderNotExiting(t *testing.T) {
+func Test_ToHeadersEnvVariablePlaceholderNotExisting(t *testing.T) {
 	headersArray := []string{"Content-Type:application/json", "api-key:{$env:VARIABLE_NOT_SET}"}
 
 	headers := toHeaders(headersArray)
