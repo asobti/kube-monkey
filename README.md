@@ -177,6 +177,7 @@ The message supports the following placeholders:
 * `{$kind}`: victim's kind
 * `{$namespace}`: victim's namespace
 * `{$timestamp}`: attack's time from Unix epoch in milliseconds
+* `{$time}`: attack's time
 * `{$date}`: attack's date
 * `{$error}`: result's error, if any
 

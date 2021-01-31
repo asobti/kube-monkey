@@ -77,10 +77,17 @@ func Test_ErrorPlaceholder(t *testing.T) {
 }
 
 func Test_TimestampPlaceholder(t *testing.T) {
-	msg := `{"time":"{$timestamp}"}`
+	msg := `{"timestamp":"{$timestamp}"}`
 	currentTime := time.Now()
 	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime)
-	assert.Equal(t, `{"time":"`+timeToEpoch(currentTime)+`"}`, actual)
+	assert.Equal(t, `{"timestamp":"`+timeToEpoch(currentTime)+`"}`, actual)
+}
+
+func Test_TimePlaceholder(t *testing.T) {
+	msg := `{"time":"{$time}"}`
+	currentTime := time.Now()
+	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime)
+	assert.Equal(t, `{"time":"`+timeToTime(currentTime)+`"}`, actual)
 }
 
 func Test_DatePlaceholder(t *testing.T) {
