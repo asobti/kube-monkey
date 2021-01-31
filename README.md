@@ -164,6 +164,7 @@ It can be a Slack webhook or a custom API.
 ```toml
 [notifications]
   enabled = true
+  reportSchedule = true
   [notifications.attacks]
     endpoint = "http://url1"
     message = "message1"

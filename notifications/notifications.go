@@ -6,6 +6,7 @@ import (
 
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
+	"github.com/asobti/kube-monkey/schedule"
 	"github.com/golang/glog"
 )
 
@@ -14,6 +15,20 @@ func Send(client Client, endpoint string, msg string, headers map[string]string)
 		return fmt.Errorf("send request: %v", err)
 	}
 	return nil
+}
+
+func ReportSchedule(client Client, schedule *schedule.Schedule) bool {
+	success := true
+	receiver := config.NotificationsAttacks()
+	msg := fmt.Sprintf("{\"text\": \"schedule:\n%s\n\"}", schedule)
+
+	glog.V(1).Infof("reporting next schedule")
+	if err := Send(client, receiver.Endpoint, msg, toHeaders(receiver.Headers)); err != nil {
+		glog.Errorf("error reporting next schedule")
+		success = false
+	}
+
+	return success
 }
 
 func ReportAttack(client Client, result *chaos.Result, time time.Time) bool {
