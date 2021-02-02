@@ -19,6 +19,7 @@ const (
 	Kind      = "{$kind}"
 	Namespace = "{$namespace}"
 	Timestamp = "{$timestamp}"
+	Time      = "{$time}"
 	Date      = "{$date}"
 	Error     = "{$error}"
 )
@@ -57,6 +58,7 @@ func ReplacePlaceholders(msg string, name string, kind string, namespace string,
 	msg = strings.Replace(msg, Kind, kind, -1)
 	msg = strings.Replace(msg, Namespace, namespace, -1)
 	msg = strings.Replace(msg, Timestamp, timeToEpoch(attackTime), -1)
+	msg = strings.Replace(msg, Time, timeToTime(attackTime), -1)
 	msg = strings.Replace(msg, Date, timeToDate(attackTime), -1)
 	msg = strings.Replace(msg, Error, err, -1)
 
@@ -71,4 +73,8 @@ func timeToEpoch(time time.Time) string {
 
 func timeToDate(time time.Time) string {
 	return time.Format("2006-01-02")
+}
+
+func timeToTime(time time.Time) string {
+	return time.Format("15:04:05 MST")
 }
