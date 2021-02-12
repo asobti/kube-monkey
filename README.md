@@ -181,10 +181,11 @@ The message supports the following placeholders:
 * `{$time}`: attack's time
 * `{$date}`: attack's date
 * `{$error}`: result's error, if any
+* `{$kubemonkeyid}`: kube-monkey id (set using KUBE_MONKEY_ID env variable otherwise empty)
 
 ```json
   message: '{
-            "what": "Kube-monkey attack of {$name} in {$namespace}",
+            "what": "Kube-monkey(${kubemonkeyid}) attack of {$name} in {$namespace}",
             "who": "{$name}",
             "when": {$timestamp}
            }'
