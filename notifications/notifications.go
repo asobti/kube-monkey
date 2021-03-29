@@ -2,6 +2,7 @@ package notifications
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/asobti/kube-monkey/chaos"
@@ -20,7 +21,8 @@ func Send(client Client, endpoint string, msg string, headers map[string]string)
 func ReportSchedule(client Client, schedule *schedule.Schedule) bool {
 	success := true
 	receiver := config.NotificationsAttacks()
-	msg := fmt.Sprintf("{\"text\": \"schedule:\n%s\n\"}", schedule)
+
+	msg := fmt.Sprintf("{\"text\": \"\n%s\n\"}", schedule)
 
 	glog.V(1).Infof("reporting next schedule")
 	if err := Send(client, receiver.Endpoint, msg, toHeaders(receiver.Headers)); err != nil {
@@ -39,7 +41,7 @@ func ReportAttack(client Client, result *chaos.Result, time time.Time) bool {
 	if result.Error() != nil {
 		errorString = result.Error().Error()
 	}
-	msg := ReplacePlaceholders(receiver.Message, result.Victim().Name(), result.Victim().Kind(), result.Victim().Namespace(), errorString, time)
+	msg := ReplacePlaceholders(receiver.Message, result.Victim().Name(), result.Victim().Kind(), result.Victim().Namespace(), errorString, time, os.Getenv("KUBE_MONKEY_ID"))
 	glog.V(1).Infof("reporting attack for %s %s to %s with message %s\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg)
 	if err := Send(client, receiver.Endpoint, msg, toHeaders(receiver.Headers)); err != nil {
 		glog.Errorf("error reporting attack for %s %s to %s with message %s, error: %v\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg, err)

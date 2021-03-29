@@ -51,55 +51,62 @@ func Test_ToHeadersEnvVariablePlaceholderNotExisting(t *testing.T) {
 func Test_NamePlaceholder(t *testing.T) {
 	msg := `{"name":"{$name}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "testName", "", "", "", currentTime)
+	actual := ReplacePlaceholders(msg, "testName", "", "", "", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"name":"testName"}`, actual)
 }
 
 func Test_KindPlaceholder(t *testing.T) {
 	msg := `{"kind":"{$kind}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "", "testKind", "", "", currentTime)
+	actual := ReplacePlaceholders(msg, "", "testKind", "", "", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"kind":"testKind"}`, actual)
 }
 
 func Test_NamespacePlaceholder(t *testing.T) {
 	msg := `{"namespace":"{$namespace}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "", "", "testNamespace", "", currentTime)
+	actual := ReplacePlaceholders(msg, "", "", "testNamespace", "", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"namespace":"testNamespace"}`, actual)
 }
 
 func Test_ErrorPlaceholder(t *testing.T) {
 	msg := `{"error":"{$error}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "", "", "", "testError", currentTime)
+	actual := ReplacePlaceholders(msg, "", "", "", "testError", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"error":"testError"}`, actual)
+}
+
+func Test_IDPlaceholder(t *testing.T) {
+	msg := `{"kubemonkeyid":"{$kubemonkeyid}"}`
+	currentTime := time.Now()
+	actual := ReplacePlaceholders(msg, "", "", "", "testError", currentTime, "CLUSTER_A")
+	assert.Equal(t, `{"kubemonkeyid":"CLUSTER_A"}`, actual)
 }
 
 func Test_TimestampPlaceholder(t *testing.T) {
 	msg := `{"timestamp":"{$timestamp}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime)
+	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"timestamp":"`+timeToEpoch(currentTime)+`"}`, actual)
 }
 
 func Test_TimePlaceholder(t *testing.T) {
 	msg := `{"time":"{$time}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime)
+	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"time":"`+timeToTime(currentTime)+`"}`, actual)
 }
 
 func Test_DatePlaceholder(t *testing.T) {
 	msg := `{"date":"{$date}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime)
+	actual := ReplacePlaceholders(msg, "", "", "", "", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"date":"`+timeToDate(currentTime)+`"}`, actual)
 }
 
 func Test_MultiplePlaceholders(t *testing.T) {
 	msg := `{"date1":"{$date}","date2":"{$date}","name":"{$name}"}`
 	currentTime := time.Now()
-	actual := ReplacePlaceholders(msg, "testName", "", "", "", currentTime)
+	actual := ReplacePlaceholders(msg, "testName", "", "", "", currentTime, "CLUSTER_A")
 	assert.Equal(t, `{"date1":"`+timeToDate(currentTime)+`","date2":"`+timeToDate(currentTime)+`","name":"testName"}`, actual)
 }

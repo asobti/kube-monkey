@@ -15,13 +15,14 @@ const (
 	EnvVariableRegex = "^{\\$env:\\w+\\}$"
 
 	// body (message)
-	Name      = "{$name}"
-	Kind      = "{$kind}"
-	Namespace = "{$namespace}"
-	Timestamp = "{$timestamp}"
-	Time      = "{$time}"
-	Date      = "{$date}"
-	Error     = "{$error}"
+	Name         = "{$name}"
+	Kind         = "{$kind}"
+	Namespace    = "{$namespace}"
+	Timestamp    = "{$timestamp}"
+	Time         = "{$time}"
+	Date         = "{$date}"
+	Error        = "{$error}"
+	KubeMonkeyID = "{$kubemonkeyid}"
 )
 
 func toHeaders(headersArray []string) map[string]string {
@@ -53,7 +54,7 @@ func replaceEnvVariablePlaceholder(value string) string {
 	return value
 }
 
-func ReplacePlaceholders(msg string, name string, kind string, namespace string, err string, attackTime time.Time) string {
+func ReplacePlaceholders(msg string, name string, kind string, namespace string, err string, attackTime time.Time, kubeMonkeyID string) string {
 	msg = strings.Replace(msg, Name, name, -1)
 	msg = strings.Replace(msg, Kind, kind, -1)
 	msg = strings.Replace(msg, Namespace, namespace, -1)
@@ -61,6 +62,7 @@ func ReplacePlaceholders(msg string, name string, kind string, namespace string,
 	msg = strings.Replace(msg, Time, timeToTime(attackTime), -1)
 	msg = strings.Replace(msg, Date, timeToDate(attackTime), -1)
 	msg = strings.Replace(msg, Error, err, -1)
+	msg = strings.Replace(msg, KubeMonkeyID, kubeMonkeyID, -1)
 
 	return msg
 }
