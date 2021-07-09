@@ -32,7 +32,7 @@ spec:
           volumeMounts:
              - name: config-volume
                mountPath: "/etc/kube-monkey"
-      serviceAccountName: {{ template "kubemonkey.fullname" . }}
+      serviceAccountName: {{ include "kubemonkey.serviceAccountName" . }}
       volumes:
         - name: config-volume
           configMap:

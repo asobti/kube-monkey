@@ -69,17 +69,18 @@ func SetDefaults() {
 	viper.SetDefault(param.DebugScheduleImmediateKill, false)
 
 	viper.SetDefault(param.NotificationsEnabled, false)
+	viper.SetDefault(param.NotificationsReportSchedule, false)
 	viper.SetDefault(param.NotificationsAttacks, Receiver{})
 }
 
 func setupWatch() {
-	// TODO: This does not appear to be working
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		glog.V(4).Info("Config change detected")
 		if err := ValidateConfigs(); err != nil {
 			panic(err)
 		}
+		glog.V(4).Info("Successfully reloaded configs")
 	})
 }
 
@@ -178,6 +179,10 @@ func DebugScheduleImmediateKill() bool {
 
 func NotificationsEnabled() bool {
 	return viper.GetBool(param.NotificationsEnabled)
+}
+
+func NotificationsReportSchedule() bool {
+	return viper.GetBool(param.NotificationsReportSchedule)
 }
 
 func NotificationsAttacks() Receiver {
