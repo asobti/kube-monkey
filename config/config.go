@@ -69,7 +69,7 @@ func SetDefaults() {
 	viper.SetDefault(param.DebugScheduleImmediateKill, false)
 
 	viper.SetDefault(param.NotificationsEnabled, false)
-	viper.SetDefault(param.NotificationsProxy, "")
+	viper.SetDefault(param.NotificationsProxy, nil)
 	viper.SetDefault(param.NotificationsReportSchedule, false)
 	viper.SetDefault(param.NotificationsAttacks, Receiver{})
 }

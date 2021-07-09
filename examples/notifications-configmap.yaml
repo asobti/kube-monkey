@@ -17,7 +17,7 @@
         graceperiod_sec= 10
         [notifications]
           enabled = true
-          proxy = ""
+          proxy = "host:port"
           reportSchedule = true
           [notifications.attacks]
             endpoint = "test1"

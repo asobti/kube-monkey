@@ -17,7 +17,7 @@ type Client struct {
 }
 
 // CreateClient creates a new client with a default timeout
-func CreateClient(proxy string) Client {
+func CreateClient(proxy *string) Client {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -25,8 +25,8 @@ func CreateClient(proxy string) Client {
 	transport := http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	if proxy != "" {
-		proxyUrl, _ := url.Parse(proxy)
+	if proxy != nil {
+		proxyUrl, _ := url.Parse(*proxy)
 		transport.Proxy = http.ProxyURL(proxyUrl)
 	}
 	client.Transport = &transport

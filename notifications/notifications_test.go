@@ -24,7 +24,7 @@ type NotificationsTestSuite struct {
 
 func (s *NotificationsTestSuite) SetupTest() {
 	//create HTTP client
-	s.client = CreateClient("")
+	s.client = CreateClient(nil)
 	//start server
 	s.server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
 	//create Result

@@ -106,7 +106,7 @@ const (
 
 	// Notifications Proxy enables send the request with proxy
 	// Type: string
-	// Default: ""
+	// Default: nil
 	NotificationsProxy = "notifications.proxy"
 
 	// NotificationsReportSchedule enables reporting of attack schedule to an HTTP endpoint
