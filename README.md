@@ -154,15 +154,54 @@ KUBEMONKEY_TIME_ZONE=America/New_York
 enabled= true
 schedule_immediate_kill= true
 ```
+
+## Notifications
+
+Kube-monkey supports notifications and can notify an endpoint of your choice after an attack.
+It can be a Slack webhook or a custom API.
+
 #### Example Config for posting attack notifications to an HTTP endpoint
 ```toml
 [notifications]
   enabled = true
+  reportSchedule = true
   [notifications.attacks]
     endpoint = "http://url1"
     message = "message1"
     headers = ["header1Key:header1Value","header2Key:header2/Value"]
 ```
+
+#### Placeholders
+
+The message supports the following placeholders:
+* `{$name}`: victim's name
+* `{$kind}`: victim's kind
+* `{$namespace}`: victim's namespace
+* `{$timestamp}`: attack's time from Unix epoch in milliseconds
+* `{$time}`: attack's time
+* `{$date}`: attack's date
+* `{$error}`: result's error, if any
+* `{$kubemonkeyid}`: kube-monkey id (set using KUBE_MONKEY_ID env variable otherwise empty)
+
+```json
+  message: '{
+            "what": "Kube-monkey(${kubemonkeyid}) attack of {$name} in {$namespace}",
+            "who": "{$name}",
+            "when": {$timestamp}
+           }'
+```
+
+The header supports a special placeholder to retrieve the value of an environment variable.
+This is useful when calling an API that has a protected endpoint.
+A typical scenario will be to pass an API token to the Kube-monkey container, this token is stored in a Kubernetes Secret and you want to pass it via an environment variable.
+
+```json
+headers = ["api-key:{$env:API_TOKEN}", "Content-Type:application/json"]
+```
+
+`{$env:API_TOKEN}` will be replaced by the environment variable `API_TOKEN` value.
+
+Note if the environment variable does not exist, the notification call will NOT be cancelled. The value will resolve to an empty string, and a warning will show up in the logs. 
 
 ## Deploying
 

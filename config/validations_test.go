@@ -48,6 +48,9 @@ func TestIsValidHeader(t *testing.T) {
 	header = "header1/Key:header1/Value"
 	assert.True(t, isValidHeader(header))
 
+	header = "header1:{$env:VARIABLE_NAME}"
+	assert.True(t, isValidHeader(header))
+
 	header = "header1Key"
 	assert.False(t, isValidHeader(header))
 

@@ -49,6 +49,9 @@ func Run() error {
 			glog.Fatal(err.Error())
 		}
 		schedule.Print()
+		if config.NotificationsEnabled() && config.NotificationsReportSchedule() {
+			notifications.ReportSchedule(notificationsClient, schedule)
+		}
 		fmt.Println(schedule)
 		ScheduleTerminations(schedule.Entries(), notificationsClient)
 	}

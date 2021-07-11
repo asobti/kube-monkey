@@ -3,6 +3,7 @@ package schedule
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -16,7 +17,8 @@ import (
 
 const (
 	Today         = "\t********** Today's schedule **********"
-	NoTermination = "No terminations scheduled"
+	KubeMonkeyID  = "\tKubeMonkey ID: %s"
+	NoTermination = "\tNo terminations scheduled"
 	HeaderRow     = "\tk8 Api Kind\tKind Namespace\tKind Name\t\tTermination Time"
 	SepRow        = "\t-----------\t--------------\t---------\t\t----------------"
 	RowFormat     = "\t%s\t%s\t%s\t\t%s"
@@ -38,7 +40,14 @@ func (s *Schedule) Add(entry *chaos.Chaos) {
 
 func (s *Schedule) String() string {
 	schedString := []string{}
+
 	schedString = append(schedString, fmt.Sprint(Today))
+
+	kubeMonkeyID := os.Getenv("KUBE_MONKEY_ID")
+	if kubeMonkeyID != "" {
+		schedString = append(schedString, fmt.Sprintf(KubeMonkeyID, kubeMonkeyID))
+	}
+
 	if len(s.entries) == 0 {
 		schedString = append(schedString, fmt.Sprint(NoTermination))
 	} else {
