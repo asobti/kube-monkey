@@ -58,7 +58,7 @@ func generateNRunningPods(namePrefix string, n int) []runtime.Object {
 }
 
 func newVictimBase() *VictimBase {
-	return New(KIND, NAME, NAMESPACE, IDENTIFIER, 1)
+	return New(KIND, NAME, NAMESPACE, IDENTIFIER, "1h")
 }
 
 func getPodList(client kube.Interface) *corev1.PodList {
@@ -74,7 +74,7 @@ func TestVictimBaseTemplateGetters(t *testing.T) {
 	assert.Equal(t, "name", v.Name())
 	assert.Equal(t, NAMESPACE, v.Namespace())
 	assert.Equal(t, IDENTIFIER, v.Identifier())
-	assert.Equal(t, 1, v.Mtbf())
+	assert.Equal(t, "1h", v.Mtbf())
 }
 
 func TestRunningPods(t *testing.T) {
@@ -320,7 +320,7 @@ func TestIsBlacklisted(t *testing.T) {
 	b := v.IsBlacklisted()
 	assert.False(t, b, "%s namespace should not be blacklisted", NAMESPACE)
 
-	v = New("Pod", "name", metav1.NamespaceSystem, IDENTIFIER, 1)
+	v = New("Pod", "name", metav1.NamespaceSystem, IDENTIFIER, "1h")
 	b = v.IsBlacklisted()
 	assert.True(t, b, "%s namespace should be blacklisted", metav1.NamespaceSystem)
 

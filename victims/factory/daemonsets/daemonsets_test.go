@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 		NAME,
 		map[string]string{
 			config.IdentLabelKey: IDENTIFIER,
-			config.MtbfLabelKey:  "1",
+			config.MtbfLabelKey:  "1h",
 		},
 	)
 	ds, err := New(&v1ds)
@@ -42,14 +42,14 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, NAME, ds.Name())
 	assert.Equal(t, NAMESPACE, ds.Namespace())
 	assert.Equal(t, IDENTIFIER, ds.Identifier())
-	assert.Equal(t, 1, ds.Mtbf())
+	assert.Equal(t, "1h", ds.Mtbf())
 }
 
 func TestInvalidIdentifier(t *testing.T) {
 	v1ds := newDaemonSet(
 		NAME,
 		map[string]string{
-			config.MtbfLabelKey: "1",
+			config.MtbfLabelKey: "1h",
 		},
 	)
 	_, err := New(&v1ds)
@@ -77,16 +77,6 @@ func TestInvalidMtbf(t *testing.T) {
 	)
 	_, err = New(&v1ds)
 
-	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label can't be converted a Int type")
+	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label can't be converted a time.Duration type")
 
-	v1ds = newDaemonSet(
-		NAME,
-		map[string]string{
-			config.IdentLabelKey: IDENTIFIER,
-			config.MtbfLabelKey:  "0",
-		},
-	)
-	_, err = New(&v1ds)
-
-	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label is lower than 1")
 }
