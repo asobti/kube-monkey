@@ -37,6 +37,10 @@ spec:
         - name: config-volume
           configMap:
             name: {{ template "kubemonkey.fullname" . }}
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+    {{ toYaml . | indent 8 }}
+    {{- end }}
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

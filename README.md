@@ -149,6 +149,9 @@ KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
 #### Example Config to test kube-monkey works by enabling debug mode
+
+Note: this will keep attacking pods every 60s regardless of what you configured for the `startHour` and `endHour`.
+
 ```toml
 [debug]
 enabled= true
