@@ -157,6 +157,12 @@ func (s *ConfigTestSuite) TestNotificationsEnabled() {
 	s.True(NotificationsEnabled())
 }
 
+func (s *ConfigTestSuite) TestNotificationsProxy() {
+	viper.Set(param.NotificationsProxy, "http://127.0.0.1:8080")
+	proxy := NotificationsProxy()
+	s.Equal("http://127.0.0.1:8080", proxy)
+}
+
 func (s *ConfigTestSuite) TestNotificationsAttacks() {
 	headers := []string{"header1Key:header1Value", "header2Key:header2Value"}
 	receiver := map[string]interface{}{"endpoint": "endpoint1", "message": "message1", "headers": headers}

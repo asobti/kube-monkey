@@ -16,7 +16,7 @@ func TestRequestSuccess(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := CreateClient()
+	c := CreateClient(nil)
 	body := "message"
 	err := c.Request(server.URL+path, body, map[string]string{})
 	if err != nil {
@@ -31,7 +31,7 @@ func TestRequestFails(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := CreateClient()
+	c := CreateClient(nil)
 	body := ""
 	err := c.Request(server.URL, body, map[string]string{})
 	expectedErr := fmt.Sprintf("POST %s returned 403 Unauthorized, expected 2xx", server.URL)
