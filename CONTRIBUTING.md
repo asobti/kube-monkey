@@ -1,38 +1,19 @@
-## Git Flow for Dev Work
-Install go 1.15
+# Contributing new Helm Charts
 
-Fork the project on github and install golang
-```bash
-go get github.com/asobti/kube-monkey
-git remote rename origin upstream
-git remote add origin https://github.com/<YOURUSERNAME>/kube-monkey
-git checkout --track -b feature/branchname
-```
-Then code & stuff. 
+Note: Unfortunately the process to publish new Helm Charts is not automated yet, so please bear with us while we explain this two step process 🦄
 
-After you think you're done working, make sure to test and get proof of working output (or write tests).
+To add a new version of a chart you need 2 pull requests.
 
-Make sure to test your branch from scratch and run `make test`! The make process will gofmt your code. Make sure to commit any files that were modified before opening a PR! Otherwise the CI process will reject your PR for code formatting. When you make the PR, please output your proof.
+## Publish Sources
 
----
-## Ways to contribute
+* Start by forking this Github repository and creating a new branch from master.
+* Update the chart under the directory `/helm/kubemonkey`
+* Submit a Pull Request with these changes.
 
-- Add unit [tests](https://golang.org/pkg/testing/)
-- Design us a cool logo!
-- Support more forms of Chaos
-  - ~~deployments~~
-  - ~~statefulsets~~
-  - ~~dameonsets~~
-  - Disabling svc
-  - Disabling ingress
-  - Disabling configmap
-  - Cordoning off Node (chaos-gorilla style)
-  - Deleting Node (chaos-gorilla style)
-  - etc
-- ~~Enhance documentation for [Helm](https://github.com/linki/chaoskube#how)~~
-- Add [related projects](https://github.com/linki/chaoskube#related-work)
-- Convert from glide to dep
-- ~~Push image to dockerhub~~
-- Analyze api versions and link dependency chart (i.e. k8s v1.8+ deprecates v1beta deployments (madeup)) #70
-- Whitelist opt-in feature #5
+## Publish Helm Charts
 
+* Switch to the `gh-pages` branch and create a new branch from this in your fork.
+* Package the new version of the chart into a `.tgz` file. See [Helm Package](https://helm.sh/docs/helm/helm_package/).
+* Add your file under the `repo` folder.
+* Finally, you will need to update the index file. See [Helm Repo Index](https://helm.sh/docs/helm/helm_repo_index/). 
+* Submit a Pull Request with these changes.
