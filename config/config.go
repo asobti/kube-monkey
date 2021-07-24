@@ -35,6 +35,21 @@ const (
 	KillAllLabelValue             = "kill-all"
 )
 
+type Receiver struct {
+	Endpoint string   `mapstructure:"endpoint"`
+	Message  string   `mapstructure:"message"`
+	Headers  []string `mapstructure:"headers"`
+}
+
+// NewReceiver creates a new Receiver instance
+func NewReceiver(endpoint string, message string, headers []string) Receiver {
+	return Receiver{
+		Endpoint: endpoint,
+		Message:  message,
+		Headers:  headers,
+	}
+}
+
 func SetDefaults() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
@@ -52,16 +67,21 @@ func SetDefaults() {
 	viper.SetDefault(param.DebugScheduleDelay, 30)
 	viper.SetDefault(param.DebugForceShouldKill, false)
 	viper.SetDefault(param.DebugScheduleImmediateKill, false)
+
+	viper.SetDefault(param.NotificationsEnabled, false)
+	viper.SetDefault(param.NotificationsProxy, nil)
+	viper.SetDefault(param.NotificationsReportSchedule, false)
+	viper.SetDefault(param.NotificationsAttacks, Receiver{})
 }
 
 func setupWatch() {
-	// TODO: This does not appear to be working
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		glog.V(4).Info("Config change detected")
 		if err := ValidateConfigs(); err != nil {
 			panic(err)
 		}
+		glog.V(4).Info("Successfully reloaded configs")
 	})
 }
 
@@ -156,4 +176,25 @@ func DebugForceShouldKill() bool {
 
 func DebugScheduleImmediateKill() bool {
 	return viper.GetBool(param.DebugScheduleImmediateKill)
+}
+
+func NotificationsEnabled() bool {
+	return viper.GetBool(param.NotificationsEnabled)
+}
+
+func NotificationsProxy() string {
+	return viper.GetString(param.NotificationsProxy)
+}
+
+func NotificationsReportSchedule() bool {
+	return viper.GetBool(param.NotificationsReportSchedule)
+}
+
+func NotificationsAttacks() Receiver {
+	var receiver Receiver
+	err := viper.UnmarshalKey(param.NotificationsAttacks, &receiver)
+	if err != nil {
+		glog.Errorf("Failed to parse notifications.attacks %v", err)
+	}
+	return receiver
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/asobti/kube-monkey/chaos"
 	"github.com/asobti/kube-monkey/config"
 	"github.com/asobti/kube-monkey/kubernetes"
+	"github.com/asobti/kube-monkey/notifications"
 	"github.com/asobti/kube-monkey/schedule"
 )
 
@@ -32,6 +33,14 @@ func Run() error {
 		return err
 	}
 
+	var notificationsClient notifications.Client
+	if config.NotificationsEnabled() {
+		glog.V(1).Infof("Notifications enabled!")
+		proxy := config.NotificationsProxy()
+		glog.V(1).Infof("Notifications proxy %s!", proxy)
+		notificationsClient = notifications.CreateClient(&proxy)
+	}
+
 	for {
 		// Calculate duration to sleep before next run
 		sleepDuration := durationToNextRun(config.RunHour(), config.Timezone())
@@ -42,12 +51,15 @@ func Run() error {
 			glog.Fatal(err.Error())
 		}
 		schedule.Print()
+		if config.NotificationsEnabled() && config.NotificationsReportSchedule() {
+			notifications.ReportSchedule(notificationsClient, schedule)
+		}
 		fmt.Println(schedule)
-		ScheduleTerminations(schedule.Entries())
+		ScheduleTerminations(schedule.Entries(), notificationsClient)
 	}
 }
 
-func ScheduleTerminations(entries []*chaos.Chaos) {
+func ScheduleTerminations(entries []*chaos.Chaos, notificationsClient notifications.Client) {
 	resultchan := make(chan *chaos.Result)
 	defer close(resultchan)
 
@@ -68,6 +80,10 @@ func ScheduleTerminations(entries []*chaos.Chaos) {
 			glog.Errorf("Failed to execute termination for %s %s. Error: %v", result.Victim().Kind(), result.Victim().Name(), result.Error().Error())
 		} else {
 			glog.V(2).Infof("Termination successfully executed for %s %s\n", result.Victim().Kind(), result.Victim().Name())
+		}
+		if config.NotificationsEnabled() {
+			currentTime := time.Now()
+			notifications.ReportAttack(notificationsClient, result, currentTime)
 		}
 		completedCount++
 		glog.V(4).Info("Status Update: ", len(entries)-completedCount, " scheduled terminations left.")

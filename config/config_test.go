@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/asobti/kube-monkey/config/param"
-	"github.com/bouk/monkey"
-	"github.com/golang/glog"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +35,8 @@ func (s *ConfigTestSuite) TestSetDefaults() {
 	s.Equal(viper.GetInt(param.DebugScheduleDelay), 30)
 	s.False(viper.GetBool(param.DebugForceShouldKill))
 	s.False(viper.GetBool(param.DebugScheduleImmediateKill))
-
+	s.False(viper.GetBool(param.NotificationsEnabled))
+	s.Equal(Receiver{}, viper.Get(param.NotificationsAttacks))
 }
 
 func (s *ConfigTestSuite) TestDryRun() {
@@ -48,14 +47,6 @@ func (s *ConfigTestSuite) TestDryRun() {
 }
 
 func (s *ConfigTestSuite) TestTimezone() {
-	viper.Set(param.Timezone, "nolnexistent")
-
-	// avoid Exit(255) on glog.Fatal
-	monkey.Patch(glog.Fatal, func(a ...interface{}) {
-		s.Contains(a[0], "cannot find nolnexistent in zip file")
-	})
-	defer func() { monkey.Unpatch(glog.Fatal) }()
-	s.Equal((*time.Location)(nil), Timezone())
 	viper.Set(param.Timezone, "UTC")
 	s.Equal(Timezone().String(), "UTC")
 }
@@ -156,9 +147,35 @@ func (s *ConfigTestSuite) TestDebugForceShouldKill() {
 	s.True(DebugForceShouldKill())
 }
 
-func (s *ConfigTestSuite) TestDebugInmediateKill() {
+func (s *ConfigTestSuite) TestDebugImmediateKill() {
 	viper.Set(param.DebugScheduleImmediateKill, true)
 	s.True(DebugScheduleImmediateKill())
+}
+
+func (s *ConfigTestSuite) TestNotificationsEnabled() {
+	viper.Set(param.NotificationsEnabled, true)
+	s.True(NotificationsEnabled())
+}
+
+func (s *ConfigTestSuite) TestNotificationsProxy() {
+	viper.Set(param.NotificationsProxy, "http://127.0.0.1:8080")
+	proxy := NotificationsProxy()
+	s.Equal("http://127.0.0.1:8080", proxy)
+}
+
+func (s *ConfigTestSuite) TestNotificationsAttacks() {
+	headers := []string{"header1Key:header1Value", "header2Key:header2Value"}
+	receiver := map[string]interface{}{"endpoint": "endpoint1", "message": "message1", "headers": headers}
+	viper.Set(param.NotificationsAttacks, receiver)
+	actual := NotificationsAttacks()
+
+	s.Equal(receiver["endpoint"], actual.Endpoint)
+	s.Equal(receiver["message"], actual.Message)
+	s.Equal(receiver["headers"], actual.Headers)
+
+	s.Equal(receiver["endpoint"], actual.Endpoint)
+	s.Equal(receiver["message"], actual.Message)
+	s.Equal(receiver["headers"], actual.Headers)
 }
 
 func TestSuite(t *testing.T) {

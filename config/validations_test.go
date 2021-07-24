@@ -40,3 +40,20 @@ func TestIsValidHour(t *testing.T) {
 	}
 	assert.False(t, IsValidHour(24))
 }
+
+func TestIsValidHeader(t *testing.T) {
+	header := "header1Key:header1Value"
+	assert.True(t, isValidHeader(header))
+
+	header = "header1/Key:header1/Value"
+	assert.True(t, isValidHeader(header))
+
+	header = "header1:{$env:VARIABLE_NAME}"
+	assert.True(t, isValidHeader(header))
+
+	header = "header1Key"
+	assert.False(t, isValidHeader(header))
+
+	header = "header1Key:"
+	assert.False(t, isValidHeader(header))
+}
