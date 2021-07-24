@@ -86,3 +86,23 @@ func TestRandomTimeInRange(t *testing.T) {
 
 	assert.Condition(t, scheduledTime)
 }
+
+func TestCustzRandomTimeInRange(t *testing.T) {
+	loc := time.UTC
+
+	monkey.Patch(time.Now, func() time.Time {
+		return time.Date(2018, 4, 16, 12, 0, 0, 0, time.UTC)
+	})
+	defer monkey.Unpatch(time.Now)
+
+	randomTime := CustzRandomTimeInRange("5h", 10, 12, loc)
+
+	scheduledTime := func() (success bool) {
+		if randomTime.Hour() >= 10 && randomTime.Hour() <= 12 {
+			success = true
+		}
+		return
+	}
+
+	assert.Condition(t, scheduledTime)
+}

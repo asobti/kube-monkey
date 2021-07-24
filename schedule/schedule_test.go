@@ -86,7 +86,7 @@ func TestStringWithEntries(t *testing.T) {
 
 func TestCalculateKillTimeRandom(t *testing.T) {
 	config.SetDefaults()
-	killtime := CalculateKillTime()
+	killtime := CalculateKillTime("1h")
 
 	scheduledTime := func() (success bool) {
 		if killtime.Hour() >= config.StartHour() && killtime.Hour() <= config.EndHour() {
@@ -104,7 +104,7 @@ func TestCalculateKillTimeNow(t *testing.T) {
 	config.SetDefaults()
 	viper.SetDefault(param.DebugEnabled, true)
 	viper.SetDefault(param.DebugScheduleImmediateKill, true)
-	killtime := CalculateKillTime()
+	killtime := CalculateKillTime("1h")
 
 	assert.Equal(t, killtime.Location(), config.Timezone())
 	assert.WithinDuration(t, killtime, time.Now(), time.Second*time.Duration(60))

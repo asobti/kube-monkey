@@ -65,3 +65,38 @@ func RandomTimeInRange(startHour int, endHour int, loc *time.Location) time.Time
 	rangeStart := time.Date(year, month, date, startHour, 0, 0, 0, loc)
 	return rangeStart.Add(offsetDuration)
 }
+
+func CustzRandomTimeInRange(mtbf string, startHour, endHour int, loc *time.Location) time.Time {
+	tmptimeDuration, err := time.ParseDuration(mtbf)
+	if err != nil {
+		glog.Errorf("error parsing customized mtbf %s: %v", mtbf, err)
+		return time.Now().Add(time.Duration(24*365*10) * time.Hour)
+	}
+	//time range should be twice of the input mean time between failure value
+	timeDuration := tmptimeDuration * 2
+	//compute random offset time
+	now := time.Now().In(loc)
+	mtbfEndTime := now.Add(timeDuration)
+	subSecond := int64(mtbfEndTime.Sub(now) / time.Second)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randSecondOffset := r.Int63n(subSecond)
+	randCalTime := now.Add(time.Duration(randSecondOffset) * time.Second)
+
+	// compute randSecondOffset between start and end hour
+	year, month, date := now.Date()
+	todayEndTime := time.Date(year, month, date, endHour, 0, 0, 0, loc)
+	todayStartTime := time.Date(year, month, date, startHour, 0, 0, 0, loc)
+	if now.Before(todayStartTime) { // now is earlier then start hour, only for test pass, normal process won't run into this condition
+		return todayStartTime
+	}
+	if randCalTime.Before(todayEndTime) { // time offset before today's endHour
+		glog.V(1).Infof("CustzRandomTimeInRange calculate time %s", randCalTime)
+		return randCalTime
+	} else {
+		leftOffset := randSecondOffset - int64(todayEndTime.Sub(now)/time.Second)
+		offsetDay := leftOffset/(int64(endHour-startHour)*60*60) + 1
+		modOffsetSecond := leftOffset % (int64(endHour-startHour) * 60 * 60)
+		glog.V(1).Infof("CustzRandomTimeInRange calculate time %s", todayStartTime.Add(time.Duration(offsetDay*24)*time.Hour).Add(time.Duration(modOffsetSecond)*time.Second))
+		return todayStartTime.Add(time.Duration(offsetDay*24) * time.Hour).Add(time.Duration(modOffsetSecond) * time.Second)
+	}
+}
