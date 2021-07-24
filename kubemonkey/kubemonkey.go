@@ -36,7 +36,9 @@ func Run() error {
 	var notificationsClient notifications.Client
 	if config.NotificationsEnabled() {
 		glog.V(1).Infof("Notifications enabled!")
-		notificationsClient = notifications.CreateClient()
+		proxy := config.NotificationsProxy()
+		glog.V(1).Infof("Notifications proxy %s!", proxy)
+		notificationsClient = notifications.CreateClient(&proxy)
 	}
 
 	for {
@@ -49,6 +51,9 @@ func Run() error {
 			glog.Fatal(err.Error())
 		}
 		schedule.Print()
+		if config.NotificationsEnabled() && config.NotificationsReportSchedule() {
+			notifications.ReportSchedule(notificationsClient, schedule)
+		}
 		fmt.Println(schedule)
 		ScheduleTerminations(schedule.Entries(), notificationsClient)
 	}

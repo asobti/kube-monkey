@@ -1,11 +1,14 @@
 ---
-  apiVersion: extensions/v1beta1
+  apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: kube-monkey
     namespace: kube-system
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: kube-monkey
     template:
       metadata:
         labels:
@@ -17,6 +20,9 @@
                - "/kube-monkey"
              args: ["-v=5", "-log_dir=/var/log/kube-monkey"]
              image: ayushsobti/kube-monkey:v0.3.0
+             env:
+               - name: KUBE_MONKEY_ID
+                 value: CLUSTER_A
              volumeMounts:
                - name: config-volume
                  mountPath: "/etc/kube-monkey"

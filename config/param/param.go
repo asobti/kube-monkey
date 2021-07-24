@@ -104,6 +104,16 @@ const (
 	// Default: false
 	NotificationsEnabled = "notifications.enabled"
 
+	// Notifications Proxy enables send the request with proxy
+	// Type: string
+	// Default: nil
+	NotificationsProxy = "notifications.proxy"
+
+	// NotificationsReportSchedule enables reporting of attack schedule to an HTTP endpoint
+	// Type: bool
+	// Default: false
+	NotificationsReportSchedule = "notifications.reportSchedule"
+
 	// NotificationsAttacks reports attacks to an HTTP endpoint
 	// Type: config.Receiver struct
 	// Default: Receiver{}

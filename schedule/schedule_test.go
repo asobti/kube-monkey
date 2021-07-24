@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -38,10 +39,30 @@ func TestStringNoEntries(t *testing.T) {
 
 	schedString := []string{}
 	schedString = append(schedString, fmt.Sprint(Today))
+
 	schedString = append(schedString, fmt.Sprint(NoTermination))
 	schedString = append(schedString, fmt.Sprint(End))
 
 	assert.Equal(t, strings.Join(schedString, "\n"), s.String())
+}
+
+func TestStringNoEntriesWithID(t *testing.T) {
+
+	id := "TestingID"
+	os.Setenv("KUBE_MONKEY_ID", id)
+
+	s := newSchedule()
+
+	schedString := []string{}
+	schedString = append(schedString, fmt.Sprint(Today))
+	schedString = append(schedString, fmt.Sprintf(KubeMonkeyID, id))
+
+	schedString = append(schedString, fmt.Sprint(NoTermination))
+	schedString = append(schedString, fmt.Sprint(End))
+
+	assert.Equal(t, strings.Join(schedString, "\n"), s.String())
+
+	os.Unsetenv("KUBE_MONKEY_ID")
 }
 
 func TestStringWithEntries(t *testing.T) {

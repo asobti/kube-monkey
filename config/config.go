@@ -69,6 +69,8 @@ func SetDefaults() {
 	viper.SetDefault(param.DebugScheduleImmediateKill, false)
 
 	viper.SetDefault(param.NotificationsEnabled, false)
+	viper.SetDefault(param.NotificationsProxy, nil)
+	viper.SetDefault(param.NotificationsReportSchedule, false)
 	viper.SetDefault(param.NotificationsAttacks, Receiver{})
 }
 
@@ -178,6 +180,14 @@ func DebugScheduleImmediateKill() bool {
 
 func NotificationsEnabled() bool {
 	return viper.GetBool(param.NotificationsEnabled)
+}
+
+func NotificationsProxy() string {
+	return viper.GetString(param.NotificationsProxy)
+}
+
+func NotificationsReportSchedule() bool {
+	return viper.GetBool(param.NotificationsReportSchedule)
 }
 
 func NotificationsAttacks() Receiver {

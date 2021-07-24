@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -16,14 +17,19 @@ type Client struct {
 }
 
 // CreateClient creates a new client with a default timeout
-func CreateClient() Client {
+func CreateClient(proxy *string) Client {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
-	client.Transport = &http.Transport{
+	transport := http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
+	if proxy != nil {
+		proxyUrl, _ := url.Parse(*proxy)
+		transport.Proxy = http.ProxyURL(proxyUrl)
+	}
+	client.Transport = &transport
 	return Client{httpClient: client}
 }
 
