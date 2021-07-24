@@ -19,7 +19,7 @@
              command:
                - "/kube-monkey"
              args: ["-v=5", "-log_dir=/var/log/kube-monkey"]
-             image: ayushsobti/kube-monkey:v0.3.0
+             image: ayushsobti/kube-monkey:v0.4.0
              env:
                - name: KUBE_MONKEY_ID
                  value: CLUSTER_A

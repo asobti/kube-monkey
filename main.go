@@ -7,8 +7,8 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/asobti/kube-monkey/config"
-	"github.com/asobti/kube-monkey/kubemonkey"
+	"kube-monkey/internal/pkg/config"
+	"kube-monkey/internal/pkg/kubemonkey"
 )
 
 func glogUsage() {
