@@ -271,7 +271,7 @@ oc create -f configmap.yaml
 oc -n kube-system adm policy add-role-to-user -z deployer system:deployer
 oc -n kube-system adm policy add-role-to-user -z builder system:image-builder
 oc -n kube-system adm policy add-role-to-group system:image-puller system:serviceaccounts:kube-system
-oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.3.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
+oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.4.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
 oc volume dc/kube-monkey --add --name=kubeconfigmap -m /etc/kube-monkey -t configmap --configmap-name=kube-monkey-config-map
 ```
 
