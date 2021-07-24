@@ -1,4 +1,9 @@
-# kube-monkey [![Build Status](https://travis-ci.org/asobti/kube-monkey.svg?branch=master)](https://travis-ci.org/asobti/kube-monkey) [![Go Report](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
+[![Build](https://github.com/asobti/kube-monkey/actions/workflows/go.yml/badge.svg)](https://github.com/asobti/kube-monkey/actions/workflows/go.yml)
+[![Publish Docker image](https://github.com/asobti/kube-monkey/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/asobti/kube-monkey/actions/workflows/docker-build-push.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Docker](https://img.shields.io/badge/docker-mittens-blue.svg)](https://hub.docker.com/r/ayushsobti/kube-monkey/)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubemonkey)](https://artifacthub.io/packages/search?repo=kubemonkey)
 
 kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/Netflix/chaosmonkey) for [Kubernetes](http://kubernetes.io/) clusters. It randomly deletes Kubernetes (k8s) pods in the cluster encouraging and validating the development of failure-resilient services.
 
@@ -266,7 +271,7 @@ oc create -f configmap.yaml
 oc -n kube-system adm policy add-role-to-user -z deployer system:deployer
 oc -n kube-system adm policy add-role-to-user -z builder system:image-builder
 oc -n kube-system adm policy add-role-to-group system:image-puller system:serviceaccounts:kube-system
-oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.3.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
+oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.4.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
 oc volume dc/kube-monkey --add --name=kubeconfigmap -m /etc/kube-monkey -t configmap --configmap-name=kube-monkey-config-map
 ```
 
