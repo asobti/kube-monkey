@@ -3,6 +3,7 @@ package daemonsets
 //All these functions require api access specific to the version of the app
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -18,7 +19,7 @@ import (
 
 // EligibleDaemonSets gets all eligible daemonsets that opted in (filtered by config.EnabledLabel)
 func EligibleDaemonSets(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
-	enabledVictims, err := clientset.AppsV1().DaemonSets(namespace).List(*filter)
+	enabledVictims, err := clientset.AppsV1().DaemonSets(namespace).List(context.TODO(), *filter)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +48,7 @@ func EligibleDaemonSets(clientset kube.Interface, namespace string, filter *meta
 
 // IsEnrolled checks if the daemonset is currently enrolled in kube-monkey
 func (d *DaemonSet) IsEnrolled(clientset kube.Interface) (bool, error) {
-	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(context.TODO(), d.Name(), metav1.GetOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -56,7 +57,7 @@ func (d *DaemonSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 
 // KillType returns current killtype config label for update
 func (d *DaemonSet) KillType(clientset kube.Interface) (string, error) {
-	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(context.TODO(), d.Name(), metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +72,7 @@ func (d *DaemonSet) KillType(clientset kube.Interface) (string, error) {
 
 // KillValue returns current killvalue config label for update
 func (d *DaemonSet) KillValue(clientset kube.Interface) (int, error) {
-	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(d.Name(), metav1.GetOptions{})
+	daemonset, err := clientset.AppsV1().DaemonSets(d.Namespace()).Get(context.TODO(), d.Name(), metav1.GetOptions{})
 	if err != nil {
 		return -1, err
 	}

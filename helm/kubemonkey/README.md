@@ -1,30 +1,38 @@
 # Kube-Monkey Helm Chart
 
-[Kube-Monkey](https://github.com/asobti/kube-monkey) periodically kills pods in your Kubernetes cluster,that are opt-in based on their own rules.
+[Kube-Monkey](https://github.com/asobti/kube-monkey) periodically kills pods in your Kubernetes cluster, that are opt-in based on their own rules.
 
-## Official Helm
+## Add repository
 
-TBA to official helm charts,There is no official helm chart yet for kube-monkey.
+```bash
+helm repo add kubemonkey https://asobti.github.io/kube-monkey/charts/repo
+helm repo update
+```
 
 ## Installing the Chart
 
 To install the chart with the release name `my-release`:
 
-```console
-$ git clone https://github.com/asobti/kube-monkey
-$ cd kube-monkey/helm
-$ helm install --name my-release kubemonkey
+With Helm v3
+
+```bash
+helm install my-release kubemonkey/kube-monkey --version 1.4.0
 ```
-**Note:** by default kube-monkey installed in default namespace, which can be overridden by passing --namespace=name
+
+With Helm v2
+
+```bash
+helm install --name my-release kubemonkey/kube-monkey --version 1.4.0
+```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
 
 ## Uninstalling the Chart
 
-To uninstall/delete the my-release deployment:
+To uninstall/delete the `my-release` deployment:
 
 ```console
-$ helm delete my-release --purge
+$ helm delete my-release
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
@@ -121,7 +129,7 @@ rbac:
   enabled: true
 image:
   repository: ayushsobti/kube-monkey
-  tag: v0.3.0
+  tag: v0.4.0
   pullPolicy: IfNotPresent
 config:
   dryRun: false
@@ -131,9 +139,6 @@ config:
   blacklistedNamespaces: [ "kube-system" ]
   whitelistedNamespaces: [ "namespace1", "namespace2" ]
   timeZone: America/New_York
-  debug:
-   enabled: true # if you want to enable debugging and see how pods killed immediately set this to true
-   schedule_immediate_kill: true
 args:
   logLevel: 5
   logDir: /var/log/kube-monkey

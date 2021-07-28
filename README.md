@@ -1,5 +1,4 @@
 [![Build](https://github.com/asobti/kube-monkey/actions/workflows/go.yml/badge.svg)](https://github.com/asobti/kube-monkey/actions/workflows/go.yml)
-[![Publish Docker image](https://github.com/asobti/kube-monkey/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/asobti/kube-monkey/actions/workflows/docker-build-push.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docker Pulls](https://img.shields.io/docker/pulls/ayushsobti/kube-monkey?label=Docker%20pulls&logo=docker)](https://hub.docker.com/r/ayushsobti/kube-monkey/)
@@ -46,7 +45,7 @@ that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-
 
 ```yaml
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: monkey-victim
@@ -67,7 +66,7 @@ For newer versions of kubernetes you may need to add the labels to the k8s app m
 
 ```yaml
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: monkey-victim
@@ -226,13 +225,8 @@ See dir [`examples/`](https://github.com/asobti/kube-monkey/tree/master/examples
 
 
 **Helm Chart**  
-A helm chart is provided that assumes you have already compiled and uploaded the container to your own container repository.  Once uploaded, you need to edit the value of `image.repository` to point at the location of your container, by default it is pointed to `ayushsobti/kube-monkey`.
 
-Helm can then be executed using default values
-```bash
-helm install --name $release helm/kubemonkey
-```
-refer [kube-monkey helm chart README.md](https://github.com/asobti/kube-monkey/blob/master/helm/kubemonkey/README.md)
+See [How to install kube-monkey with Helm](helm/kubemonkey/README.md).
 
 ## Logging
 
@@ -254,15 +248,7 @@ kube-monkey uses [glog](github.com/golang/glog) and supports all command-line fe
 
 More resources: See the [k8s logging page](https://kubernetes.io/docs/concepts/cluster-administration/logging/) suggesting [community conventions for logging severity](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
 
-## Compatibility with Kubernetes
-
-kube-monkey is built using v7.0 of [kubernetes/client-go](https://github.com/kubernetes/client-go). Refer to the
-[Compatibility Matrix](https://github.com/kubernetes/client-go#compatibility-matrix) to see which
-versions of Kubernetes are compatible.
-
-## Instructions on how to get this working on OpenShift
-
-### OpenShift 3.x
+## Instructions on how to get this working on OpenShift 3.x
 
 ```
 git clone https://github.com/asobti/kube-monkey.git
@@ -292,4 +278,7 @@ oc set volume dc/kube-monkey --add --name=kubeconfigmap -m /etc/kube-monkey -t c
 
 ## Ways to contribute
 
-See [How to Contribute](https://github.com/asobti/kube-monkey/blob/master/CONTRIBUTING.md)
+See [How to Contribute](CONTRIBUTING.md)
+
+## License
+This project is licensed under the Apache License v2.0 - see the [LICENSE](LICENSE) file for details.

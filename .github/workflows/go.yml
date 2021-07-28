@@ -14,10 +14,10 @@ jobs:
     name: Build and Unit Tests
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.15
+    - name: Set up Go 1.16
       uses: actions/setup-go@v2.1.3
       with:
-        go-version: 1.15
+        go-version: 1.16
     - name: Check out code
       uses: actions/checkout@v2.3.4
     - name: Build

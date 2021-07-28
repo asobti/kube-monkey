@@ -3,6 +3,7 @@ package statefulsets
 //All these functions require api access specific to the version of the app
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -18,7 +19,7 @@ import (
 
 // EligibleStatefulSets gets all eligible statefulsets that opted in (filtered by config.EnabledLabel)
 func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *metav1.ListOptions) (eligVictims []victims.Victim, err error) {
-	enabledVictims, err := clientset.AppsV1().StatefulSets(namespace).List(*filter)
+	enabledVictims, err := clientset.AppsV1().StatefulSets(namespace).List(context.TODO(), *filter)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +48,7 @@ func EligibleStatefulSets(clientset kube.Interface, namespace string, filter *me
 
 // IsEnrolled checks if the statefulset is currently enrolled in kube-monkey
 func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
-	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(context.TODO(), ss.Name(), metav1.GetOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -56,7 +57,7 @@ func (ss *StatefulSet) IsEnrolled(clientset kube.Interface) (bool, error) {
 
 // KillType returns current killtype config label for update
 func (ss *StatefulSet) KillType(clientset kube.Interface) (string, error) {
-	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(context.TODO(), ss.Name(), metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +72,7 @@ func (ss *StatefulSet) KillType(clientset kube.Interface) (string, error) {
 
 // KillValue returns current killvalue config label for update
 func (ss *StatefulSet) KillValue(clientset kube.Interface) (int, error) {
-	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(ss.Name(), metav1.GetOptions{})
+	statefulset, err := clientset.AppsV1().StatefulSets(ss.Namespace()).Get(context.TODO(), ss.Name(), metav1.GetOptions{})
 	if err != nil {
 		return -1, err
 	}
