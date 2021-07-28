@@ -25,7 +25,7 @@ func CreateClient(proxy *string) Client {
 	transport := http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	if proxy != nil {
+	if proxy != nil && *proxy != "" {
 		proxyUrl, _ := url.Parse(*proxy)
 		transport.Proxy = http.ProxyURL(proxyUrl)
 	}

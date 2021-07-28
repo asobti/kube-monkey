@@ -37,7 +37,9 @@ func Run() error {
 	if config.NotificationsEnabled() {
 		glog.V(1).Infof("Notifications enabled!")
 		proxy := config.NotificationsProxy()
-		glog.V(1).Infof("Notifications proxy %s!", proxy)
+		if proxy != "" {
+			glog.V(1).Infof("Notifications proxy set: %s!", proxy)
+		}
 		notificationsClient = notifications.CreateClient(&proxy)
 	}
 
