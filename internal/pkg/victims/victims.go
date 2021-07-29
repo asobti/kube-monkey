@@ -1,6 +1,7 @@
 package victims
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
@@ -118,7 +119,7 @@ func (v *VictimBase) Pods(clientset kube.Interface) ([]corev1.Pod, error) {
 		return nil, err
 	}
 
-	podlist, err := clientset.CoreV1().Pods(v.namespace).List(*labelSelector)
+	podlist, err := clientset.CoreV1().Pods(v.namespace).List(context.TODO(), *labelSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +134,7 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	}
 
 	deleteOpts := v.GetDeleteOptsForPod()
-	return clientset.CoreV1().Pods(v.namespace).Delete(podName, deleteOpts)
+	return clientset.CoreV1().Pods(v.namespace).Delete(context.TODO(), podName, *deleteOpts)
 }
 
 // Creates the DeleteOptions object

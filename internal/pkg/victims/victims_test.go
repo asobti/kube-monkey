@@ -1,6 +1,7 @@
 package victims
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -63,7 +64,7 @@ func newVictimBase() *VictimBase {
 }
 
 func getPodList(client kube.Interface) *corev1.PodList {
-	podList, _ := client.CoreV1().Pods(NAMESPACE).List(metav1.ListOptions{})
+	podList, _ := client.CoreV1().Pods(NAMESPACE).List(context.TODO(), metav1.ListOptions{})
 	return podList
 }
 
