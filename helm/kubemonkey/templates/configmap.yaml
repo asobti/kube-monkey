@@ -11,7 +11,10 @@ data:
       start_hour = {{ .Values.config.startHour }}
       end_hour = {{ .Values.config.endHour }}
       blacklisted_namespaces = [ {{- range .Values.config.blacklistedNamespaces }} {{ . | trim | quote }}, {{- end }} ]
+      {{- $whitelen := len .Values.config.whitelistedNamespaces }}
+      {{- if gt $whitelen 0 }}
       whitelisted_namespaces = [ {{- range .Values.config.whitelistedNamespaces }} {{ . | trim | quote }}, {{- end }} ]
+      {{- end }}
       time_zone = {{ .Values.config.timeZone | quote }}
       [debug]
       enabled= {{ .Values.config.debug.enabled }}
