@@ -130,7 +130,7 @@ rbac:
   enabled: true
 image:
   repository: ayushsobti/kube-monkey
-  tag: v0.4.0
+  tag: v0.4.1
   pullPolicy: IfNotPresent
 config:
   dryRun: false
