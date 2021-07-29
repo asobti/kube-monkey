@@ -3,9 +3,9 @@ entries:
   kube-monkey:
   - apiVersion: v1
     appVersion: 0.4.1
-    created: "2021-07-29T20:00:13.040632+01:00"
+    created: "2021-07-29T20:03:07.350491+01:00"
     description: A Helm chart for Kubernetes
-    digest: 531a10e5070ff7024a95773101e4800d36b98a4638349225c4cca9ed9ede16d8
+    digest: 46254efa2cef8596ff515e4274b88a8043ef70f27fb84652dadf6c738cf1a884
     name: kube-monkey
     urls:
     - kube-monkey-1.4.1.tgz
@@ -28,4 +28,4 @@ entries:
     urls:
     - kube-monkey-1.3.0.tgz
     version: 1.3.0
-generated: "2021-07-29T20:00:13.032338+01:00"
+generated: "2021-07-29T20:03:07.339999+01:00"
