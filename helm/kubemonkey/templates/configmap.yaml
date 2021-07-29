@@ -16,4 +16,11 @@ data:
       [debug]
       enabled= {{ .Values.config.debug.enabled }}
       schedule_immediate_kill= {{ .Values.config.debug.schedule_immediate_kill }}
+      [notifications]
+      enabled = {{ .Values.config.notifications.enabled }}
+      {{- if ne .Values.config.notifications.proxy "" }}
+      proxy = {{ .Values.config.notifications.proxy}}
+      {{- end }}
+      [notifications.attacks]
+{{ indent 6 .Values.config.notifications.attacks -}}
 

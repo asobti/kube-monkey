@@ -103,6 +103,7 @@ $ helm get manifest my-release
 | `config.debug.enabled`                 | debug mode,need to be enabled to see debuging behaviour                                 | false                            |
 | `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time                                 | false                            |
 | `config.notifications.enabled`         | enables reporting of attacks to an HTTP endpoint                                        | false                            |
+| `config.notifications.proxy`           | notifications proxy URL                                                                 |                                  |
 | `config.notifications.attacks`         | HTTP collector in the form (endpoint,message,headers) where attacks will be reported to |                                  |
 | `args.logLevel`                        | go log level                                                                            | 5                                |
 | `args.logDir`                          | log directory                                                                           | /var/log/kube-monkey             |

@@ -29,6 +29,10 @@ config:
   debug:
    enabled: false # if you want to enable debugging and see how pods killed immediately set enabled and schedule_immediate_kill to true
    schedule_immediate_kill: false
+  notifications:
+   enabled: false
+   proxy: ""
+   attacks: ""
 
 args:
   logLevel: 5
