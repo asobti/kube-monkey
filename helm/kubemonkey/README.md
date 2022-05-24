@@ -97,10 +97,10 @@ $ helm get manifest my-release
 | Parameter                              | Description                                                                             | Default                          |
 |----------------------------------------|-----------------------------------------------------------------------------------------|----------------------------------|
 | `image.repository`                     | docker image repo                                                                       | ayushsobti/kube-monkey           |
-| `image.tag`                            | docker image tag                                                                        | v0.3.0                           |
+| `image.tag`                            | docker image tag                                                                        | v0.4.1                           |
 | `replicaCount`                         | number of replicas to run                                                               | 1                                |
 | `rbac.enabled`                         | rbac enabled or not                                                                     | true                             |
-| `image.tag.IfNotPresent`               | image pull logic                                                                        | IfNotPresent                     |
+| `image.pullPolicy`                     | image pull logic                                                                        | IfNotPresent                     |
 | `config.dryRun`                        | will not kill pods, only logs behaviour                                                 | true                             |
 | `config.runHour`                       | schedule start time in 24hr format                                                      | 8                                |
 | `config.startHour`                     | pod killing start time  in 24hr format                                                  | 10                               |
