@@ -190,7 +190,7 @@ The message supports the following placeholders:
 * `{$error}`: result's error, if any
 * `{$kubemonkeyid}`: kube-monkey id (set using KUBE_MONKEY_ID env variable otherwise empty)
 
-```json
+```
   message: '{
             "what": "Kube-monkey(${kubemonkeyid}) attack of {$name} in {$namespace}",
             "who": "{$name}",
@@ -202,7 +202,7 @@ The header supports a special placeholder to retrieve the value of an environmen
 This is useful when calling an API that has a protected endpoint.
 A typical scenario will be to pass an API token to the Kube-monkey container, this token is stored in a Kubernetes Secret and you want to pass it via an environment variable.
 
-```json
+```
 headers = ["api-key:{$env:API_TOKEN}", "Content-Type:application/json"]
 ```
 
