@@ -1,6 +1,6 @@
 module kube-monkey
 
-go 1.16
+go 1.18
 
 require (
 	bou.ke/monkey v1.0.2
@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
-	k8s.io/api v0.24.2
-	k8s.io/apimachinery v0.24.2
-	k8s.io/client-go v0.24.2
+	k8s.io/api v0.24.3
+	k8s.io/apimachinery v0.24.3
+	k8s.io/client-go v0.24.3
 )
