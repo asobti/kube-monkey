@@ -16,13 +16,13 @@ To install the chart with the release name `my-release`:
 With Helm v3
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.4.0
+helm install my-release kubemonkey/kube-monkey --version 1.5.0
 ```
 
 With Helm v2
 
 ```bash
-helm install --name my-release kubemonkey/kube-monkey --version 1.4.0
+helm install --name my-release kubemonkey/kube-monkey --version 1.5.0
 ```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
