@@ -281,7 +281,7 @@ func (v *VictimBase) KillNumberForFixedPercentage(clientset kube.Interface, kill
 	}
 
 	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
-	killNum := int(math.Floor(numberOfPodsToKill))
+	killNum := int(math.Round(numberOfPodsToKill))
 
 	return killNum, nil
 }
@@ -305,7 +305,7 @@ func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPer
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	killPercentage := r.Intn(maxPercentage + 1) // + 1 because Intn works with half open interval [0,n) and we want [0,n]
 	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
-	killNum := int(math.Floor(numberOfPodsToKill))
+	killNum := int(math.Round(numberOfPodsToKill))
 
 	return killNum, nil
 }
