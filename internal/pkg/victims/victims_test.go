@@ -258,7 +258,7 @@ func TestDeletePodsFixedPercentage(t *testing.T) {
 			pods: append(
 				generateNPods("running", 1, corev1.PodRunning),
 				generateNPods("pending", 1, corev1.PodPending)...),
-			expectedNum: 0,
+			expectedNum: 1,
 			expectedErr: false,
 		},
 	}
