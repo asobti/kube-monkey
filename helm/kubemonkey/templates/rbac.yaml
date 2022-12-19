@@ -1,4 +1,3 @@
-{{- if .Values.rbac.enabled -}}
 {{- if .Values.serviceAccount }}
 {{- if not .Values.serviceAccount.name }}
 apiVersion: v1
@@ -8,13 +7,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
 {{- end}}
 {{- end}}
-{{- end}}
 
 ---
 
----
-
-{{- if .Values.rbac.enabled }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -54,11 +49,9 @@ rules:
   - "list"
   - "watch"
   - "delete"
-{{- end}}
 
 ---
 
-{{- if .Values.rbac.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -72,4 +65,3 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "kubemonkey.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
-{{- end -}}

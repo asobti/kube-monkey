@@ -9,9 +9,6 @@ serviceAccount:
   # If set, an existing Service Account is used. Else a Service Account is created automatically
   name: ""
 
-rbac:
-  enabled: true
-
 image:
   repository: ayushsobti/kube-monkey
   tag: v0.5.1
