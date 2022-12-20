@@ -12,6 +12,52 @@ metadata:
 
 ---
 
+---
+
+{{- if .Values.rbac.enabled }}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "kubemonkey.fullname" . }}
+rules:
+- apiGroups:
+  - ""
+  - "extensions"
+  - "apps"
+  resources:
+  - daemonsets
+  - deployments
+  - deployments/rollback
+  - deployments/scale
+  - replicasets
+  - replicasets/scale
+  - statefulsets
+  - statefulsets/scale
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: 
+  - ""
+  resources: 
+  - "namespaces"
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - "pods"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "delete"
+{{- end}}
+
+---
+
 {{- if .Values.rbac.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -21,7 +67,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: edit
+  name: {{ template "kubemonkey.fullname" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "kubemonkey.serviceAccountName" . }}
