@@ -52,3 +52,17 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+additionalVolumes: {}
+# - name: log
+#   emptyDir: {}
+
+additionalVolumeMounts: {}
+# - name: log
+#   mountPath: "/var/log"
+
+podSecurityContext: {}
+  # runAsNonRoot: true
+  # runAsUser: 1001
+  # runAsGroup: 1001
+  # fsGroup: 1001
