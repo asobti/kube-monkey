@@ -130,7 +130,7 @@ make container
 ## Configuring
 kube-monkey is configured by environment variables or a toml file placed at `/etc/kube-monkey/config.toml` and expects the configmap to exist before the kube-monkey deployment.
 
-Configuration keys and descriptions can be found in [`config/param/param.go`](https://github.com/asobti/kube-monkey/blob/master/config/param/param.go)
+Configuration keys and descriptions can be found in [`config/param/param.go`](https://github.com/asobti/kube-monkey/blob/master/internal/pkg/config/param/param.go)
 
 #### Example config.toml file
 ```toml
