@@ -43,9 +43,10 @@ func ReportAttack(client Client, result *chaos.Result, time time.Time) bool {
 		errorString = result.Error().Error()
 	}
 	msg := ReplacePlaceholders(receiver.Message, result.Victim().Name(), result.Victim().Kind(), result.Victim().Namespace(), errorString, time, os.Getenv("KUBE_MONKEY_ID"))
-	glog.V(1).Infof("reporting attack for %s %s to %s with message %s\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg)
-	if err := Send(client, receiver.Endpoint, msg, toHeaders(receiver.Headers)); err != nil {
-		glog.Errorf("error reporting attack for %s %s to %s with message %s, error: %v\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg, err)
+	endpoint := replaceEnvVariablePlaceholder(receiver.Endpoint)
+	glog.V(1).Infof("reporting attack for %s %s to %s with message %s\n", result.Victim().Kind(), result.Victim().Name(), endpoint, msg)
+	if err := Send(client, endpoint, msg, toHeaders(receiver.Headers)); err != nil {
+		glog.Errorf("error reporting attack for %s %s to %s with message %s, error: %v\n", result.Victim().Kind(), result.Victim().Name(), endpoint, msg, err)
 		success = false
 	}
 
