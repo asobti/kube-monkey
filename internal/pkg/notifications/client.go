@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -53,12 +52,12 @@ func (c Client) Request(endpoint string, requestBody string, headers map[string]
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		b, _ := ioutil.ReadAll(resp.Body) // try to read response body as well to give user more info why request failed
+		b, _ := io.ReadAll(resp.Body) // try to read response body as well to give user more info why request failed
 		return fmt.Errorf("%s %s returned %d %s, expected 2xx",
 			"POST", endpoint, resp.StatusCode, strings.TrimSuffix(string(b), "\n"))
 	}
 
-	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
+	if _, err = io.Copy(io.Discard, resp.Body); err != nil {
 		return fmt.Errorf("read response body: %s %s: %v", "POST", endpoint, err)
 	}
 	return nil
