@@ -25,7 +25,7 @@ kube-monkey works on an opt-in model and will only schedule terminations for Kub
 Opt-in is done by setting the following labels on a k8s app:
 
 **`kube-monkey/enabled`**: Set to **`"enabled"`** to opt-in to kube-monkey  
-**`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8s app can expect to have a Pod
+**`kube-monkey/mtbf`**: Mean time between failure. Examples are: 1 or 1d (1 day), 4h (4 hours) and 20m (20 minutes). A recommended value would be 2h or 3h so pods get killed at least a couple of times a day.
 killed approximately every third weekday.  
 **`kube-monkey/identifier`**: A unique identifier for the k8s apps. This is used to identify the pods
 that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. The recommendation is to set this value to be the same as the app's name.  
@@ -41,7 +41,7 @@ that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-
 * if `random-max-percent`, provide a number from `0`-`100` to specify the max `%` of pods kube-monkey can kill
 * if `fixed-percent`, provide a number from `0`-`100` to specify the `%` of pods to kill
 
-#### Example of opted-in Deployment killing one pod per purge
+#### Example of opted-in Deployment killing one pod once every two hours.
 
 ```yaml
 ---
@@ -56,7 +56,7 @@ spec:
       labels:
         kube-monkey/enabled: enabled
         kube-monkey/identifier: monkey-victim
-        kube-monkey/mtbf: '2'
+        kube-monkey/mtbf: '2h'
         kube-monkey/kill-mode: "fixed"
         kube-monkey/kill-value: '1'
 [... omitted ...]
@@ -74,7 +74,7 @@ metadata:
   labels:
     kube-monkey/enabled: enabled
     kube-monkey/identifier: monkey-victim
-    kube-monkey/mtbf: '2'
+    kube-monkey/mtbf: '2h'
     kube-monkey/kill-mode: "fixed"
     kube-monkey/kill-value: '1'
 spec:

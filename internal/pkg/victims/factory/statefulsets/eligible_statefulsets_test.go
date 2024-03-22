@@ -15,7 +15,7 @@ func TestEligibleStatefulSets(t *testing.T) {
 		NAME,
 		map[string]string{
 			"kube-monkey/identifier": "1",
-			"kube-monkey/mtbf":       "1",
+			"kube-monkey/mtbf":       "1h",
 		},
 	)
 
@@ -30,7 +30,7 @@ func TestIsEnrolled(t *testing.T) {
 		NAME,
 		map[string]string{
 			config.IdentLabelKey:   "1",
-			config.MtbfLabelKey:    "1",
+			config.MtbfLabelKey:    "1h",
 			config.EnabledLabelKey: config.EnabledLabelValue,
 		},
 	)
@@ -49,7 +49,7 @@ func TestIsNotEnrolled(t *testing.T) {
 		NAME,
 		map[string]string{
 			config.IdentLabelKey:   "1",
-			config.MtbfLabelKey:    "1",
+			config.MtbfLabelKey:    "1h",
 			config.EnabledLabelKey: "x",
 		},
 	)
@@ -66,7 +66,7 @@ func TestIsNotEnrolled(t *testing.T) {
 func TestKillType(t *testing.T) {
 
 	ident := "1"
-	mtbf := "1"
+	mtbf := "1h"
 	killMode := "kill-mode"
 
 	v1stfs := newStatefulSet(
@@ -104,7 +104,7 @@ func TestKillType(t *testing.T) {
 func TestKillValue(t *testing.T) {
 
 	ident := "1"
-	mtbf := "1"
+	mtbf := "1h"
 	killValue := "0"
 
 	v1stfs := newStatefulSet(

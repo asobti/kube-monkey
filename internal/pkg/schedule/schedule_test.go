@@ -87,16 +87,16 @@ func TestStringWithEntries(t *testing.T) {
 
 func TestCalculateKillTimeRandom(t *testing.T) {
 	config.SetDefaults()
-	killtime := CalculateKillTime()
+	killtimes := CalculateKillTimes("1h")
 
 	scheduledTime := func() (success bool) {
-		if killtime.Hour() >= config.StartHour() && killtime.Hour() <= config.EndHour() {
+		if killtimes[0].Hour() >= config.StartHour() && killtimes[0].Hour() <= config.EndHour() {
 			success = true
 		}
 		return
 	}
 
-	assert.Equal(t, killtime.Location(), config.Timezone())
+	assert.Equal(t, killtimes[0].Location(), config.Timezone())
 	assert.Condition(t, scheduledTime)
 
 }
@@ -105,10 +105,10 @@ func TestCalculateKillTimeNow(t *testing.T) {
 	config.SetDefaults()
 	viper.SetDefault(param.DebugEnabled, true)
 	viper.SetDefault(param.DebugScheduleImmediateKill, true)
-	killtime := CalculateKillTime()
+	killtimes := CalculateKillTimes("1h")
 
-	assert.Equal(t, killtime.Location(), config.Timezone())
-	assert.WithinDuration(t, killtime, time.Now(), time.Second*time.Duration(60))
+	assert.Equal(t, killtimes[0].Location(), config.Timezone())
+	assert.WithinDuration(t, killtimes[0], time.Now(), time.Second*time.Duration(60))
 	config.SetDefaults()
 }
 
