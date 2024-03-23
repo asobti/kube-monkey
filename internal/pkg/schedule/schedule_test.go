@@ -111,16 +111,3 @@ func TestCalculateKillTimeNow(t *testing.T) {
 	assert.WithinDuration(t, killtimes[0], time.Now(), time.Second*time.Duration(60))
 	config.SetDefaults()
 }
-
-func TestShouldScheduleChaosNow(t *testing.T) {
-	config.SetDefaults()
-	viper.SetDefault(param.DebugEnabled, true)
-	viper.SetDefault(param.DebugForceShouldKill, true)
-	assert.True(t, ShouldScheduleChaos(100000000000))
-	config.SetDefaults()
-}
-
-func TestShouldScheduleChaosMtbf(t *testing.T) {
-	assert.False(t, ShouldScheduleChaos(100000000000))
-	assert.True(t, ShouldScheduleChaos(1))
-}

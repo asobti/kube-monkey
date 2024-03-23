@@ -81,20 +81,9 @@ func New() (*Schedule, error) {
 	}
 
 	for _, victim := range victims {
-		mtbf := victim.Mtbf()
-		parsed_mtbf, err := calendar.ParseMtbf(mtbf)
-		if err != nil {
-			glog.Errorf("error parsing customized mtbf for %s/%s in namespace %s - %s: %v", victim.Kind(), victim.Name(), victim.Namespace(), mtbf, err)
-			continue
-		}
-		killtimes := CalculateKillTimes(mtbf)
-		one_day, _ := time.ParseDuration("24h")
-		// If the parsed mtbf value is less than one day we want to add the calculated kill times no matter
-		// what and otherwise we use probability to decide if we will schedule the calculated kill time.
-		if parsed_mtbf < one_day || ShouldScheduleChaos(float64(parsed_mtbf / one_day)) {
-			for _, killtime := range killtimes {
-				schedule.Add(chaos.New(killtime, victim))
-			}
+		killtimes := CalculateKillTimes(victim.Mtbf())
+		for _, killtime := range killtimes {
+			schedule.Add(chaos.New(killtime, victim))
 		}
 	}
 
@@ -110,14 +99,4 @@ func CalculateKillTimes(mtbf string) []time.Time {
 		return []time.Time{time.Now().In(loc).Add(time.Duration(secOffset) * time.Second)}
 	}
 	return calendar.RandomTimeInRange(mtbf, config.StartHour(), config.EndHour(), loc)
-}
-
-func ShouldScheduleChaos(mtbf float64) bool {
-	if config.DebugEnabled() && config.DebugForceShouldKill() {
-		return true
-	}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	probability := 1 / mtbf
-	return probability > r.Float64()
 }

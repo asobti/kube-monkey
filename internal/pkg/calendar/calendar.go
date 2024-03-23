@@ -89,54 +89,32 @@ func RandomTimeInRange(mtbf string, startHour int, endHour int, loc *time.Locati
 		return []time.Time{time.Now().Add(time.Duration(24*365*10) * time.Hour)}
 	}
 
-	one_day, _ := time.ParseDuration("24h")
+	startTime := time.Now().In(loc)
 
-	// If the mtbf is bigger or equal to one day we will calculate one
-	// random time in the range. If not we will calculate several random
-	// times.
-	if tmptimeDuration >= one_day {
-		// calculate the number of minutes in the range
-		minutesInRange := (endHour - startHour) * 60
-
-		// calculate a random minute-offset in range [0, minutesInRange)
+	for {
+		//time range should be twice of the input mean time between failure value
+		timeDuration := tmptimeDuration * 2
+		//compute random offset time
+		mtbfEndTime := startTime.Add(timeDuration)
+		subSecond := int64(mtbfEndTime.Sub(startTime) / time.Second)
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		randMinuteOffset := r.Intn(minutesInRange)
-		offsetDuration := time.Duration(randMinuteOffset) * time.Minute
+		randSecondOffset := r.Int63n(subSecond)
+		randCalTime := startTime.Add(time.Duration(randSecondOffset) * time.Second)
 
-		// Add the minute offset to the start of the range to get a random
-		// time within the range
-		year, month, date := time.Now().Date()
-		rangeStart := time.Date(year, month, date, startHour, 0, 0, 0, loc)
-		times = append(times, rangeStart.Add(offsetDuration))
-		return times
-	} else {
-		startTime := time.Now().In(loc)
-
-		for {
-			//time range should be twice of the input mean time between failure value
-			timeDuration := tmptimeDuration * 2
-			//compute random offset time
-			mtbfEndTime := startTime.Add(timeDuration)
-			subSecond := int64(mtbfEndTime.Sub(startTime) / time.Second)
-			r := rand.New(rand.NewSource(time.Now().UnixNano()))
-			randSecondOffset := r.Int63n(subSecond)
-			randCalTime := startTime.Add(time.Duration(randSecondOffset) * time.Second)
-
-			// compute randSecondOffset between start and end hour
-			year, month, date := startTime.Date()
-			todayEndTime := time.Date(year, month, date, endHour, 0, 0, 0, loc)
-			todayStartTime := time.Date(year, month, date, startHour, 0, 0, 0, loc)
-			if startTime.Before(todayStartTime) { // now is earlier then start hour, only for test pass, normal process won't run into this condition
-				return []time.Time{todayStartTime}
-			}
-			if randCalTime.Before(todayEndTime) { // time offset before today's endHour
-				glog.V(1).Infof("RandomTimeInRange calculate time %s", randCalTime)
-				times = append(times, randCalTime)
-				// Move start time up to the calculated random time
-				startTime = randCalTime
-			} else {
-				return times
-			}
+		// compute randSecondOffset between start and end hour
+		year, month, date := startTime.Date()
+		todayEndTime := time.Date(year, month, date, endHour, 0, 0, 0, loc)
+		todayStartTime := time.Date(year, month, date, startHour, 0, 0, 0, loc)
+		if startTime.Before(todayStartTime) { // now is earlier then start hour, only for test pass, normal process won't run into this condition
+			return []time.Time{todayStartTime}
+		}
+		if randCalTime.Before(todayEndTime) { // time offset before today's endHour
+			glog.V(1).Infof("RandomTimeInRange calculate time %s", randCalTime)
+			times = append(times, randCalTime)
+			// Move start time up to the calculated random time
+			startTime = randCalTime
+		} else {
+			return times
 		}
 	}
 }
