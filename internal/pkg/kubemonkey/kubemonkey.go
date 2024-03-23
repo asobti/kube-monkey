@@ -44,10 +44,6 @@ func Run() error {
 	}
 
 	for {
-		// Calculate duration to sleep before next run
-		sleepDuration := durationToNextRun(config.RunHour(), config.Timezone())
-		time.Sleep(sleepDuration)
-
 		schedule, err := schedule.New()
 		if err != nil {
 			glog.Fatal(err.Error())
@@ -58,6 +54,10 @@ func Run() error {
 		}
 		fmt.Println(schedule)
 		ScheduleTerminations(schedule.Entries(), notificationsClient)
+
+		// Calculate duration to sleep before next run
+		sleepDuration := durationToNextRun(config.RunHour(), config.Timezone())
+		time.Sleep(sleepDuration)
 	}
 }
 
