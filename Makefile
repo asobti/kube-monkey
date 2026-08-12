@@ -1,16 +1,20 @@
 all: test
 
-ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
+# Overridable so cross-compilation (e.g. multi-arch container builds) can target
+# another platform. GOARM is inherited from the environment when set.
+GOOS ?= linux
+GOARCH ?= amd64
+CGO_ENABLED ?= 0
+
+ENVVAR = GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED)
 GOLANGCI_INSTALLED := $(shell which bin/golangci-lint)
 
 
 .PHONY: all build container clean gofmt lint test
 
-# linting is temporarily disabled
-# see https://github.com/asobti/kube-monkey/pull/123
 lint:
 ifdef GOLANGCI_INSTALLED
-	bin/golangci-lint run -E golint -E goimports
+	bin/golangci-lint run -E revive -E goimports
 else
 	@echo Warning golangci-lint not installed. Skipping linting
 	@echo Installation instructions: https://github.com/golangci/golangci-lint#ci-installation
@@ -37,7 +41,7 @@ gofmt:
 
 # Same as gofmt, but also orders imports
 goimports:
-	goimports -s -w .
+	goimports -w .
 
 clean:
 	rm -f kube-monkey
