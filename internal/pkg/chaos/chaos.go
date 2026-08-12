@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"kube-monkey/internal/pkg/config"
 	"kube-monkey/internal/pkg/kubernetes"
 	"kube-monkey/internal/pkg/victims"
@@ -102,7 +100,7 @@ func (c *Chaos) verifyExecution(clientset kube.Interface) error {
 func (c *Chaos) terminate(clientset kube.Interface) error {
 	killType, err := c.Victim().KillType(clientset)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to check KillType label for %s %s", c.Victim().Kind(), c.Victim().Name())
+		return fmt.Errorf("Failed to check KillType label for %s %s: %w", c.Victim().Kind(), c.Victim().Name(), err)
 	}
 
 	killValue, err := c.getKillValue(clientset)
@@ -142,7 +140,7 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 func (c *Chaos) getKillValue(clientset kube.Interface) (int, error) {
 	killValue, err := c.Victim().KillValue(clientset)
 	if err != nil {
-		return 0, errors.Wrapf(err, "Failed to check KillValue label for %s %s", c.Victim().Kind(), c.Victim().Name())
+		return 0, fmt.Errorf("Failed to check KillValue label for %s %s: %w", c.Victim().Kind(), c.Victim().Name(), err)
 	}
 
 	return killValue, nil
