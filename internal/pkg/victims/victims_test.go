@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -59,7 +60,7 @@ func generateNRunningPods(namePrefix string, n int) []runtime.Object {
 }
 
 func newVictimBase() *VictimBase {
-	return New(KIND, NAME, NAMESPACE, IDENTIFIER, 1)
+	return New(KIND, NAME, NAMESPACE, IDENTIFIER, 24*time.Hour)
 }
 
 func getPodList(client kube.Interface) *corev1.PodList {
@@ -75,7 +76,7 @@ func TestVictimBaseTemplateGetters(t *testing.T) {
 	assert.Equal(t, "name", v.Name())
 	assert.Equal(t, NAMESPACE, v.Namespace())
 	assert.Equal(t, IDENTIFIER, v.Identifier())
-	assert.Equal(t, 1, v.Mtbf())
+	assert.Equal(t, 24*time.Hour, v.Mtbf())
 }
 
 func TestRunningPods(t *testing.T) {

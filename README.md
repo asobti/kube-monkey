@@ -25,8 +25,11 @@ kube-monkey works on an opt-in model and will only schedule terminations for Kub
 Opt-in is done by setting the following labels on a k8s app:
 
 **`kube-monkey/enabled`**: Set to **`"enabled"`** to opt-in to kube-monkey  
-**`kube-monkey/mtbf`**: Mean time between failure (in days). For example, if set to **`"3"`**, the k8s app can expect to have a Pod
-killed approximately every third weekday.  
+**`kube-monkey/mtbf`**: Mean time between failure, as a whole number and a unit: `d` for days, `h` for hours or `m` for minutes. For example,
+if set to **`"3d"`**, the k8s app can expect to have a Pod killed approximately every third weekday, and if set to **`"2h"`**, it can expect
+to lose a Pod every two hours. A value without a unit is read as days, so **`"3"`** and **`"3d"`** mean the same thing. The shortest mean time
+between failure is one minute. Note that all terminations happen inside the daily run window (see `start_hour` and `end_hour`), so an mtbf
+shorter than a day packs that day's terminations into that window.  
 **`kube-monkey/identifier`**: A unique identifier for the k8s apps. This is used to identify the pods
 that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. The recommendation is to set this value to be the same as the app's name.  
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
@@ -102,8 +105,9 @@ host="https://your-apiserver-url.com:apiport"
 #### Scheduling time
 Scheduling happens once a day on Weekdays - this is when a schedule for terminations for the current day is generated. During scheduling, kube-monkey will:  
 1. Generate a list of eligible k8s apps (k8s apps that have opted-in and are not blacklisted, if specified, and are whitelisted, if specified)
-2. For each eligible k8s app, flip a biased coin (bias determined by `kube-monkey/mtbf`) to determine if a pod for that k8s app should be killed today
-3. For each victim, calculate a random time when a pod will be killed
+2. For each eligible k8s app, work out how many pods to kill today from `kube-monkey/mtbf`. An app is killed 24h/mtbf times a day, so an mtbf
+   of a day or more gives at most one termination and a shorter one gives several
+3. For each termination, calculate a random time when a pod will be killed
 
 #### Termination time
 This is the randomly generated time during the day when a victim k8s app will have a pod killed.

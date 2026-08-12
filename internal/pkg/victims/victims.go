@@ -32,7 +32,7 @@ type VictimBaseTemplate interface {
 	Name() string
 	Namespace() string
 	Identifier() string
-	Mtbf() int
+	Mtbf() time.Duration
 
 	VictimAPICalls
 }
@@ -66,12 +66,12 @@ type VictimBase struct {
 	name       string
 	namespace  string
 	identifier string
-	mtbf       int
+	mtbf       time.Duration
 
 	VictimBaseTemplate
 }
 
-func New(kind, name, namespace, identifier string, mtbf int) *VictimBase {
+func New(kind, name, namespace, identifier string, mtbf time.Duration) *VictimBase {
 	return &VictimBase{kind: kind, name: name, namespace: namespace, identifier: identifier, mtbf: mtbf}
 }
 
@@ -91,7 +91,7 @@ func (v *VictimBase) Identifier() string {
 	return v.identifier
 }
 
-func (v *VictimBase) Mtbf() int {
+func (v *VictimBase) Mtbf() time.Duration {
 	return v.mtbf
 }
 
