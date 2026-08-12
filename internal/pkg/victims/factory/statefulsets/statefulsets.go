@@ -2,8 +2,9 @@ package statefulsets
 
 import (
 	"fmt"
-	"strconv"
+	"time"
 
+	"kube-monkey/internal/pkg/calendar"
 	"kube-monkey/internal/pkg/config"
 	"kube-monkey/internal/pkg/victims"
 
@@ -44,20 +45,16 @@ func identifier(kubekind *corev1.StatefulSet) (string, error) {
 
 // Read the mean-time-between-failures value defined by the StatefulSet
 // in the label defined by config.MtbfLabelKey
-func meanTimeBetweenFailures(kubekind *corev1.StatefulSet) (int, error) {
+func meanTimeBetweenFailures(kubekind *corev1.StatefulSet) (time.Duration, error) {
 	mtbf, ok := kubekind.Labels[config.MtbfLabelKey]
 	if !ok {
-		return -1, fmt.Errorf("%T %s does not have %s label", kubekind, kubekind.Name, config.MtbfLabelKey)
+		return 0, fmt.Errorf("%T %s does not have %s label", kubekind, kubekind.Name, config.MtbfLabelKey)
 	}
 
-	mtbfInt, err := strconv.Atoi(mtbf)
+	duration, err := calendar.ParseMtbf(mtbf)
 	if err != nil {
-		return -1, err
+		return 0, fmt.Errorf("%T %s has an %s", kubekind, kubekind.Name, err)
 	}
 
-	if !(mtbfInt > 0) {
-		return -1, fmt.Errorf("Invalid value for label %s: %d", config.MtbfLabelKey, mtbfInt)
-	}
-
-	return mtbfInt, nil
+	return duration, nil
 }

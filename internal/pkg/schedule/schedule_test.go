@@ -85,42 +85,56 @@ func TestStringWithEntries(t *testing.T) {
 	assert.Equal(t, strings.Join(schedString, "\n"), s.String())
 }
 
-func TestCalculateKillTimeRandom(t *testing.T) {
-	config.SetDefaults()
-	killtime := CalculateKillTime()
-
-	scheduledTime := func() (success bool) {
-		if killtime.Hour() >= config.StartHour() && killtime.Hour() <= config.EndHour() {
-			success = true
-		}
-		return
-	}
-
-	assert.Equal(t, killtime.Location(), config.Timezone())
-	assert.Condition(t, scheduledTime)
-
+// wholeDayRange makes the kill range cover the rest of the day, so tests do not
+// depend on the time of day they run at
+func wholeDayRange() {
+	viper.SetDefault(param.StartHour, 0)
+	viper.SetDefault(param.EndHour, 24)
 }
 
-func TestCalculateKillTimeNow(t *testing.T) {
+func TestCalculateKillTimesRandom(t *testing.T) {
+	config.SetDefaults()
+	wholeDayRange()
+	// One kill a minute on average, so there is always more than one left today
+	killtimes := CalculateKillTimes(time.Minute)
+
+	assert.NotEmpty(t, killtimes)
+	for _, killtime := range killtimes {
+		assert.Equal(t, config.Timezone(), killtime.Location())
+		assert.True(t, killtime.After(time.Now().Add(-time.Second)))
+	}
+	config.SetDefaults()
+}
+
+func TestCalculateKillTimesForLongMtbf(t *testing.T) {
+	config.SetDefaults()
+	wholeDayRange()
+	// A victim that dies once every two centuries is not expected to die today
+	assert.Empty(t, CalculateKillTimes(time.Duration(200*365)*24*time.Hour))
+	config.SetDefaults()
+}
+
+func TestCalculateKillTimesNow(t *testing.T) {
 	config.SetDefaults()
 	viper.SetDefault(param.DebugEnabled, true)
 	viper.SetDefault(param.DebugScheduleImmediateKill, true)
-	killtime := CalculateKillTime()
+	killtimes := CalculateKillTimes(24 * time.Hour)
 
-	assert.Equal(t, killtime.Location(), config.Timezone())
-	assert.WithinDuration(t, killtime, time.Now(), time.Second*time.Duration(60))
+	assert.Len(t, killtimes, 1)
+	assert.Equal(t, config.Timezone(), killtimes[0].Location())
+	assert.WithinDuration(t, killtimes[0], time.Now(), time.Second*time.Duration(60))
 	config.SetDefaults()
 }
 
-func TestShouldScheduleChaosNow(t *testing.T) {
+func TestCalculateKillTimesForced(t *testing.T) {
 	config.SetDefaults()
+	wholeDayRange()
 	viper.SetDefault(param.DebugEnabled, true)
 	viper.SetDefault(param.DebugForceShouldKill, true)
-	assert.True(t, ShouldScheduleChaos(100000000000))
-	config.SetDefaults()
-}
+	// The mtbf asks for no kill today, but the debug flag forces one anyway
+	killtimes := CalculateKillTimes(time.Duration(200*365) * 24 * time.Hour)
 
-func TestShouldScheduleChaosMtbf(t *testing.T) {
-	assert.False(t, ShouldScheduleChaos(100000000000))
-	assert.True(t, ShouldScheduleChaos(1))
+	assert.Len(t, killtimes, 1)
+	assert.True(t, killtimes[0].After(time.Now().Add(-time.Second)))
+	config.SetDefaults()
 }

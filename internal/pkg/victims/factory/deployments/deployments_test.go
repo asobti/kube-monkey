@@ -2,6 +2,7 @@ package deployments
 
 import (
 	"testing"
+	"time"
 
 	"kube-monkey/internal/pkg/config"
 
@@ -43,7 +44,21 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, NAME, depl.Name())
 	assert.Equal(t, NAMESPACE, depl.Namespace())
 	assert.Equal(t, IDENTIFIER, depl.Identifier())
-	assert.Equal(t, 1, depl.Mtbf())
+	assert.Equal(t, 24*time.Hour, depl.Mtbf())
+}
+
+func TestNewWithMtbfInHours(t *testing.T) {
+	v1depl := newDeployment(
+		NAME,
+		map[string]string{
+			config.IdentLabelKey: IDENTIFIER,
+			config.MtbfLabelKey:  "2h",
+		},
+	)
+	depl, err := New(&v1depl)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 2*time.Hour, depl.Mtbf())
 }
 
 func TestInvalidIdentifier(t *testing.T) {
@@ -78,7 +93,7 @@ func TestInvalidMtbf(t *testing.T) {
 	)
 	_, err = New(&v1depl)
 
-	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label can't be converted a Int type")
+	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label is not a valid mtbf")
 
 	v1depl = newDeployment(
 		NAME,
@@ -89,5 +104,5 @@ func TestInvalidMtbf(t *testing.T) {
 	)
 	_, err = New(&v1depl)
 
-	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label is lower than 1")
+	assert.Errorf(t, err, "Expected an error if "+config.MtbfLabelKey+" label is not greater than zero")
 }
