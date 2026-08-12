@@ -89,7 +89,7 @@ $ helm get manifest my-release
 | Parameter                              | Description                                                                             | Default                          |
 |----------------------------------------|-----------------------------------------------------------------------------------------|----------------------------------|
 | `image.repository`                     | docker image repo                                                                       | ayushsobti/kube-monkey           |
-| `image.tag`                            | docker image tag                                                                        | v0.5.2                           |
+| `image.tag`                            | docker image tag                                                                        | v0.5.4                           |
 | `replicaCount`                         | number of replicas to run                                                               | 1                                |
 | `image.pullPolicy`                     | image pull logic                                                                        | IfNotPresent                     |
 | `config.dryRun`                        | will not kill pods, only logs behaviour                                                 | true                             |
@@ -119,7 +119,7 @@ example of a modified values.yaml (only important parts are displayed)
 replicaCount: 1
 image:
   repository: ayushsobti/kube-monkey
-  tag: v0.5.2
+  tag: v0.5.4
   pullPolicy: IfNotPresent
 config:
   dryRun: false
