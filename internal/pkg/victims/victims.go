@@ -10,7 +10,6 @@ import (
 	"kube-monkey/internal/pkg/config"
 
 	"github.com/golang/glog"
-	"github.com/pkg/errors"
 
 	kube "k8s.io/client-go/kubernetes"
 
@@ -314,7 +313,7 @@ func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPer
 func (v *VictimBase) numberOfRunningPods(clientset kube.Interface) (int, error) {
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
-		return 0, errors.Wrapf(err, "Failed to get running pods for victim %s %s", v.kind, v.name)
+		return 0, fmt.Errorf("Failed to get running pods for victim %s %s: %w", v.kind, v.name, err)
 	}
 
 	return len(pods), nil

@@ -13,16 +13,8 @@ helm repo update
 
 To install the chart with the release name `my-release`:
 
-With Helm v3
-
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.5.0
-```
-
-With Helm v2
-
-```bash
-helm install --name my-release kubemonkey/kube-monkey --version 1.5.0
+helm install my-release kubemonkey/kube-monkey --version 1.6.0
 ```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
@@ -43,14 +35,14 @@ By default `Kube-Monkey` runs in dry-run mode so it doesn't actually kill anythi
 If you're confident you want to use it in real run `helm` with:
 
 ```console
-$ helm install --name my-release kubemonkey --set config.dryRun=false
+$ helm install my-release kubemonkey --set config.dryRun=false
 ```
 
 By default `Kube-Monkey` runs in without any white listed namespace assigned so it doesn't actually kill anything.
 If you're confident you want to enable it in real, run `helm` with:
 
 ```console
-$ helm install --name my-release kubemonkey \
+$ helm install my-release kubemonkey \
                --set config.dryRun=false \
                --set config.whitelistedNamespaces="{namespace1,namespace2,namespace3}"
 ```
@@ -60,7 +52,7 @@ $ helm install --name my-release kubemonkey \
 If you want to see how kube-monkey kills pods immediately in debug mode.
 
 ```console
-$ helm install --name my-release kubemonkey \
+$ helm install my-release kubemonkey \
                --set config.dryRun=false \
                --set config.whitelistedNamespaces="{namespace1,namespace2,namespace3}"
                --set config.debug.enabled=true \
@@ -69,7 +61,7 @@ $ helm install --name my-release kubemonkey \
 If you want to change the time kube-monkey wakes up and start and end killing pods.
 
 ```console
-$ helm install --name my-release kubemonkey \
+$ helm install my-release kubemonkey \
                --set config.dryRun=false \
                --set config.whitelistedNamespaces="{namespace1,namespace2,namespace3}"
                --set config.runHour=10 \
@@ -79,7 +71,7 @@ $ helm install --name my-release kubemonkey \
 If you want to enable attacks notifications.
 
 ```console
-$ helm install --name my-release kubemonkey \
+$ helm install my-release kubemonkey \
                --set config.dryRun=false \
                --set config.whitelistedNamespaces="namespace1\"\,\"namespace2\"\,\"namespace3" \
                --set config.notifications.enabled=true \
@@ -97,7 +89,7 @@ $ helm get manifest my-release
 | Parameter                              | Description                                                                             | Default                          |
 |----------------------------------------|-----------------------------------------------------------------------------------------|----------------------------------|
 | `image.repository`                     | docker image repo                                                                       | ayushsobti/kube-monkey           |
-| `image.tag`                            | docker image tag                                                                        | v0.4.1                           |
+| `image.tag`                            | docker image tag                                                                        | v0.5.4                           |
 | `replicaCount`                         | number of replicas to run                                                               | 1                                |
 | `image.pullPolicy`                     | image pull logic                                                                        | IfNotPresent                     |
 | `config.dryRun`                        | will not kill pods, only logs behaviour                                                 | true                             |
@@ -118,7 +110,7 @@ $ helm get manifest my-release
 after all you can simply edit values.yaml with your preferred configs and run as below
 
 ```console
-$ helm install --name my-release kubemonkey --namespace=kube-monkey
+$ helm install my-release kubemonkey --namespace=kube-monkey
 ```
 example of a modified values.yaml (only important parts are displayed)
 
@@ -127,7 +119,7 @@ example of a modified values.yaml (only important parts are displayed)
 replicaCount: 1
 image:
   repository: ayushsobti/kube-monkey
-  tag: v0.4.1
+  tag: v0.5.4
   pullPolicy: IfNotPresent
 config:
   dryRun: false
