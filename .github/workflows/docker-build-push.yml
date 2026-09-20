@@ -1,14 +1,21 @@
-name: Publish Docker image
+name: Publish release
 
 on:
   push:
     tags:
       - '*'
+  # Lets a chart-only fix ship against an app version that is already released.
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   publish-docker:
 
+    name: Publish Docker image
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
     steps:
       - name: Check out code
@@ -45,3 +52,57 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  publish-helm:
+
+    name: Publish Helm chart
+    runs-on: ubuntu-latest
+    # The chart pins the image the job above builds, so it must wait for it.
+    # A chart-only run skips that job, so a skipped result is fine here.
+    needs: publish-docker
+    if: always() && needs.publish-docker.result != 'failure' && needs.publish-docker.result != 'cancelled'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out code
+        # Full history so the chart-only path can look for the release tag.
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check out chart repo
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      - name: Verify release
+        id: verify
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: ./hack/verify-release.sh gh-pages/charts/repo
+
+      - name: Package chart
+        run: |
+          set -euo pipefail
+          # Index a staging dir holding only the new chart, then merge the
+          # published index into it. Indexing the published dir directly would
+          # regenerate every entry and churn all their timestamps.
+          stage=$(mktemp -d)
+          helm package helm/kubemonkey -d "$stage"
+          helm repo index "$stage" --merge gh-pages/charts/repo/index.yaml
+          cp "$stage"/*.tgz "$stage"/index.yaml gh-pages/charts/repo/
+
+      - name: Publish chart
+        working-directory: gh-pages
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add charts/repo
+          git commit -m "helm chart ${{ steps.verify.outputs.chart_version }}"
+          git push

@@ -25,3 +25,17 @@ jobs:
 
     - name: Build
       run: make test
+
+  chart:
+    name: Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v5
+
+    # Catches a broken or stale chart here rather than when the release runs.
+    - name: Verify chart
+      run: ./hack/verify-release.sh --pre-release
