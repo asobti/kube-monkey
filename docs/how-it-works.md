@@ -15,6 +15,17 @@ terminations for the current day is generated. During scheduling, kube-monkey wi
    termination, and a shorter one gives several.
 3. For each termination, calculate a random time during the day when a pod will be killed.
 
+## Why nothing dies at run_hour
+
+Scheduling only writes down the day's plan. The plan goes to the log, and to your
+notification receiver if `notifications.reportSchedule` is on. The earliest a pod can
+actually die is `start_hour`, which is why kube-monkey refuses to start unless `run_hour`
+is the earlier of the two.
+
+The gap between the two is your chance to read the plan and pull anything you do not want
+killed today, so leave enough of it to be useful. The default `run_hour = 8` with
+`start_hour = 10` gives you two hours.
+
 ## Termination time
 
 This is the randomly generated moment when a victim app has a pod killed. At termination

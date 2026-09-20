@@ -91,7 +91,7 @@ Once you trust it, drop debug mode and pick the hours that suit the people on ca
 ```toml
 [kubemonkey]
 dry_run = false
-run_hour = 8      # Build the day's schedule at 8am
+run_hour = 8      # Build the day's schedule at 8am. Nothing dies yet
 start_hour = 10   # No terminations before 10am
 end_hour = 16     # No terminations after 4pm
 time_zone = "Europe/Lisbon"
