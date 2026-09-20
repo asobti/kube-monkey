@@ -25,7 +25,7 @@ the reasoning.
 Pin the chart version if you want a repeatable install:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.9.2
+helm install my-release kubemonkey/kube-monkey --version 1.10.0
 ```
 
 ## Uninstall
@@ -98,6 +98,8 @@ helm get manifest my-release
 | `config.blacklistedNamespaces` | pods in this namespace will not be killed | `kube-system` |
 | `config.timeZone` | time zone in tzdata format | `America/New_York` |
 | `config.debug.enabled` | debug mode, needed to see debugging behaviour | `false` |
+| `config.debug.schedule_delay` | seconds to wait before each scheduling run | `30` |
+| `config.debug.force_should_kill` | schedule a termination for every eligible app | `false` |
 | `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time | `false` |
 | `config.notifications.enabled` | enables reporting of attacks to an HTTP endpoint | `false` |
 | `config.notifications.proxy` | notifications proxy URL | |

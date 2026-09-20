@@ -14,7 +14,7 @@ helm repo update
 To install the chart with the release name `my-release`:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.9.2
+helm install my-release kubemonkey/kube-monkey --version 1.10.0
 ```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
@@ -109,6 +109,8 @@ $ helm get manifest my-release
 | `config.blacklistedNamespaces`         | pods in this namespace will not be killed                                               | kube-system                      |
 | `config.timeZone`                      | time zone in DZ format                                                                  | America/New_York                 |
 | `config.debug.enabled`                 | debug mode,need to be enabled to see debuging behaviour                                 | false                            |
+| `config.debug.schedule_delay`          | seconds to wait before each scheduling run                                              | 30                               |
+| `config.debug.force_should_kill`       | schedule a termination for every eligible app                                           | false                            |
 | `config.debug.schedule_immediate_kill` | immediate pod kill matching other rules apart from time                                 | false                            |
 | `config.notifications.enabled`         | enables reporting of attacks to an HTTP endpoint                                        | false                            |
 | `config.notifications.proxy`           | notifications proxy URL                                                                 |                                  |
