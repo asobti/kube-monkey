@@ -1066,7 +1066,7 @@ whitelisted namespaces. It kills nothing until you tell it to.</p>
 See <a href="../getting-started/#kubernetes-compatibility">Kubernetes compatibility</a> for the range and
 the reasoning.</p>
 <p>Pin the chart version if you want a repeatable install:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>helm<span class="w"> </span>install<span class="w"> </span>my-release<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.9.2
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>helm<span class="w"> </span>install<span class="w"> </span>my-release<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.10.0
 </code></pre></div>
 <h2 id="uninstall">Uninstall<a class="headerlink" href="#uninstall" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>delete<span class="w"> </span>my-release
@@ -1174,6 +1174,16 @@ are confident, turn it off:</p>
 <tr>
 <td><code>config.debug.enabled</code></td>
 <td>debug mode, needed to see debugging behaviour</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>config.debug.schedule_delay</code></td>
+<td>seconds to wait before each scheduling run</td>
+<td><code>30</code></td>
+</tr>
+<tr>
+<td><code>config.debug.force_should_kill</code></td>
+<td>schedule a termination for every eligible app</td>
 <td><code>false</code></td>
 </tr>
 <tr>

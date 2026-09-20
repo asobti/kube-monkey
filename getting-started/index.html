@@ -1148,34 +1148,40 @@ namespace. If you have narrowed the whitelist, your app's namespace has to be on
 <p>See <a href="../configuration/#namespace-lists">Configuration</a> for how the two lists interact.</p>
 <h2 id="4-watch-it-work">4. Watch it work<a class="headerlink" href="#4-watch-it-work" title="Permanent link">&para;</a></h2>
 <p>Terminations normally happen at a random moment inside the daily window, which is not much
-use when you are trying to confirm the install. Debug mode ignores the window and kills
-every 60 seconds:</p>
+use when you are trying to confirm the install. Debug mode ignores the window and kills on a
+short repeating cycle:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span>kube-monkey<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--namespace<span class="w"> </span>kube-system<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--set<span class="w"> </span>config.debug.enabled<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--set<span class="w"> </span>config.debug.schedule_immediate_kill<span class="o">=</span><span class="nb">true</span>
 </code></pre></div>
+<p>Each round waits <code>config.debug.schedule_delay</code> seconds, builds a schedule, then kills each
+victim at a random point in the next 60 seconds. Raise the delay if you want longer between
+rounds, for example to give pods time to come back:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span>kube-monkey<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--namespace<span class="w"> </span>kube-system<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--set<span class="w"> </span>config.debug.schedule_delay<span class="o">=</span><span class="m">300</span>
+</code></pre></div>
 <p>Follow the logs:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>deployment.apps/kube-monkey<span class="w"> </span>--namespace<span class="w"> </span>kube-system
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>deployment.apps/kube-monkey<span class="w"> </span>--namespace<span class="w"> </span>kube-system
 </code></pre></div>
 <p>With <code>dryRun</code> still on you will see the terminations it intends to carry out. Turn the
 handle when you believe it:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span>kube-monkey<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--namespace<span class="w"> </span>kube-system<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--set<span class="w"> </span>config.dryRun<span class="o">=</span><span class="nb">false</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span>kube-monkey<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--namespace<span class="w"> </span>kube-system<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--set<span class="w"> </span>config.dryRun<span class="o">=</span><span class="nb">false</span>
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Turn debug back off</p>
-<p>Debug mode attacks every 60 seconds and ignores <code>start_hour</code> and <code>end_hour</code>. It is a
-tool for the first ten minutes, not a setting to leave on.</p>
+<p>Debug mode attacks in a loop and ignores <code>start_hour</code> and <code>end_hour</code>. It is a tool for
+the first ten minutes, not a setting to leave on.</p>
 </div>
 <h2 id="5-move-to-a-real-schedule">5. Move to a real schedule<a class="headerlink" href="#5-move-to-a-real-schedule" title="Permanent link">&para;</a></h2>
 <p>Once you trust it, drop debug mode and pick the hours that suit the people on call:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[kubemonkey]</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">dry_run</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">run_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"mon"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tue"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wed"</span><span class="p">,</span><span class="w"> </span><span class="s2">"thu"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fri"</span><span class="p">]</span><span class="w">  </span><span class="c1"># Weekdays only</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">run_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="w">      </span><span class="c1"># Build the day's schedule at 8am. Nothing dies yet</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">start_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w">   </span><span class="c1"># No terminations before 10am</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">end_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="w">     </span><span class="c1"># No terminations after 4pm</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">time_zone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Europe/Lisbon"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[kubemonkey]</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">dry_run</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">run_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"mon"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tue"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wed"</span><span class="p">,</span><span class="w"> </span><span class="s2">"thu"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fri"</span><span class="p">]</span><span class="w">  </span><span class="c1"># Weekdays only</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">run_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="w">      </span><span class="c1"># Build the day's schedule at 8am. Nothing dies yet</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">start_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w">   </span><span class="c1"># No terminations before 10am</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">end_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="w">     </span><span class="c1"># No terminations after 4pm</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">time_zone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Europe/Lisbon"</span>
 </code></pre></div>
 <h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
 <ul>

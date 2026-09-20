@@ -1307,7 +1307,7 @@ example because the certificate does not carry the right SAN. Two cases come up 
 <td><code>debug.schedule_delay</code></td>
 <td>int</td>
 <td><code>30</code></td>
-<td>Seconds after startup before scheduling runs. Lower it to see a schedule sooner</td>
+<td>Seconds to wait before each scheduling run. Raise it for longer between rounds, lower it to see a schedule sooner</td>
 </tr>
 <tr>
 <td><code>debug.force_should_kill</code></td>
@@ -1329,8 +1329,10 @@ example because the certificate does not carry the right SAN. Two cases come up 
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>With <code>schedule_immediate_kill</code> on, kube-monkey attacks every 60 seconds and ignores the
-hours you configured.</p>
+<p>With <code>schedule_immediate_kill</code> on, kube-monkey ignores the hours you configured and
+attacks in a loop: it waits <code>schedule_delay</code> seconds, builds a schedule, then kills each
+victim at a random point in the next 60 seconds. That 60 second spread is fixed, so
+<code>schedule_delay</code> is the knob for longer gaps between rounds.</p>
 </div>
 <h2 id="other-sections">Other sections<a class="headerlink" href="#other-sections" title="Permanent link">&para;</a></h2>
 <ul>
