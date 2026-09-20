@@ -155,21 +155,44 @@ func IsBlacklistedNamespace(namespace string) bool {
 		return false
 	}
 
-	for _, pattern := range BlacklistedNamespaces().UnsortedList() {
-		matched, err := path.Match(pattern, namespace)
+	matched, invalid := matchesNamespace(BlacklistedNamespaces().UnsortedList(), namespace)
+
+	// A pattern that does not parse cannot be shown to leave the namespace
+	// alone, so block it rather than guess
+	return matched || invalid
+}
+
+// IsWhitelistedNamespace reports whether a namespace is covered by the
+// whitelist. Entries are shell-style patterns, in the same form the blacklist
+// takes. An empty whitelist entry means every namespace.
+func IsWhitelistedNamespace(namespace string) bool {
+	if !WhitelistEnabled() {
+		return true
+	}
+
+	// A pattern that does not parse never grants access
+	matched, _ := matchesNamespace(WhitelistedNamespaces().UnsortedList(), namespace)
+	return matched
+}
+
+// matchesNamespace reports whether the namespace matches any of the patterns,
+// and separately whether any pattern was malformed. Patterns are checked when
+// the config loads, so a malformed one means validation was skipped, and each
+// caller picks the side it is safe to fail on.
+func matchesNamespace(patterns []string, namespace string) (matched bool, invalid bool) {
+	for _, pattern := range patterns {
+		ok, err := path.Match(pattern, namespace)
 		if err != nil {
-			// Patterns are checked when the config loads, so a bad one here
-			// means validation was skipped. Blocking nothing is the unsafe
-			// reading, so treat it as a match
-			glog.Warningf("Treating namespace %s as blacklisted because pattern %q is invalid: %v", namespace, pattern, err)
-			return true
+			glog.Warningf("Ignoring namespace pattern %q because it is invalid: %v", pattern, err)
+			invalid = true
+			continue
 		}
-		if matched {
-			return true
+		if ok {
+			return true, invalid
 		}
 	}
 
-	return false
+	return false, invalid
 }
 
 func WhitelistedNamespaces() sets.String {

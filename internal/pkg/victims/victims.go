@@ -228,11 +228,7 @@ func (v *VictimBase) IsBlacklisted() bool {
 
 // IsWhitelisted checks if this victim is whitelisted
 func (v *VictimBase) IsWhitelisted() bool {
-	if config.WhitelistEnabled() {
-		whitelist := config.WhitelistedNamespaces()
-		return whitelist.Has(v.namespace)
-	}
-	return true
+	return config.IsWhitelistedNamespace(v.namespace)
 }
 
 // IdentifierSelector matches the pods carrying the given identifier label

@@ -31,13 +31,6 @@ func EligibleDaemonSets(clientset kube.Interface, namespace string, filter *meta
 			continue
 		}
 
-		// TODO: After generating whitelisting ns list, this will move to factory.
-		// IsBlacklisted will change to something like IsAllowedNamespace
-		// and will only be used to verify at time of scheduled execution
-		if victim.IsBlacklisted() {
-			continue
-		}
-
 		eligVictims = append(eligVictims, victim)
 	}
 

@@ -134,6 +134,27 @@ func (s *ConfigTestSuite) TestWhitelistedNamespaces() {
 	}
 }
 
+func (s *ConfigTestSuite) TestIsWhitelistedNamespace() {
+	viper.Set(param.WhitelistedNamespaces, []string{"default", "team-?", "*-staging"})
+
+	for _, namespace := range []string{"default", "team-a", "shop-staging"} {
+		s.True(IsWhitelistedNamespace(namespace), "%s should be whitelisted", namespace)
+	}
+
+	for _, namespace := range []string{"default-2", "team-ab", "staging-shop", "kube-system"} {
+		s.False(IsWhitelistedNamespace(namespace), "%s should not be whitelisted", namespace)
+	}
+}
+
+func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWhenWhitelistDisabled() {
+	s.True(IsWhitelistedNamespace("any-namespace"))
+}
+
+func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWithInvalidPattern() {
+	viper.Set(param.WhitelistedNamespaces, []string{"[default"})
+	s.False(IsWhitelistedNamespace("anything"))
+}
+
 func (s *ConfigTestSuite) TestBlacklistEnabled() {
 	s.True(BlacklistEnabled())
 	viper.Set(param.BlacklistedNamespaces, []string{metav1.NamespaceNone})

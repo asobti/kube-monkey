@@ -13,10 +13,13 @@ Join us at [#kube-monkey](https://kubernetes.slack.com/messages/kube-monkey) on 
 kube-monkey runs at a pre-configured hour (`run_hour`, defaults to 8 am) on weekdays, and builds a schedule of deployments that will face a random
 Pod death sometime during the same day. The time-range during the day when the random pod Death might occur is configurable and defaults to 10 am to 4 pm.
 
-kube-monkey can be configured with a list of namespaces
-* to blacklist (any deployments within a blacklisted namespace will not be touched)
+kube-monkey can be configured with two lists of namespaces
+* a whitelist (only apps in a whitelisted namespace can be touched)
+* a blacklist (apps in a blacklisted namespace are never touched)
 
-Blacklist entries are shell-style patterns, so a namespace is blacklisted when it matches any entry:
+An app has to pass both lists. Where the two overlap the blacklist wins.
+
+Entries in either list are shell-style patterns, so a namespace is matched when it matches any entry:
 
 | Entry | Matches |
 | --- | --- |
@@ -27,7 +30,10 @@ Blacklist entries are shell-style patterns, so a namespace is blacklisted when i
 
 Namespace names never contain `*` or `?`, so a plain name still matches nothing but itself.
 
-To disable the blacklist provide `[""]` in the `blacklisted_namespaces` config.param.
+Patterns are checked when the config loads, and a malformed one stops kube-monkey from starting.
+
+To disable the blacklist provide `[""]` in the `blacklisted_namespaces` config.param. The whitelist is off by default, which is `[""]`
+in `whitelisted_namespaces` and means every namespace.
 
 ## Opting-In to Chaos
 
@@ -145,6 +151,7 @@ run_hour = 8                             # Run scheduling at 8am on weekdays
 start_hour = 10                          # Don't schedule any pod deaths before 10am
 end_hour = 16                            # Don't schedule any pod deaths after 4pm
 blacklisted_namespaces = ["kube-system"] # Critical apps live here. Patterns like "*-prod" work too
+whitelisted_namespaces = [""]            # Every namespace. Narrow it with names or patterns like "team-*"
 time_zone = "America/New_York"           # Set tzdata timezone example. Note the field is time_zone not timezone
 ```
 
@@ -155,6 +162,7 @@ KUBEMONKEY_RUN_HOUR=8
 KUBEMONKEY_START_HOUR=10
 KUBEMONKEY_END_HOUR=16
 KUBEMONKEY_BLACKLISTED_NAMESPACES=kube-system
+KUBEMONKEY_WHITELISTED_NAMESPACES=
 KUBEMONKEY_TIME_ZONE=America/New_York
 ```
 #### Example Config to test kube-monkey works by enabling debug mode

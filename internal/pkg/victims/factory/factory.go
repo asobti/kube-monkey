@@ -23,9 +23,11 @@ import (
 
 // EligibleVictims gathers list of enabled/enrolled kinds for judgement by
 // the scheduler
-// This checks against config.WhitelistedNamespaces but
-// each victim checks themselves against the ns blacklist
-// TODO: fetch all namespaces from k8 apiserver to check blacklist here
+//
+// The namespace lists hold patterns rather than names, so they cannot be turned
+// into API paths. Each kind is fetched across the whole cluster in one call and
+// the namespace lists are applied to the result. The enrollment filter already
+// narrows the fetch to opted-in workloads, which keeps the response small.
 func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 	clientset, err := kubernetes.CreateClient()
 	if err != nil {
@@ -38,33 +40,48 @@ func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 		return nil, err
 	}
 
-	for _, namespace := range config.WhitelistedNamespaces().UnsortedList() {
-		// Fetch deployments
-		deployments, err := deployments.EligibleDeployments(clientset, namespace, filter)
-		if err != nil {
-			//allow pass through to schedule other kinds and namespaces
-			glog.Warningf("Failed to fetch eligible deployments for namespace %s due to error: %s", namespace, err.Error())
-			continue
-		}
-		eligibleVictims = append(eligibleVictims, deployments...)
+	// Fetch deployments
+	deployments, err := deployments.EligibleDeployments(clientset, metav1.NamespaceAll, filter)
+	if err != nil {
+		//allow pass through to schedule other kinds
+		glog.Warningf("Failed to fetch eligible deployments due to error: %s", err.Error())
+	}
+	eligibleVictims = append(eligibleVictims, deployments...)
 
-		// Fetch statefulsets
-		statefulsets, err := statefulsets.EligibleStatefulSets(clientset, namespace, filter)
-		if err != nil {
-			//allow pass through to schedule other kinds and namespaces
-			glog.Warningf("Failed to fetch eligible statefulsets for namespace %s due to error: %s", namespace, err.Error())
-			continue
-		}
-		eligibleVictims = append(eligibleVictims, statefulsets...)
+	// Fetch statefulsets
+	statefulsets, err := statefulsets.EligibleStatefulSets(clientset, metav1.NamespaceAll, filter)
+	if err != nil {
+		//allow pass through to schedule other kinds
+		glog.Warningf("Failed to fetch eligible statefulsets due to error: %s", err.Error())
+	}
+	eligibleVictims = append(eligibleVictims, statefulsets...)
 
-		// Fetch daemonsets
-		daemonsets, err := daemonsets.EligibleDaemonSets(clientset, namespace, filter)
-		if err != nil {
-			//allow pass through to schedule other kinds and namespaces
-			glog.Warningf("Failed to fetch eligible daemonsets for namespace %s due to error: %s", namespace, err.Error())
+	// Fetch daemonsets
+	daemonsets, err := daemonsets.EligibleDaemonSets(clientset, metav1.NamespaceAll, filter)
+	if err != nil {
+		//allow pass through to schedule other kinds
+		glog.Warningf("Failed to fetch eligible daemonsets due to error: %s", err.Error())
+	}
+	eligibleVictims = append(eligibleVictims, daemonsets...)
+
+	return InAllowedNamespace(eligibleVictims), nil
+}
+
+// InAllowedNamespace keeps the victims whose namespace is whitelisted and not
+// blacklisted. The blacklist wins where the two overlap.
+func InAllowedNamespace(candidates []victims.Victim) (allowed []victims.Victim) {
+	for _, victim := range candidates {
+		if victim.IsBlacklisted() {
+			glog.V(6).Infof("Skipping %s %s because namespace %s is blacklisted", victim.Kind(), victim.Name(), victim.Namespace())
 			continue
 		}
-		eligibleVictims = append(eligibleVictims, daemonsets...)
+
+		if !victim.IsWhitelisted() {
+			glog.V(6).Infof("Skipping %s %s because namespace %s is not whitelisted", victim.Kind(), victim.Name(), victim.Namespace())
+			continue
+		}
+
+		allowed = append(allowed, victim)
 	}
 
 	return
