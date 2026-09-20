@@ -6,4 +6,4 @@ name: kube-monkey
 # apps/v1 is the oldest API kube-monkey and this chart use, and it went stable in 1.9.
 # The -0 suffix keeps pre-release server versions such as v1.31.0-gke.1000 in range.
 kubeVersion: ">=1.9.0-0"
-version: 1.9.2
+version: 1.10.0

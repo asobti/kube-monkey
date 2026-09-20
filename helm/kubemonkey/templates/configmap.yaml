@@ -19,6 +19,8 @@ data:
       time_zone = {{ .Values.config.timeZone | quote }}
       [debug]
       enabled = {{ .Values.config.debug.enabled }}
+      schedule_delay = {{ .Values.config.debug.schedule_delay }}
+      force_should_kill = {{ .Values.config.debug.force_should_kill }}
       schedule_immediate_kill = {{ .Values.config.debug.schedule_immediate_kill }}
       [notifications]
       enabled = {{ .Values.config.notifications.enabled }}

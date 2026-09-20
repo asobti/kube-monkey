@@ -79,13 +79,22 @@ See [Configuration](configuration.md#namespace-lists) for how the two lists inte
 ## 4. Watch it work
 
 Terminations normally happen at a random moment inside the daily window, which is not much
-use when you are trying to confirm the install. Debug mode ignores the window and kills
-every 60 seconds:
+use when you are trying to confirm the install. Debug mode ignores the window and kills on a
+short repeating cycle:
 
 ```bash
 helm upgrade kube-monkey kubemonkey/kube-monkey --namespace kube-system \
   --set config.debug.enabled=true \
   --set config.debug.schedule_immediate_kill=true
+```
+
+Each round waits `config.debug.schedule_delay` seconds, builds a schedule, then kills each
+victim at a random point in the next 60 seconds. Raise the delay if you want longer between
+rounds, for example to give pods time to come back:
+
+```bash
+helm upgrade kube-monkey kubemonkey/kube-monkey --namespace kube-system \
+  --set config.debug.schedule_delay=300
 ```
 
 Follow the logs:
@@ -104,8 +113,8 @@ helm upgrade kube-monkey kubemonkey/kube-monkey --namespace kube-system \
 
 !!! warning "Turn debug back off"
 
-    Debug mode attacks every 60 seconds and ignores `start_hour` and `end_hour`. It is a
-    tool for the first ten minutes, not a setting to leave on.
+    Debug mode attacks in a loop and ignores `start_hour` and `end_hour`. It is a tool for
+    the first ten minutes, not a setting to leave on.
 
 ## 5. Move to a real schedule
 

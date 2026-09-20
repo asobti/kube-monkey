@@ -110,7 +110,7 @@ Debug mode is for confirming an install works. It is not a setting to leave on.
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
 | `debug.enabled` | bool | `false` | Turn debug mode on |
-| `debug.schedule_delay` | int | `30` | Seconds after startup before scheduling runs. Lower it to see a schedule sooner |
+| `debug.schedule_delay` | int | `30` | Seconds to wait before each scheduling run. Raise it for longer between rounds, lower it to see a schedule sooner |
 | `debug.force_should_kill` | bool | `false` | Schedule a termination for every eligible app, so the probability of a kill is 1 |
 | `debug.schedule_immediate_kill` | bool | `false` | Schedule terminations in the next 60 seconds instead of between `start_hour` and `end_hour` |
 
@@ -122,8 +122,10 @@ schedule_immediate_kill = true
 
 !!! warning
 
-    With `schedule_immediate_kill` on, kube-monkey attacks every 60 seconds and ignores the
-    hours you configured.
+    With `schedule_immediate_kill` on, kube-monkey ignores the hours you configured and
+    attacks in a loop: it waits `schedule_delay` seconds, builds a schedule, then kills each
+    victim at a random point in the next 60 seconds. That 60 second spread is fixed, so
+    `schedule_delay` is the knob for longer gaps between rounds.
 
 ## Other sections
 
