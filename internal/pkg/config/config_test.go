@@ -122,6 +122,10 @@ func (s *ConfigTestSuite) TestIsBlacklistedNamespaceWhenBlacklistDisabled() {
 func (s *ConfigTestSuite) TestIsBlacklistedNamespaceWithInvalidPattern() {
 	viper.Set(param.BlacklistedNamespaces, []string{"[kube-system"})
 	s.True(IsBlacklistedNamespace("anything"))
+
+	// An entry that still reads does not soften the rest of the list
+	viper.Set(param.BlacklistedNamespaces, []string{"nothing-matches-this", "[kube-system"})
+	s.True(IsBlacklistedNamespace("anything"))
 }
 
 func (s *ConfigTestSuite) TestWhitelistedNamespaces() {
@@ -153,6 +157,17 @@ func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWhenWhitelistDisabled() {
 func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWithInvalidPattern() {
 	viper.Set(param.WhitelistedNamespaces, []string{"[default"})
 	s.False(IsWhitelistedNamespace("anything"))
+
+	// An entry that still reads does not rescue the rest of the list
+	viper.Set(param.WhitelistedNamespaces, []string{"*", "[default"})
+	s.False(IsWhitelistedNamespace("anything"))
+}
+
+func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWithEmptyEntryAlongsideOthers() {
+	viper.Set(param.WhitelistedNamespaces, []string{"", "team-*"})
+
+	s.True(IsWhitelistedNamespace("team-shop"))
+	s.False(IsWhitelistedNamespace("default"))
 }
 
 func (s *ConfigTestSuite) TestBlacklistEnabled() {

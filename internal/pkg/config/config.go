@@ -164,21 +164,31 @@ func IsBlacklistedNamespace(namespace string) bool {
 
 // IsWhitelistedNamespace reports whether a namespace is covered by the
 // whitelist. Entries are shell-style patterns, in the same form the blacklist
-// takes. An empty whitelist entry means every namespace.
+// takes.
+//
+// The whitelist is off when it holds nothing but an empty entry, which is the
+// default and allows every namespace. An empty entry sitting alongside real
+// entries matches nothing, because a namespace name is never empty.
 func IsWhitelistedNamespace(namespace string) bool {
 	if !WhitelistEnabled() {
 		return true
 	}
 
-	// A pattern that does not parse never grants access
-	matched, _ := matchesNamespace(WhitelistedNamespaces().UnsortedList(), namespace)
-	return matched
+	matched, invalid := matchesNamespace(WhitelistedNamespaces().UnsortedList(), namespace)
+
+	// A list holding a pattern that does not parse no longer describes what the
+	// operator meant, so grant nothing rather than act on the half of it that
+	// still reads
+	return matched && !invalid
 }
 
 // matchesNamespace reports whether the namespace matches any of the patterns,
 // and separately whether any pattern was malformed. Patterns are checked when
 // the config loads, so a malformed one means validation was skipped, and each
 // caller picks the side it is safe to fail on.
+//
+// Every pattern is read even once a match is found, so invalid always covers
+// the whole list.
 func matchesNamespace(patterns []string, namespace string) (matched bool, invalid bool) {
 	for _, pattern := range patterns {
 		ok, err := path.Match(pattern, namespace)
@@ -187,12 +197,10 @@ func matchesNamespace(patterns []string, namespace string) (matched bool, invali
 			invalid = true
 			continue
 		}
-		if ok {
-			return true, invalid
-		}
+		matched = matched || ok
 	}
 
-	return false, invalid
+	return matched, invalid
 }
 
 func WhitelistedNamespaces() sets.String {
