@@ -31,9 +31,13 @@ git tag v0.7.0
 git push origin v0.7.0
 ```
 
-That builds and pushes the image, then packages the chart and commits it to
+That builds and pushes the image, adds the release entry on GitHub with notes
+from the merged pull requests, then packages the chart and commits it to
 `gh-pages`. The chart waits for the image, so it can never go out pointing at an
 image that does not exist yet.
+
+The chart lands on `gh-pages` before GitHub Pages rebuilds, which takes about a
+minute. Until then `helm repo update` still sees the old version.
 
 ## Releasing a chart-only change
 
@@ -63,7 +67,9 @@ pushed yet:
 RELEASE_TAG=v0.7.0 ./hack/verify-release.sh
 ```
 
-Every pull request runs the same checks, minus the ones that need the tag.
+Every pull request runs the same checks, minus the ones that need the tag. The
+check for a version that is already published only runs when the pull request
+changes something under `helm/`.
 
 ## If the chart step fails
 
