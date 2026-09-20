@@ -1,30 +1,556 @@
-.km-hero {
-  padding: 2.5rem 0 1.5rem;
-  text-align: center;
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap");
+
+/* The site is built around the schedule kube-monkey prints every morning:
+   hairline columns, monospaced times, and one colour per state. Gold means
+   scheduled, red means terminated, and neither is used for decoration. */
+
+:root {
+  --km-ink: #16202C;
+  --km-ink-soft: #2A3846;
+  --km-gold: #E0A80D;
+  --km-gold-bright: #F0BE3D;
+  --km-gold-deep: #8A5600;
+  --km-kill: #C6302B;
+  --km-display: "IBM Plex Sans Condensed", "IBM Plex Sans", -apple-system, sans-serif;
 }
 
-.km-hero h1 {
+body[data-md-color-scheme="default"][data-md-color-primary] {
+  --md-default-bg-color: #ffffff;
+  --md-default-fg-color: #16202C;
+  --md-default-fg-color--light: #52616F;
+  --md-default-fg-color--lighter: #8494A1;
+  --md-default-fg-color--lightest: #DCE2E7;
+
+  --md-primary-fg-color: #16202C;
+  --md-primary-fg-color--light: #2A3846;
+  --md-primary-fg-color--dark: #0E1720;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, .72);
+
+  --md-accent-fg-color: #16202C;
+  --md-typeset-a-color: #8A5600;
+
+  --md-code-bg-color: #F4F6F8;
+  --md-code-fg-color: #253241;
+
+  --km-rule: #DCE2E7;
+  --km-mist: #F4F6F8;
+  --km-link-hover: #16202C;
+  --km-board-bg: #16202C;
+  --km-board-border: #27333F;
+}
+
+body[data-md-color-scheme="slate"][data-md-color-primary] {
+  --md-default-bg-color: #0F1720;
+  --md-default-fg-color: #DFE6EC;
+  --md-default-fg-color--light: #9FB0BF;
+  --md-default-fg-color--lighter: #6C7F8F;
+  --md-default-fg-color--lightest: #2A3846;
+
+  --md-primary-fg-color: #16202C;
+  --md-primary-fg-color--light: #2A3846;
+  --md-primary-fg-color--dark: #0B131B;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, .72);
+
+  --md-accent-fg-color: #F0BE3D;
+  --md-typeset-a-color: #F0BE3D;
+
+  --md-code-bg-color: #16202C;
+  --md-code-fg-color: #D8E1E8;
+
+  --km-rule: #27333F;
+  --km-mist: #16202C;
+  --km-link-hover: #ffffff;
+  /* The board has to lift off the page once the page itself is dark. */
+  --km-board-bg: #1B2735;
+  --km-board-border: #35485C;
+}
+
+/* Typography */
+
+.md-typeset {
+  font-size: .78rem;
+  line-height: 1.68;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 {
+  font-family: var(--km-display);
+  color: var(--md-default-fg-color);
+  letter-spacing: -.005em;
+}
+
+.md-typeset .headerlink {
+  margin-left: .2em;
+}
+
+.md-typeset h1 {
+  font-size: 2.1rem;
   font-weight: 700;
-  margin-bottom: .4rem;
+  line-height: 1.08;
+  letter-spacing: -.02em;
+  margin: 0 0 .8rem;
 }
 
-.km-hero p {
-  font-size: .85rem;
-  max-width: 34rem;
-  margin: 0 auto 1.4rem;
+.md-typeset h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 2.6rem 0 .7rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--km-rule);
+}
+
+.md-typeset h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1.8rem 0 .5rem;
+}
+
+.md-typeset h4 {
+  font-size: .88rem;
+  font-weight: 600;
+  margin: 1.4rem 0 .4rem;
+}
+
+.md-typeset p,
+.md-typeset li {
+  max-width: 74ch;
+}
+
+.md-typeset a {
+  text-underline-offset: .18em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--md-typeset-a-color) 40%, transparent);
+}
+
+.md-typeset a:hover {
+  color: var(--km-link-hover);
+  text-decoration-color: currentcolor;
+}
+
+.md-typeset :is(a, .md-button):focus-visible {
+  outline: 2px solid var(--md-typeset-a-color);
+  outline-offset: 2px;
+}
+
+/* Header and navigation */
+
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+.md-header__title {
+  font-family: var(--km-display);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  font-size: .95rem;
+}
+
+.md-header__button.md-logo :is(img, svg) {
+  height: 1.1rem;
+  width: 1.1rem;
+}
+
+.md-search__form {
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, .12);
+}
+
+.md-nav {
+  font-size: .68rem;
+}
+
+.md-nav__title {
+  font-family: var(--km-display);
+  font-weight: 600;
+  letter-spacing: .01em;
   color: var(--md-default-fg-color--light);
 }
 
-.km-hero .md-button {
-  margin: .2rem .3rem;
+.md-nav__link--active,
+.md-nav__link--active code {
+  font-weight: 600;
+}
+
+.md-sidebar--primary .md-nav__item--section > .md-nav__link {
+  color: var(--md-default-fg-color--lighter);
+}
+
+/* Hero */
+
+/* The home page has no sidebars, so the composed blocks keep their own measure
+   rather than stretching across the full window. */
+.km-hero,
+.km-split {
+  max-width: 47rem;
+}
+
+.km-hero {
+  padding: 1.4rem 0 2.2rem;
+  border-bottom: 1px solid var(--km-rule);
+  margin-bottom: 2.2rem;
+}
+
+.md-typeset .km-hero h1 {
+  font-size: 2.9rem;
+  text-wrap: balance;
+  margin-bottom: .7rem;
+}
+
+.md-typeset .km-hero .km-lede {
+  font-size: .95rem;
+  line-height: 1.5;
+  max-width: 48ch;
+  color: var(--md-default-fg-color--light);
+  margin: 0 0 1.5rem;
+}
+
+.md-typeset .km-hero .md-button {
+  margin: 0 .5rem .5rem 0;
+}
+
+/* Buttons */
+
+.md-typeset .md-button {
+  font-family: var(--km-display);
+  font-weight: 600;
+  font-size: .8rem;
+  border-radius: 2px;
+  border-width: 1px;
+  padding: .5em 1.2em;
+  transition: background-color .15s, color .15s;
+}
+
+.md-typeset .md-button--primary {
+  background-color: var(--km-ink);
+  border-color: var(--km-ink);
+  color: #fff;
+}
+
+.md-typeset .md-button--primary:is(:hover, :focus) {
+  background-color: var(--km-ink-soft);
+  border-color: var(--km-ink-soft);
+  color: #fff;
+}
+
+.md-typeset .md-button:not(.md-button--primary) {
+  color: var(--md-default-fg-color);
+  border-color: var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .md-button:not(.md-button--primary):is(:hover, :focus) {
+  background-color: transparent;
+  border-color: var(--md-default-fg-color);
+  color: var(--md-default-fg-color);
+}
+
+/* An ink button disappears against an ink page, so it inverts in dark mode. */
+
+body[data-md-color-scheme="slate"] .md-typeset .md-button--primary {
+  background-color: #EDF1F4;
+  border-color: #EDF1F4;
+  color: var(--km-ink);
+}
+
+body[data-md-color-scheme="slate"] .md-typeset .md-button--primary:is(:hover, :focus) {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: var(--km-ink);
+}
+
+/* Schedule board. Dark in both schemes: it is a picture of a terminal. */
+
+.km-board {
+  background-color: var(--km-board-bg);
+  border: 1px solid var(--km-board-border);
+  border-radius: 3px;
+  padding: 1.1rem 1.3rem 1rem;
+  margin: 0 0 1rem;
+  overflow-x: auto;
+}
+
+.km-board-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--km-display);
+  padding-bottom: .7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+
+.km-board-head b {
+  color: #fff;
+  font-weight: 600;
+  font-size: .95rem;
+  letter-spacing: -.01em;
+}
+
+.km-board-head span {
+  color: var(--km-gold);
+  font-size: .76rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.md-typeset .km-board table:not([class]) {
+  display: table;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.md-typeset .km-board table:not([class]) :is(th, td) {
+  border: none;
+  background: transparent;
+  padding: .34rem .9rem .34rem 0;
+  white-space: nowrap;
+}
+
+.md-typeset .km-board table:not([class]) th {
+  font-family: var(--km-display);
+  font-weight: 500;
+  font-size: .72rem;
+  color: #8FA3B5;
+  padding-top: .6rem;
+}
+
+.md-typeset .km-board table:not([class]) td {
+  font-family: var(--md-code-font-family), monospace;
+  color: #E4EAEF;
+}
+
+.md-typeset .km-board table:not([class]) :is(th, td):last-child {
+  text-align: right;
+  padding-right: 0;
+}
+
+.md-typeset .km-board table:not([class]) td:last-child {
+  color: var(--km-gold);
+}
+
+.km-board :is(.md-typeset__scrollwrap, .md-typeset__table) {
+  margin: 0;
+  overflow: visible;
+}
+
+.km-board-foot {
+  margin: .8rem 0 0;
+  padding-top: .7rem;
+  border-top: 1px solid rgba(255, 255, 255, .14);
+  font-size: .68rem;
+  color: #8FA3B5;
+}
+
+.md-typeset .km-board-foot code {
+  background-color: rgba(255, 255, 255, .08);
+  color: #C6D3DE;
+}
+
+/* The one moment of motion on the site: the schedule arriving, row by row. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .km-board tbody tr {
+    animation: km-row-in .32s ease-out both;
+  }
+
+  .km-board tbody tr:nth-child(1) { animation-delay: .10s; }
+  .km-board tbody tr:nth-child(2) { animation-delay: .19s; }
+  .km-board tbody tr:nth-child(3) { animation-delay: .28s; }
+  .km-board tbody tr:nth-child(4) { animation-delay: .37s; }
+  .km-board tbody tr:nth-child(5) { animation-delay: .46s; }
+}
+
+@keyframes km-row-in {
+  from { opacity: 0; transform: translateY(.35rem); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Paired lists: what is safe, what is tunable. */
+
+.km-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 3rem;
+  margin: 1.2rem 0 0;
+}
+
+.md-typeset .km-split h3 {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+  margin: 0 0 .9rem;
+  padding-bottom: .5rem;
+  border-bottom: 1px solid var(--km-rule);
+}
+
+.md-typeset .km-split dl {
+  margin: 0;
+}
+
+.md-typeset .km-split dt {
+  font-family: var(--km-display);
+  font-weight: 600;
+  font-size: .95rem;
+  margin: 0 0 .15rem;
+}
+
+.md-typeset .km-split dt a {
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+}
+
+.md-typeset .km-split dt a:hover {
+  color: var(--md-typeset-a-color);
+  text-decoration: underline;
+}
+
+.md-typeset .km-split dd {
+  margin: 0 0 1.3rem;
+  color: var(--md-default-fg-color--light);
+  font-size: .74rem;
+  line-height: 1.55;
+  max-width: 42ch;
+}
+
+/* Tables carry the reference docs, so they get the same care as the hero. */
+
+.md-typeset table:not([class]) {
+  border: none;
+  border-top: 1px solid var(--km-rule);
+  border-bottom: 1px solid var(--km-rule);
+  border-radius: 0;
+  box-shadow: none;
+  font-size: .72rem;
+  display: table;
+  width: 100%;
+}
+
+.md-typeset table:not([class]) th {
+  font-family: var(--km-display);
+  font-weight: 600;
+  font-size: .76rem;
+  background-color: transparent;
+  color: var(--md-default-fg-color);
+  border-bottom: 1px solid var(--km-rule);
+  padding: .6rem .9rem .6rem 0;
+}
+
+.md-typeset table:not([class]) td {
+  border-top: 1px solid var(--km-rule);
+  padding: .55rem .9rem .55rem 0;
+  vertical-align: top;
+}
+
+.md-typeset table:not([class]) :is(th, td):last-child {
+  padding-right: 0;
+}
+
+.md-typeset table:not([class]) tr:first-child td {
+  border-top: none;
+}
+
+.md-typeset table:not([class]) tbody tr:hover {
+  background-color: var(--km-mist);
+}
+
+.md-typeset table:not([class]) code {
+  white-space: nowrap;
+}
+
+/* Code. The frame lives on the wrapper so the block is one box, not two. */
+
+.md-typeset .highlight {
+  background-color: var(--md-code-bg-color);
+  border: 1px solid var(--km-rule);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.md-typeset .highlight pre,
+.md-typeset .highlight pre > code {
+  background-color: transparent;
+}
+
+.md-typeset .highlight pre > code {
+  padding: .8rem 1rem;
+}
+
+.md-typeset code {
+  border-radius: 2px;
+  font-size: .82em;
+  padding: .1em .3em;
+}
+
+/* Admonitions: a rule down the side rather than a tinted box. */
+
+.md-typeset :is(.admonition, details) {
+  border: 1px solid var(--km-rule);
+  border-left-width: 3px;
+  border-radius: 2px;
+  box-shadow: none;
+  font-size: .74rem;
+}
+
+.md-typeset :is(.admonition-title, summary) {
+  font-family: var(--km-display);
+  font-weight: 600;
+  background-color: transparent;
+}
+
+.md-typeset .danger > .admonition-title {
+  color: var(--km-kill);
+}
+
+/* Footer */
+
+.md-footer-meta {
+  background-color: var(--km-ink);
+}
+
+.md-footer {
+  background-color: var(--km-ink-soft);
 }
 
 .km-badges {
-  text-align: center;
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  align-items: center;
+  margin-top: 1rem;
 }
 
 .km-badges img {
-  margin: 0 .15rem;
-  vertical-align: middle;
+  height: 20px;
+}
+
+@media screen and (max-width: 59.9em) {
+  .km-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .md-typeset .km-hero h1 {
+    font-size: 2.1rem;
+  }
+
+  .km-board {
+    padding: .9rem 1rem;
+  }
+
+  /* The kind matters least of the four columns, so it is the one to go when
+     the board has to fit a phone. */
+  .md-typeset .km-board table:not([class]) :is(th, td):first-child {
+    display: none;
+  }
 }
