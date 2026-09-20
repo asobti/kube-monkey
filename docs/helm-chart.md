@@ -25,7 +25,7 @@ the reasoning.
 Pin the chart version if you want a repeatable install:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.9.1
+helm install my-release kubemonkey/kube-monkey --version 1.9.2
 ```
 
 ## Uninstall
@@ -86,7 +86,7 @@ helm get manifest my-release
 | Parameter | Description | Default |
 |---|---|---|
 | `image.repository` | docker image repo | `ayushsobti/kube-monkey` |
-| `image.tag` | docker image tag | `v0.6.0` |
+| `image.tag` | docker image tag | `v0.6.1` |
 | `image.pullPolicy` | image pull logic | `IfNotPresent` |
 | `replicaCount` | number of replicas to run | `1` |
 | `config.dryRun` | will not kill pods, only logs behaviour | `true` |
@@ -127,7 +127,7 @@ Rather than a long line of `--set` flags, edit `values.yaml` and install from it
 replicaCount: 1
 image:
   repository: ayushsobti/kube-monkey
-  tag: v0.6.0
+  tag: v0.6.1
   pullPolicy: IfNotPresent
 config:
   dryRun: false
