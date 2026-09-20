@@ -118,4 +118,17 @@ const (
 	// Type: config.Receiver struct
 	// Default: Receiver{}
 	NotificationsAttacks = "notifications.attacks"
+
+	// MetricsEnabled serves Prometheus metrics
+	// about kube-monkey's schedules and terminations
+	// Type: bool
+	// Default: false
+	MetricsEnabled = "metrics.enabled"
+
+	// MetricsAddress is the host and port the
+	// metrics endpoint listens on, in host:port form.
+	// Leave the host out to listen on every interface
+	// Type: string
+	// Default: :8080
+	MetricsAddress = "metrics.address"
 )

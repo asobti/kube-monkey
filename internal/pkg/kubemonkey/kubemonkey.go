@@ -10,6 +10,7 @@ import (
 	"kube-monkey/internal/pkg/chaos"
 	"kube-monkey/internal/pkg/config"
 	"kube-monkey/internal/pkg/kubernetes"
+	"kube-monkey/internal/pkg/metrics"
 	"kube-monkey/internal/pkg/notifications"
 	"kube-monkey/internal/pkg/schedule"
 )
@@ -31,6 +32,12 @@ func Run() error {
 	// we enter execution loop
 	if _, err := kubernetes.CreateClient(); err != nil {
 		return err
+	}
+
+	if config.MetricsEnabled() {
+		if err := metrics.Serve(config.MetricsAddress()); err != nil {
+			return err
+		}
 	}
 
 	var notificationsClient notifications.Client
@@ -65,8 +72,12 @@ func ScheduleTerminations(entries []*chaos.Chaos, notificationsClient notificati
 	resultchan := make(chan *chaos.Result)
 	defer close(resultchan)
 
+	metrics.RecordSchedule(len(entries))
+
 	// Spin off all terminations
 	for _, chaos := range entries {
+		victim := chaos.Victim()
+		metrics.RecordScheduledTermination(victim.Kind(), victim.Namespace(), victim.Name())
 		go chaos.Schedule(resultchan)
 	}
 
@@ -83,6 +94,7 @@ func ScheduleTerminations(entries []*chaos.Chaos, notificationsClient notificati
 		} else {
 			glog.V(2).Infof("Termination successfully executed for %s %s\n", result.Victim().Kind(), result.Victim().Name())
 		}
+		metrics.RecordTermination(result.Victim().Kind(), result.Victim().Namespace(), result.Victim().Name(), result.Error())
 		if config.NotificationsEnabled() {
 			currentTime := time.Now()
 			notifications.ReportAttack(notificationsClient, result, currentTime)

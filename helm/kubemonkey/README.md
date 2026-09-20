@@ -14,7 +14,7 @@ helm repo update
 To install the chart with the release name `my-release`:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.6.0
+helm install my-release kubemonkey/kube-monkey --version 1.7.0
 ```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
@@ -79,6 +79,14 @@ $ helm install my-release kubemonkey \
                --set config.notifications.message="{\"foo\":\"bar\"}" \
                --set config.notifications.headers="Content-Type:application/json\"\,\"client-id:kubemonkey"
 ```
+If you want to serve Prometheus metrics and have the Prometheus Operator scrape them.
+
+```console
+$ helm install my-release kubemonkey \
+               --set config.metrics.enabled=true \
+               --set serviceMonitor.enabled=true
+```
+
 If you want validate intended values passed in to configmap .
 
 ```console
@@ -104,6 +112,12 @@ $ helm get manifest my-release
 | `config.notifications.enabled`         | enables reporting of attacks to an HTTP endpoint                                        | false                            |
 | `config.notifications.proxy`           | notifications proxy URL                                                                 |                                  |
 | `config.notifications.attacks`         | HTTP collector in the form (endpoint,message,headers) where attacks will be reported to |                                  |
+| `config.metrics.enabled`               | serves Prometheus metrics on /metrics and creates a Service for them                    | false                            |
+| `config.metrics.port`                  | port the metrics endpoint listens on                                                    | 8080                             |
+| `serviceMonitor.enabled`               | creates a ServiceMonitor for the Prometheus Operator, needs config.metrics.enabled      | false                            |
+| `serviceMonitor.interval`              | how often Prometheus scrapes the metrics                                                | 30s                              |
+| `serviceMonitor.scrapeTimeout`         | how long Prometheus waits for a scrape                                                  | 10s                              |
+| `serviceMonitor.additionalLabels`      | extra labels on the ServiceMonitor, to match your Prometheus selector                   | {}                               |
 | `args.logLevel`                        | go log level                                                                            | 5                                |
 | `args.logDir`                          | log directory                                                                           | /var/log/kube-monkey             |
 

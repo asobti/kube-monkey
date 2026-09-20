@@ -214,6 +214,51 @@ headers = ["api-key:{$env:API_TOKEN}", "Content-Type:application/json"]
 
 Note if the environment variable does not exist, the notification call will NOT be cancelled. The value will resolve to an empty string, and a warning will show up in the logs. 
 
+## Metrics
+
+kube-monkey can serve Prometheus metrics about the schedules it builds and the terminations it runs.
+The endpoint is off by default. When it is on, kube-monkey listens on `/metrics` at the configured address.
+
+#### Example config for the metrics endpoint
+```toml
+[metrics]
+  enabled = true
+  address = ":8080"  # host:port to listen on, leave the host out to listen on every interface
+```
+
+The same settings as environment variables:
+```
+METRICS_ENABLED=true
+METRICS_ADDRESS=:8080
+```
+
+#### Exposed metrics
+
+| Metric | Type | Labels | Description |
+|--------|------|--------|-------------|
+| `kube_monkey_schedule_size` | gauge | | Terminations on the latest schedule |
+| `kube_monkey_last_schedule_timestamp_seconds` | gauge | | When the latest schedule was generated |
+| `kube_monkey_scheduled_terminations_total` | counter | `kind`, `namespace`, `name` | Terminations kube-monkey has put on a schedule |
+| `kube_monkey_terminations_total` | counter | `kind`, `namespace`, `name`, `result` | Terminations kube-monkey has carried out. `result` is `success` or `failure`, where a failure means the whole termination was skipped or errored, for example because the victim opted out after it was scheduled |
+| `kube_monkey_pods_terminated_total` | counter | `kind`, `namespace`, `name` | Pods kube-monkey has deleted. Stays at zero in dry run mode because no pod is really deleted |
+
+The standard Go runtime and process metrics are exposed as well.
+
+#### Scraping
+
+To let a Prometheus that discovers pods scrape kube-monkey, annotate the pod template in the
+[example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml):
+
+```yaml
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+```
+
+The Helm chart creates a Service for the endpoint when `config.metrics.enabled` is set, and a ServiceMonitor
+for the Prometheus Operator when `serviceMonitor.enabled` is set too.
+
 ## Deploying
 
 **Manually**

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 
 	"kube-monkey/internal/pkg/config/param"
@@ -42,6 +43,13 @@ func ValidateConfigs() error {
 	for _, header := range notificationsReceiver.Headers {
 		if !isValidHeader(header) {
 			return fmt.Errorf("Header: %s is not in valid format", header)
+		}
+	}
+
+	// Metrics need somewhere to listen
+	if MetricsEnabled() {
+		if _, _, err := net.SplitHostPort(MetricsAddress()); err != nil {
+			return fmt.Errorf("MetricsAddress: %s is not a valid host:port address: %v", param.MetricsAddress, err)
 		}
 	}
 

@@ -35,6 +35,26 @@ func TestValidateConfigs(t *testing.T) {
 
 }
 
+func TestValidateMetricsAddress(t *testing.T) {
+	SetDefaults()
+
+	// Other tests leave hours set, and a set value wins over a default
+	viper.Set(param.RunHour, 8)
+	viper.Set(param.StartHour, 10)
+	viper.Set(param.EndHour, 16)
+
+	viper.Set(param.MetricsEnabled, true)
+	defer viper.Set(param.MetricsEnabled, false)
+
+	assert.Nil(t, ValidateConfigs())
+
+	viper.Set(param.MetricsAddress, "8080")
+	assert.ErrorContains(t, ValidateConfigs(), "MetricsAddress: "+param.MetricsAddress+" is not a valid host:port address")
+
+	viper.Set(param.MetricsAddress, "127.0.0.1:8080")
+	assert.Nil(t, ValidateConfigs())
+}
+
 func TestIsValidHour(t *testing.T) {
 	for i := 0; i <= 23; i++ {
 		assert.True(t, IsValidHour(i))

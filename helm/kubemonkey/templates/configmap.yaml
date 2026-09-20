@@ -25,5 +25,8 @@ data:
       proxy = {{ .Values.config.notifications.proxy}}
       {{- end }}
       [notifications.attacks]
-{{ indent 6 .Values.config.notifications.attacks -}}
+{{ indent 6 .Values.config.notifications.attacks }}
+      [metrics]
+      enabled = {{ .Values.config.metrics.enabled }}
+      address = ":{{ .Values.config.metrics.port }}"
 

@@ -27,6 +27,12 @@ spec:
           command:
             - "/kube-monkey"
           args: ["-v={{ .Values.args.logLevel }}", "-log_dir={{ .Values.args.logDir }}"]
+          {{- if .Values.config.metrics.enabled }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.config.metrics.port }}
+              protocol: TCP
+          {{- end }}
           resources:
 {{- toYaml .Values.resources | trimSuffix "\n" | nindent 12 }}
           volumeMounts:
