@@ -14,7 +14,7 @@ helm repo update
 To install the chart with the release name `my-release`:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.9.0
+helm install my-release kubemonkey/kube-monkey --version 1.9.1
 ```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.

@@ -18,10 +18,14 @@ helm install my-release kubemonkey/kube-monkey
 This deploys kube-monkey with the default configuration, which is dry run mode with no
 whitelisted namespaces. It kills nothing until you tell it to.
 
+The chart declares the oldest Kubernetes it can run on and Helm checks it before installing.
+See [Kubernetes compatibility](getting-started.md#kubernetes-compatibility) for the range and
+the reasoning.
+
 Pin the chart version if you want a repeatable install:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.9.0
+helm install my-release kubemonkey/kube-monkey --version 1.9.1
 ```
 
 ## Uninstall
