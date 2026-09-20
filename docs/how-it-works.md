@@ -5,8 +5,9 @@ waits for each of those moments to arrive.
 
 ## Scheduling time
 
-Scheduling happens once a day on weekdays, at `run_hour`. This is when the schedule of
-terminations for the current day is generated. During scheduling, kube-monkey will:
+Scheduling happens once a day at `run_hour`, on each day listed in `run_days`. By default
+that is Monday to Friday. This is when the schedule of terminations for the current day is
+generated. During scheduling, kube-monkey will:
 
 1. Generate a list of eligible apps. An app is eligible when it has opted in, is not in a
    blacklisted namespace, and is in a whitelisted namespace if a whitelist is set.
@@ -65,3 +66,7 @@ window to hours when the people who own the services are around to notice.
 
 An mtbf shorter than a day does not spread terminations across the clock. It packs that day's
 terminations into the same window.
+
+A day that is not in `run_days` is skipped entirely, and `kube-monkey/mtbf` counts run days
+rather than calendar days. So an app with an mtbf of `3d` loses a pod on about a third of
+the run days, and adding days to `run_days` makes it lose more pods in a week.

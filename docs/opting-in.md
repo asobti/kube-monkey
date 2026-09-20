@@ -24,7 +24,7 @@ Set to `"enabled"` to opt in. Any other value, or no label at all, and kube-monk
 Mean time between failures, as a whole number and a unit: `d` for days, `h` for hours or `m`
 for minutes.
 
-Set to `"3d"` and the app can expect to have a pod killed approximately every third weekday.
+Set to `"3d"` and the app can expect to have a pod killed on about one run day in three.
 Set to `"2h"` and it can expect to lose a pod every two hours.
 
 A value with no unit is read as days, so `"3"` and `"3d"` mean the same thing. The shortest
@@ -32,9 +32,9 @@ mean time between failures is one minute.
 
 !!! note "Short mtbf values still respect the window"
 
-    All terminations happen inside the daily run window set by `start_hour` and `end_hour`.
-    An mtbf shorter than a day packs that day's terminations into that window rather than
-    spreading them around the clock.
+    All terminations happen inside the daily run window set by `start_hour` and `end_hour`,
+    on the days set by `run_days`. An mtbf shorter than a day packs that day's terminations
+    into that window rather than spreading them around the clock.
 
 ### `kube-monkey/identifier`
 

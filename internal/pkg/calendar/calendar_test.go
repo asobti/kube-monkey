@@ -8,17 +8,85 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsWeekDay(t *testing.T) {
+// The default set of run days
+var weekdays = []time.Weekday{time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday}
+
+func TestIsRunDay(t *testing.T) {
 	monday := time.Date(2018, 4, 16, 0, 0, 0, 0, time.UTC)
 
-	assert.True(t, isWeekday(monday))
-	assert.True(t, isWeekday(monday.Add(time.Hour*24)))
-	assert.True(t, isWeekday(monday.Add(time.Hour*24*2)))
-	assert.True(t, isWeekday(monday.Add(time.Hour*24*3)))
-	assert.True(t, isWeekday(monday.Add(time.Hour*24*4)))
+	assert.True(t, isRunDay(monday, weekdays))
+	assert.True(t, isRunDay(monday.AddDate(0, 0, 1), weekdays))
+	assert.True(t, isRunDay(monday.AddDate(0, 0, 2), weekdays))
+	assert.True(t, isRunDay(monday.AddDate(0, 0, 3), weekdays))
+	assert.True(t, isRunDay(monday.AddDate(0, 0, 4), weekdays))
 
-	assert.False(t, isWeekday(monday.Add(time.Hour*24*5)))
-	assert.False(t, isWeekday(monday.Add(time.Hour*24*6)))
+	assert.False(t, isRunDay(monday.AddDate(0, 0, 5), weekdays))
+	assert.False(t, isRunDay(monday.AddDate(0, 0, 6), weekdays))
+
+	weekend := []time.Weekday{time.Saturday, time.Sunday}
+	assert.False(t, isRunDay(monday, weekend))
+	assert.True(t, isRunDay(monday.AddDate(0, 0, 5), weekend))
+	assert.True(t, isRunDay(monday.AddDate(0, 0, 6), weekend))
+}
+
+func TestNextRuntimeToday(t *testing.T) {
+	loc := time.UTC
+	// A Monday, before the run hour
+	now := time.Date(2018, 4, 16, 6, 0, 0, 0, loc)
+
+	assert.Equal(t, time.Date(2018, 4, 16, 8, 0, 0, 0, loc), nextRuntime(now, loc, 8, weekdays))
+}
+
+func TestNextRuntimeSkipsTheWeekend(t *testing.T) {
+	loc := time.UTC
+	// A Friday, an hour after the run hour has passed
+	now := time.Date(2018, 4, 20, 9, 0, 0, 0, loc)
+
+	assert.Equal(t, time.Date(2018, 4, 23, 8, 0, 0, 0, loc), nextRuntime(now, loc, 8, weekdays))
+}
+
+func TestNextRuntimeIncludingTheWeekend(t *testing.T) {
+	loc := time.UTC
+	everyDay := append([]time.Weekday{time.Saturday, time.Sunday}, weekdays...)
+	// The same Friday, but Saturday is a run day now
+	now := time.Date(2018, 4, 20, 9, 0, 0, 0, loc)
+
+	assert.Equal(t, time.Date(2018, 4, 21, 8, 0, 0, 0, loc), nextRuntime(now, loc, 8, everyDay))
+}
+
+func TestNextRuntimeOnASingleRunDay(t *testing.T) {
+	loc := time.UTC
+	// A Wednesday, an hour after the run hour has passed, so the next run is a week away
+	now := time.Date(2018, 4, 18, 9, 0, 0, 0, loc)
+
+	assert.Equal(t, time.Date(2018, 4, 25, 8, 0, 0, 0, loc), nextRuntime(now, loc, 8, []time.Weekday{time.Wednesday}))
+}
+
+func TestParseWeekday(t *testing.T) {
+	for value, expected := range map[string]time.Weekday{
+		"mon":       time.Monday,
+		"Monday":    time.Monday,
+		"MONDAY":    time.Monday,
+		" tue ":     time.Tuesday,
+		"wednesday": time.Wednesday,
+		"thu":       time.Thursday,
+		"fri":       time.Friday,
+		"sat":       time.Saturday,
+		"sunday":    time.Sunday,
+	} {
+		day, err := ParseWeekday(value)
+
+		assert.NoError(t, err, value)
+		assert.Equal(t, expected, day, value)
+	}
+}
+
+func TestParseWeekdayInvalid(t *testing.T) {
+	for _, value := range []string{"", " ", "funday", "m", "mondays", "tues", "1", "mon,tue"} {
+		_, err := ParseWeekday(value)
+
+		assert.Error(t, err, value)
+	}
 }
 
 func TestParseMtbf(t *testing.T) {

@@ -16,6 +16,12 @@ image:
 imagePullSecrets: {}
 config:
   dryRun: true  
+  runDays:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
   runHour: 8
   startHour: 10
   endHour: 16

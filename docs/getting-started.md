@@ -35,8 +35,8 @@ metadata:
     kube-monkey/mtbf: "2"
 ```
 
-That reads as: this app is in, call it `monkey-victim`, and expect to lose a pod roughly
-every second weekday.
+That reads as: this app is in, call it `monkey-victim`, and expect to lose a pod on about
+one run day in two. Run days are weekdays unless you change `run_days`.
 
 The labels go on the app's own `metadata.labels`. See [Opting in to chaos](opting-in.md)
 for the full set, including the kill modes that let you take out more than one pod.
@@ -91,6 +91,7 @@ Once you trust it, drop debug mode and pick the hours that suit the people on ca
 ```toml
 [kubemonkey]
 dry_run = false
+run_days = ["mon", "tue", "wed", "thu", "fri"]  # Weekdays only
 run_hour = 8      # Build the day's schedule at 8am. Nothing dies yet
 start_hour = 10   # No terminations before 10am
 end_hour = 16     # No terminations after 4pm

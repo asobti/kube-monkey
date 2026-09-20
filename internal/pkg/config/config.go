@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"path"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
 
+	"kube-monkey/internal/pkg/calendar"
 	"kube-monkey/internal/pkg/config/param"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,6 +59,7 @@ func SetDefaults() {
 
 	viper.SetDefault(param.DryRun, true)
 	viper.SetDefault(param.Timezone, "America/Los_Angeles")
+	viper.SetDefault(param.RunDays, []string{"mon", "tue", "wed", "thu", "fri"})
 	viper.SetDefault(param.RunHour, 8)
 	viper.SetDefault(param.StartHour, 10)
 	viper.SetDefault(param.EndHour, 16)
@@ -119,6 +122,33 @@ func Timezone() *time.Location {
 		glog.Fatal(err.Error())
 	}
 	return location
+}
+
+// RunDays lists the days of the week kube-monkey builds a schedule on
+func RunDays() []time.Weekday {
+	days, err := parseRunDays()
+	if err != nil {
+		// Unreachable: ValidateConfigs rejects a bad list at startup and on reload
+		glog.Fatal(err.Error())
+	}
+	return days
+}
+
+func parseRunDays() ([]time.Weekday, error) {
+	values := viper.GetStringSlice(param.RunDays)
+	if len(values) == 0 {
+		return nil, fmt.Errorf("RunDays: %s must list at least one day", param.RunDays)
+	}
+
+	days := make([]time.Weekday, 0, len(values))
+	for _, value := range values {
+		day, err := calendar.ParseWeekday(value)
+		if err != nil {
+			return nil, fmt.Errorf("RunDays: %s contains an %v", param.RunDays, err)
+		}
+		days = append(days, day)
+	}
+	return days, nil
 }
 
 func RunHour() int {
