@@ -53,6 +53,29 @@ func NewReceiver(endpoint string, message string, headers []string) Receiver {
 	}
 }
 
+// CustomResource names a custom resource kube-monkey can terminate pods for.
+//
+// The operator that owns the resource creates the pods, so the resource has no
+// pod template to read a selector off. PodLabel names the label the operator
+// puts on those pods, holding the name of the custom resource, which is the
+// convention operators follow. An empty PodLabel falls back to matching pods on
+// the kube-monkey identifier label.
+type CustomResource struct {
+	Group    string `mapstructure:"group"`
+	Version  string `mapstructure:"version"`
+	Resource string `mapstructure:"resource"`
+	PodLabel string `mapstructure:"pod_label"`
+}
+
+// Name returns the resource in the "resource.group" form the API server and
+// kubectl use, which is unique across groups
+func (cr CustomResource) Name() string {
+	if cr.Group == "" {
+		return cr.Resource
+	}
+	return cr.Resource + "." + cr.Group
+}
+
 func SetDefaults() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
@@ -66,6 +89,7 @@ func SetDefaults() {
 	viper.SetDefault(param.GracePeriodSec, 5)
 	viper.SetDefault(param.BlacklistedNamespaces, []string{metav1.NamespaceSystem})
 	viper.SetDefault(param.WhitelistedNamespaces, []string{metav1.NamespaceAll})
+	viper.SetDefault(param.CustomResources, []CustomResource{})
 
 	viper.SetDefault(param.DebugEnabled, false)
 	viper.SetDefault(param.DebugScheduleDelay, 30)
@@ -245,6 +269,19 @@ func BlacklistEnabled() bool {
 
 func WhitelistEnabled() bool {
 	return !WhitelistedNamespaces().Equal(sets.NewString(metav1.NamespaceAll))
+}
+
+// CustomResources lists the custom resources to treat as victims. An unreadable
+// list yields nothing, so a broken entry never widens the blast radius
+func CustomResources() []CustomResource {
+	var resources []CustomResource
+	if err := viper.UnmarshalKey(param.CustomResources, &resources); err != nil {
+		// Unreachable: ValidateConfigs rejects a list it cannot read at startup
+		// and on reload
+		glog.Errorf("Failed to parse %s %v", param.CustomResources, err)
+		return nil
+	}
+	return resources
 }
 
 func ClusterAPIServerHost() (string, bool) {

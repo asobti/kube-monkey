@@ -29,6 +29,16 @@ config:
     - kube-system
   whitelistedNamespaces:  []
   timeZone: America/New_York
+  # Custom resources to terminate pods for, alongside deployments, statefulsets
+  # and daemonsets. The chart grants read access to each one it is given.
+  # podLabel is the label the operator puts on the pods it creates, holding the
+  # name of the custom resource. Leave it out only if those pods carry the
+  # kube-monkey/identifier label themselves.
+  customResources: []
+  #  - group: postgresql.cnpg.io
+  #    version: v1
+  #    resource: clusters
+  #    podLabel: cnpg.io/cluster
   debug:
    enabled: false # if you want to enable debugging and see how pods killed immediately set enabled and schedule_immediate_kill to true
    schedule_delay: 30 # seconds to wait before each scheduling run, raise it for longer between rounds

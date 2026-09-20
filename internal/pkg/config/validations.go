@@ -5,8 +5,14 @@ import (
 	"net"
 	"path"
 	"regexp"
+	"strings"
+
+	"github.com/spf13/viper"
 
 	"kube-monkey/internal/pkg/config/param"
+
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func ValidateConfigs() error {
@@ -53,6 +59,12 @@ func ValidateConfigs() error {
 		return err
 	}
 
+	// A custom resource entry that does not describe a real resource would
+	// silently schedule nothing, so reject it here rather than at kill time
+	if err := validateCustomResources(); err != nil {
+		return err
+	}
+
 	notificationsReceiver := NotificationsAttacks()
 
 	// Notification headers should be in a valid format
@@ -67,6 +79,40 @@ func ValidateConfigs() error {
 		if _, _, err := net.SplitHostPort(MetricsAddress()); err != nil {
 			return fmt.Errorf("MetricsAddress: %s is not a valid host:port address: %v", param.MetricsAddress, err)
 		}
+	}
+
+	return nil
+}
+
+func validateCustomResources() error {
+	var resources []CustomResource
+	if err := viper.UnmarshalKey(param.CustomResources, &resources); err != nil {
+		return fmt.Errorf("CustomResources: %s could not be read: %v", param.CustomResources, err)
+	}
+
+	seen := sets.NewString()
+	for _, resource := range resources {
+		if resource.Version == "" || resource.Resource == "" {
+			return fmt.Errorf("CustomResources: %s has an entry without a version and a resource", param.CustomResources)
+		}
+
+		// The plural resource name, not the kind, because that is what the
+		// dynamic client asks the API server for. "Cluster" would 404
+		if strings.ToLower(resource.Resource) != resource.Resource {
+			return fmt.Errorf("CustomResources: %q should be the lowercase plural resource name, e.g. %q rather than the kind", resource.Resource, strings.ToLower(resource.Resource))
+		}
+
+		if resource.PodLabel != "" {
+			if errs := validation.IsQualifiedName(resource.PodLabel); len(errs) > 0 {
+				return fmt.Errorf("CustomResources: %q is not a valid label key: %s", resource.PodLabel, strings.Join(errs, ", "))
+			}
+		}
+
+		// Two entries for one resource would schedule every victim twice
+		if seen.Has(resource.Name()) {
+			return fmt.Errorf("CustomResources: %s is listed more than once", resource.Name())
+		}
+		seen.Insert(resource.Name())
 	}
 
 	return nil

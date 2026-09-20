@@ -38,6 +38,16 @@ rules:
   - get
   - list
   - watch
+{{- range .Values.config.customResources }}
+- apiGroups:
+  - {{ .group | quote }}
+  resources:
+  - {{ .resource | quote }}
+  verbs:
+  - get
+  - list
+  - watch
+{{- end }}
 - apiGroups:
   - ""
   resources:

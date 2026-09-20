@@ -73,6 +73,22 @@ const (
 	// Default: [ "kube-system" ]
 	BlacklistedNamespaces = "kubemonkey.blacklisted_namespaces"
 
+	// CustomResources lists the custom resources kube-monkey should
+	// treat as victims, alongside the built in deployments,
+	// statefulsets and daemonsets
+	// Each entry names one resource and how to find the pods
+	// its operator creates:
+	//   group       API group, e.g. "postgresql.cnpg.io"
+	//   version     API version, e.g. "v1"
+	//   resource    plural resource name, e.g. "clusters"
+	//   pod_label   label the operator puts on the pods, holding
+	//               the name of the custom resource. Leave it out
+	//               to match pods on the kube-monkey identifier
+	//               label instead
+	// Type: list of tables
+	// Default: [] (no custom resources)
+	CustomResources = "kubemonkey.custom_resources"
+
 	// ClusterAPIServerHost specifies the host URL for Kubernetes
 	// cluster APIServer. Use this config if the apiserver IP
 	// address provided by in-cluster config

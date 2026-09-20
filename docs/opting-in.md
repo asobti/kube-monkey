@@ -74,6 +74,9 @@ You do not need to repeat them on **`spec.template.metadata.labels`**. To find t
 kill, kube-monkey falls back to the app's pod selector (`spec.selector`), which every
 Deployment, StatefulSet and DaemonSet already has.
 
+An app run by an operator has no pod selector of its own, so it needs one more piece of
+config. See [Custom resources](custom-resources.md).
+
 ## Example: one pod per attack
 
 ```yaml

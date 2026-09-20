@@ -91,6 +91,7 @@ nav:
   - Getting started: getting-started.md
   - How it works: how-it-works.md
   - Opting in to chaos: opting-in.md
+  - Custom resources: custom-resources.md
   - Configuration:
       - Reference: configuration.md
       - Notifications: notifications.md

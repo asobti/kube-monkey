@@ -11,10 +11,12 @@ import (
 	"kube-monkey/internal/pkg/config"
 	"kube-monkey/internal/pkg/kubernetes"
 	"kube-monkey/internal/pkg/victims"
+	"kube-monkey/internal/pkg/victims/factory/customresources"
 	"kube-monkey/internal/pkg/victims/factory/daemonsets"
 	"kube-monkey/internal/pkg/victims/factory/deployments"
 	"kube-monkey/internal/pkg/victims/factory/statefulsets"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -70,7 +72,47 @@ func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 	}
 	eligibleVictims = append(eligibleVictims, daemonsets...)
 
+	// Fetch the custom resources named in the config
+	eligibleVictims = append(eligibleVictims, eligibleCustomResources(filter)...)
+
 	return InAllowedNamespace(eligibleVictims), nil
+}
+
+// eligibleCustomResources fetches every custom resource kind the config names.
+//
+// The dynamic client is only built when there is something to use it for, so a
+// config without custom resources needs no extra permissions.
+func eligibleCustomResources(filter *metav1.ListOptions) (eligibleVictims []victims.Victim) {
+	resources := config.CustomResources()
+	if len(resources) == 0 {
+		return nil
+	}
+
+	client, err := kubernetes.NewDynamicClient()
+	if err != nil {
+		glog.Errorf("Failed to create a client for custom resources due to error: %s", err.Error())
+		return nil
+	}
+
+	for _, resource := range resources {
+		customResources, err := customresources.EligibleCustomResources(client, resource, metav1.NamespaceAll, filter)
+		if err != nil {
+			// A resource nobody has installed the CRD for is worth a word but
+			// not a shout, because a single config can cover a fleet of
+			// clusters that do not all run the same operators
+			if apierrors.IsNotFound(err) {
+				glog.V(4).Infof("Skipping %s because the cluster does not serve it", resource.Name())
+				continue
+			}
+			// Anything else, a missing RBAC rule most likely, leaves the
+			// schedule empty for this kind and is worth shouting about
+			glog.Errorf("Failed to fetch eligible %s due to error: %s", resource.Name(), err.Error())
+			continue
+		}
+		eligibleVictims = append(eligibleVictims, customResources...)
+	}
+
+	return
 }
 
 // InAllowedNamespace keeps the victims whose namespace is whitelisted and not
