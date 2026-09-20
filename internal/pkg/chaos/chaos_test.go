@@ -3,6 +3,7 @@ package chaos
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"kube-monkey/internal/pkg/config"
 
@@ -146,12 +147,19 @@ func (s *ChaosTestSuite) TestGetKillValueReturnsError() {
 	s.NotNil(err)
 }
 
-// Disabling test
-// See https://github.com/asobti/kube-monkey/issues/126
-//func (s *ChaosTestSuite) TestDurationToKillTime() {
-//	t := s.chaos.DurationToKillTime()
-//	s.WithinDuration(s.chaos.KillAt(), time.Now(), t+time.Millisecond)
-//}
+func (s *ChaosTestSuite) TestDurationToKillTime() {
+	killAt := time.Now().Add(time.Hour)
+	c := New(killAt, NewVictimMock())
+
+	// The clock read inside DurationToKillTime happens between these two samples,
+	// so the duration is bracketed exactly and no timing tolerance is needed
+	before := time.Now()
+	d := c.DurationToKillTime()
+	after := time.Now()
+
+	s.LessOrEqual(d, killAt.Sub(before))
+	s.GreaterOrEqual(d, killAt.Sub(after))
+}
 
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(ChaosTestSuite))
