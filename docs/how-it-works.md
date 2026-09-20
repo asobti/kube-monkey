@@ -5,8 +5,9 @@ waits for each of those moments to arrive.
 
 ## Scheduling time
 
-Scheduling happens once a day on weekdays, at `run_hour`. This is when the schedule of
-terminations for the current day is generated. During scheduling, kube-monkey will:
+Scheduling happens once a day at `run_hour`, on each day listed in `run_days`. By default
+that is Monday to Friday. This is when the schedule of terminations for the current day is
+generated. During scheduling, kube-monkey will:
 
 1. Generate a list of eligible apps. An app is eligible when it has opted in, is not in a
    blacklisted namespace, and is in a whitelisted namespace if a whitelist is set.
@@ -14,6 +15,17 @@ terminations for the current day is generated. During scheduling, kube-monkey wi
    An app is killed `24h / mtbf` times a day, so an mtbf of a day or more gives at most one
    termination, and a shorter one gives several.
 3. For each termination, calculate a random time during the day when a pod will be killed.
+
+## Why nothing dies at run_hour
+
+Scheduling only writes down the day's plan. The plan goes to the log, and to your
+notification receiver if `notifications.reportSchedule` is on. The earliest a pod can
+actually die is `start_hour`, which is why kube-monkey refuses to start unless `run_hour`
+is the earlier of the two.
+
+The gap between the two is your chance to read the plan and pull anything you do not want
+killed today, so leave enough of it to be useful. The default `run_hour = 8` with
+`start_hour = 10` gives you two hours.
 
 ## Termination time
 
@@ -54,3 +66,7 @@ window to hours when the people who own the services are around to notice.
 
 An mtbf shorter than a day does not spread terminations across the clock. It packs that day's
 terminations into the same window.
+
+A day that is not in `run_days` is skipped entirely, and `kube-monkey/mtbf` counts run days
+rather than calendar days. So an app with an mtbf of `3d` loses a pod on about a third of
+the run days, and adding days to `run_days` makes it lose more pods in a week.

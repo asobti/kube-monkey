@@ -30,8 +30,9 @@ own the service are still at their desks.</p>
 | v1.StatefulSet | payments | ledger | 13:47:19 |
 | v1.DaemonSet | observability | log-shipper | 15:02:41 |
 
-<p class="km-board-foot">kube-monkey writes this to the log at <code>run_hour</code> every
-weekday. Every termination lands between <code>start_hour</code> and <code>end_hour</code>.</p>
+<p class="km-board-foot">kube-monkey writes this to the log at <code>run_hour</code> on each
+of its <code>run_days</code>. Every termination lands between <code>start_hour</code> and
+<code>end_hour</code>.</p>
 
 </div>
 
@@ -51,8 +52,8 @@ encouraging and validating the development of failure-resilient services.
     ready, not when the cluster operator flips a switch.
 
 [Office hours only](how-it-works.md)
-:   Terminations are scheduled inside a window you choose, on weekdays. Pods die while the
-    people who own them are at their desks.
+:   Terminations are scheduled inside a window you choose, on the days you choose. Pods die
+    while the people who own them are at their desks.
 
 [Dry run until you say otherwise](configuration.md)
 :   Out of the box kube-monkey only logs what it would have killed. You see the blast radius

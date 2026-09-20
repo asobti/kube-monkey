@@ -14,7 +14,7 @@ helm repo update
 To install the chart with the release name `my-release`:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.8.0
+helm install my-release kubemonkey/kube-monkey --version 1.9.0
 ```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
@@ -64,6 +64,7 @@ If you want to change the time kube-monkey wakes up and start and end killing po
 $ helm install my-release kubemonkey \
                --set config.dryRun=false \
                --set config.whitelistedNamespaces="{namespace1,namespace2,namespace3}"
+               --set config.runDays="{mon,wed,fri}" \
                --set config.runHour=10 \
                --set config.startHour=11 \
                --set config.endHour=17 

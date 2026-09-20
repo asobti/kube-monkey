@@ -10,6 +10,11 @@ import (
 )
 
 func ValidateConfigs() error {
+	// RunDays should name at least one day of the week
+	if _, err := parseRunDays(); err != nil {
+		return err
+	}
+
 	// RunHour should be [0, 23]
 	runHour := RunHour()
 	if !IsValidHour(runHour) {

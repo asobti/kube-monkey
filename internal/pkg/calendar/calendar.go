@@ -6,50 +6,77 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
 )
 
-// Checks if specified Time is a weekday
-func isWeekday(t time.Time) bool {
-	switch t.Weekday() {
-	case time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday:
-		return true
-	case time.Saturday, time.Sunday:
-		return false
-	}
-
-	glog.Fatalf("Unrecognized day of the week: %s", t.Weekday().String())
-
-	panic("Explicit Panic to avoid compiler error: missing return at end of function")
+var weekdayNames = map[string]time.Weekday{
+	"sun": time.Sunday, "sunday": time.Sunday,
+	"mon": time.Monday, "monday": time.Monday,
+	"tue": time.Tuesday, "tuesday": time.Tuesday,
+	"wed": time.Wednesday, "wednesday": time.Wednesday,
+	"thu": time.Thursday, "thursday": time.Thursday,
+	"fri": time.Friday, "friday": time.Friday,
+	"sat": time.Saturday, "saturday": time.Saturday,
 }
 
-// Returns the next weekday in Location
-func nextWeekday(loc *time.Location) time.Time {
-	check := time.Now().In(loc)
-	for {
-		check = check.AddDate(0, 0, 1)
-		if isWeekday(check) {
-			return check
+// ParseWeekday turns a day name from the config into a time.Weekday. The short
+// and the full name are both accepted, in any case, e.g. "mon" or "Monday".
+func ParseWeekday(value string) (time.Weekday, error) {
+	day, ok := weekdayNames[strings.ToLower(strings.TrimSpace(value))]
+	if !ok {
+		return 0, fmt.Errorf("invalid day %q: expected a day name like mon or monday", value)
+	}
+	return day, nil
+}
+
+// Checks if the specified Time falls on one of the days kube-monkey runs on
+func isRunDay(t time.Time, runDays []time.Weekday) bool {
+	for _, day := range runDays {
+		if t.Weekday() == day {
+			return true
 		}
 	}
+	return false
+}
+
+// Returns the first day after now that kube-monkey runs on. It reports false
+// when runDays is empty, which config validation rejects.
+func nextRunDay(now time.Time, runDays []time.Weekday) (time.Time, bool) {
+	// Seven days reaches every day of the week, so a miss means there is
+	// nothing to find
+	for i := 1; i <= 7; i++ {
+		check := now.AddDate(0, 0, i)
+		if isRunDay(check, runDays) {
+			return check, true
+		}
+	}
+	return time.Time{}, false
 }
 
 // NextRuntime calculates the next time the Scheduled should run
-func NextRuntime(loc *time.Location, r int) time.Time {
-	now := time.Now().In(loc)
+func NextRuntime(loc *time.Location, r int, runDays []time.Weekday) time.Time {
+	return nextRuntime(time.Now().In(loc), loc, r, runDays)
+}
 
-	// Is today a weekday and are we still in time for it?
-	if isWeekday(now) {
+func nextRuntime(now time.Time, loc *time.Location, r int, runDays []time.Weekday) time.Time {
+	// Does kube-monkey run today and are we still in time for it?
+	if isRunDay(now, runDays) {
 		runtimeToday := time.Date(now.Year(), now.Month(), now.Day(), r, 0, 0, 0, loc)
 		if runtimeToday.After(now) {
 			return runtimeToday
 		}
 	}
 
-	// Missed the train for today. Schedule on next weekday
-	year, month, day := nextWeekday(loc).Date()
+	// Missed the train for today. Schedule on the next run day
+	next, ok := nextRunDay(now, runDays)
+	if !ok {
+		glog.Fatal("No run days configured, so there is never a next runtime")
+	}
+
+	year, month, day := next.Date()
 	return time.Date(year, month, day, r, 0, 0, 0, loc)
 }
 

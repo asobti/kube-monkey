@@ -35,6 +35,26 @@ func TestValidateConfigs(t *testing.T) {
 
 }
 
+func TestValidateRunDays(t *testing.T) {
+	SetDefaults()
+
+	// Other tests leave hours set, and a set value wins over a default
+	viper.Set(param.RunHour, 8)
+	viper.Set(param.StartHour, 10)
+	viper.Set(param.EndHour, 16)
+
+	defer viper.Set(param.RunDays, []string{"mon", "tue", "wed", "thu", "fri"})
+
+	viper.Set(param.RunDays, []string{"Saturday", "SUN"})
+	assert.Nil(t, ValidateConfigs())
+
+	viper.Set(param.RunDays, []string{})
+	assert.EqualError(t, ValidateConfigs(), "RunDays: "+param.RunDays+" must list at least one day")
+
+	viper.Set(param.RunDays, []string{"mon", "funday"})
+	assert.ErrorContains(t, ValidateConfigs(), "RunDays: "+param.RunDays+" contains an invalid day \"funday\"")
+}
+
 func TestValidateMetricsAddress(t *testing.T) {
 	SetDefaults()
 

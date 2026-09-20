@@ -21,7 +21,7 @@ whitelisted namespaces. It kills nothing until you tell it to.
 Pin the chart version if you want a repeatable install:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.8.0
+helm install my-release kubemonkey/kube-monkey --version 1.9.0
 ```
 
 ## Uninstall
@@ -65,6 +65,7 @@ To change when kube-monkey wakes up, and when it starts and stops killing pods:
 helm install my-release kubemonkey/kube-monkey \
   --set config.dryRun=false \
   --set config.whitelistedNamespaces="{namespace1,namespace2,namespace3}" \
+  --set config.runDays="{mon,wed,fri}" \
   --set config.runHour=10 \
   --set config.startHour=11 \
   --set config.endHour=17
@@ -85,6 +86,7 @@ helm get manifest my-release
 | `image.pullPolicy` | image pull logic | `IfNotPresent` |
 | `replicaCount` | number of replicas to run | `1` |
 | `config.dryRun` | will not kill pods, only logs behaviour | `true` |
+| `config.runDays` | days of the week the schedule is built on | `[mon, tue, wed, thu, fri]` |
 | `config.runHour` | schedule start time in 24hr format | `8` |
 | `config.startHour` | pod killing start time in 24hr format | `10` |
 | `config.endHour` | pod killing stop time in 24hr format | `16` |
@@ -125,6 +127,7 @@ image:
   pullPolicy: IfNotPresent
 config:
   dryRun: false
+  runDays: [ "mon", "tue", "wed", "thu", "fri" ]
   runHour: 8
   startHour: 10
   endHour: 16

@@ -28,12 +28,22 @@ because that is its section name.
 | --- | --- | --- | --- |
 | `kubemonkey.dry_run` | bool | `true` | Log terminations instead of carrying them out |
 | `kubemonkey.time_zone` | string | `America/Los_Angeles` | tzdata timezone the hours below are read in. Note the key is `time_zone`, not `timezone` |
-| `kubemonkey.run_hour` | int | `8` | Hour of the weekday when the day's schedule is built. Must be less than `start_hour`, and in `[0,23]` |
+| `kubemonkey.run_days` | list | `["mon", "tue", "wed", "thu", "fri"]` | Days of the week a schedule is built on. Short or full day names, in any case. Must name at least one day |
+| `kubemonkey.run_hour` | int | `8` | Hour of the weekday when the day's schedule is built. Nothing is terminated at this hour. Must be less than `start_hour`, and in `[0,23]` |
 | `kubemonkey.start_hour` | int | `10` | Earliest hour a termination may happen. Must be less than `end_hour`, and in `[0,23]` |
 | `kubemonkey.end_hour` | int | `16` | Latest hour a termination may happen. Must be in `[0,23]` |
 | `kubemonkey.graceperiod_sec` | int | `5` | Seconds a pod is given to shut down before Kubernetes hard kills it |
 
 Set `start_hour` and `end_hour` to a time when service owners are expected to be available.
+
+`run_hour` is when the day's plan is built, not when pods die. The time between `run_hour`
+and `start_hour` is there for you to read the plan and opt anything out of it before the
+first termination. See [How it works](how-it-works.md) for what happens in that gap.
+
+Nothing at all happens on a day outside `run_days`. Adding days to the list makes every
+opted in app lose pods more often, because `kube-monkey/mtbf` counts run days rather than
+calendar days. An app with an mtbf of `3d` expects a termination on a third of the run days,
+which is more terminations a week once the weekend is in the list.
 
 ## Namespace lists
 
@@ -128,7 +138,8 @@ schedule_immediate_kill = true
     ```toml
     [kubemonkey]
     dry_run = true                           # Terminations are only logged
-    run_hour = 8                             # Run scheduling at 8am on weekdays
+    run_days = ["mon", "tue", "wed", "thu", "fri"] # Build a schedule on weekdays only
+    run_hour = 8                             # Build the day's schedule at 8am. Nothing dies yet
     start_hour = 10                          # Don't schedule any pod deaths before 10am
     end_hour = 16                            # Don't schedule any pod deaths after 4pm
     blacklisted_namespaces = ["kube-system"] # Critical apps live here. Patterns like "*-prod" work too
@@ -140,6 +151,7 @@ schedule_immediate_kill = true
 
     ```bash
     KUBEMONKEY_DRY_RUN=true
+    KUBEMONKEY_RUN_DAYS="mon tue wed thu fri"
     KUBEMONKEY_RUN_HOUR=8
     KUBEMONKEY_START_HOUR=10
     KUBEMONKEY_END_HOUR=16
