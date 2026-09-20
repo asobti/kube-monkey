@@ -23,18 +23,32 @@ func initLogging() {
 	flag.Usage = glogUsage
 	flag.Parse()
 
-	if _, err := os.Stat(flag.Lookup("log_dir").Value.String()); os.IsNotExist(err) {
-		err = os.MkdirAll(flag.Lookup("log_dir").Value.String(), os.ModePerm)
-		if err != nil {
-			glog.Errorf("Failed to open custom log directory at %s; defaulting to /tmp! Error: %v", flag.Lookup("log_dir").Value, err)
-		} else {
-			glog.V(5).Infof("Created custom logging %s directory!", flag.Lookup("log_dir").Value)
-		}
-	}
 	// Since km runs as a k8 pod, log everything to stderr (stdout not supported)
 	// this takes advantage of k8's logging driver allowing kubectl logs kube-monkey
 	if err := flag.Lookup("alsologtostderr").Value.Set("true"); err != nil {
 		glog.Errorf("Failed to set alsologtostderr. Error: %v", err)
+	}
+
+	// glog only opens log files when -logtostderr is off, and it writes them to
+	// the system temp dir when -log_dir is empty. Neither case needs a directory
+	// prepared here.
+	if flag.Lookup("logtostderr").Value.String() == "true" {
+		return
+	}
+	logDir := flag.Lookup("log_dir").Value.String()
+	if logDir == "" {
+		return
+	}
+
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
+			// The image runs on an empty filesystem owned by root, so a non-root
+			// user cannot create this directory. Mount a writable volume at the
+			// path, or drop -log_dir and log to stderr only.
+			glog.Errorf("Failed to create log directory at %s; glog will fall back to %s. Error: %v", logDir, os.TempDir(), err)
+		} else {
+			glog.V(5).Infof("Created custom logging %s directory!", logDir)
+		}
 	}
 }
 
@@ -51,7 +65,11 @@ func main() {
 	// Initialize configs
 	initConfig()
 
-	glog.V(1).Infof("Starting kube-monkey with v logging level %v and local log directory %s", flag.Lookup("v").Value, flag.Lookup("log_dir").Value)
+	if logDir := flag.Lookup("log_dir").Value.String(); logDir != "" {
+		glog.V(1).Infof("Starting kube-monkey with v logging level %v and local log directory %s", flag.Lookup("v").Value, logDir)
+	} else {
+		glog.V(1).Infof("Starting kube-monkey with v logging level %v", flag.Lookup("v").Value)
+	}
 
 	if err := kubemonkey.Run(); err != nil {
 		glog.Fatal(err.Error())

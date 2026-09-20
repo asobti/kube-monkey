@@ -269,7 +269,9 @@ See [How to install kube-monkey with Helm](helm/kubemonkey/README.md).
 
 ## Logging
 
-kube-monkey uses [glog](github.com/golang/glog) and supports all command-line features for glog. To specify a custom v level or a custom log directory on the pod, see  `args: ["-v=5", "-log_dir=/path/to/custom/log"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
+kube-monkey uses [glog](github.com/golang/glog) and supports all command-line features for glog. It logs to stderr, so `kubectl logs` shows everything. To change the v level, see `args: ["-v=5"]` in the [example deployment file](https://github.com/asobti/kube-monkey/tree/master/examples/deployment.yaml)
+
+To also write glog log files, pass `-log_dir=/path/to/custom/log`. The image runs on an empty filesystem, so mount a writable volume at that path, otherwise the directory cannot be created and kube-monkey exits.
 
 > **Standardized glog levels `grep -r V\([0-9]\) *`**
 >
@@ -298,7 +300,7 @@ oc create -f configmap.yaml
 oc -n kube-system adm policy add-role-to-user -z deployer system:deployer
 oc -n kube-system adm policy add-role-to-user -z builder system:image-builder
 oc -n kube-system adm policy add-role-to-group system:image-puller system:serviceaccounts:kube-system
-oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.4.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
+oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.4.0 --command -- /kube-monkey -v=5 -logtostderr=true
 oc volume dc/kube-monkey --add --name=kubeconfigmap -m /etc/kube-monkey -t configmap --configmap-name=kube-monkey-config-map
 ```
 
@@ -311,7 +313,7 @@ oc login http://someserver/ -u system:admin
 oc project kube-system
 oc create -f configmap.yaml
 oc -n kube-system adm policy add-cluster-role-to-user edit -z default --rolebinding-name kube-monkey-edit
-oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.3.0 --command -- /kube-monkey -v=5 -log_dir=/var/log/kube-monkey
+oc run kube-monkey --image=docker.io/ayushsobti/kube-monkey:v0.3.0 --command -- /kube-monkey -v=5 -logtostderr=true
 oc set volume dc/kube-monkey --add --name=kubeconfigmap -m /etc/kube-monkey -t configmap --configmap-name=kube-monkey-config-map
 ```
 

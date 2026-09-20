@@ -18,7 +18,7 @@
           -  name: kube-monkey
              command:
                - "/kube-monkey"
-             args: ["-v=5", "-log_dir=/var/log/kube-monkey"]
+             args: ["-v=5", "-logtostderr=true"]
              image: ayushsobti/kube-monkey:v0.4.0
              env:
                - name: KUBE_MONKEY_ID

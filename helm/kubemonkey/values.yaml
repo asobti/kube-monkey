@@ -43,7 +43,13 @@ serviceMonitor:
 
 args:
   logLevel: 5
-  logDir: /var/log/kube-monkey
+  # Directory for the glog log files. Leave it empty to log to the container's
+  # stderr only, which is what `kubectl logs` reads. The image has no writable
+  # filesystem of its own, so setting a directory also needs a writable volume
+  # mounted at that exact path (see additionalVolumes below).
+  logDir: ""
+  # Extra command line flags for kube-monkey, e.g. ["-stderrthreshold=INFO"]
+  extraArgs: []
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -63,14 +69,17 @@ tolerations: []
 
 affinity: {}
 
-additionalVolumes: {}
+additionalVolumes: []
 # - name: log
 #   emptyDir: {}
 
-additionalVolumeMounts: {}
+additionalVolumeMounts: []
 # - name: log
-#   mountPath: "/var/log"
+#   mountPath: "/var/log/kube-monkey"
 
+# Running as a non-root user needs no extra setup while logs go to stderr. If
+# you also set args.logDir, mount a writable volume at that path, otherwise the
+# user cannot create the directory and kube-monkey will not start.
 podSecurityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1001

@@ -14,7 +14,7 @@ helm repo update
 To install the chart with the release name `my-release`:
 
 ```bash
-helm install my-release kubemonkey/kube-monkey --version 1.7.0
+helm install my-release kubemonkey/kube-monkey --version 1.8.0
 ```
 
 The command deploys kube-monkey on the Kubernetes cluster in the default configuration. The [configurations](#Configurations) section lists the parameters that can be configured during installation.
@@ -119,7 +119,11 @@ $ helm get manifest my-release
 | `serviceMonitor.scrapeTimeout`         | how long Prometheus waits for a scrape                                                  | 10s                              |
 | `serviceMonitor.additionalLabels`      | extra labels on the ServiceMonitor, to match your Prometheus selector                   | {}                               |
 | `args.logLevel`                        | go log level                                                                            | 5                                |
-| `args.logDir`                          | log directory                                                                           | /var/log/kube-monkey             |
+| `args.logDir`                          | writes log files to this directory, empty means stderr only                             |                                  |
+| `args.extraArgs`                       | extra command line flags for kube-monkey                                                | []                               |
+| `additionalVolumes`                    | extra volumes on the pod                                                                | []                               |
+| `additionalVolumeMounts`               | extra volume mounts on the container                                                    | []                               |
+| `podSecurityContext`                   | security context for the pod                                                            | {}                               |
 
 after all you can simply edit values.yaml with your preferred configs and run as below
 
@@ -145,6 +149,42 @@ config:
   timeZone: America/New_York
 args:
   logLevel: 5
-  logDir: /var/log/kube-monkey
 ...
 ```
+
+## Logging
+
+By default kube-monkey logs to the container's stderr only, so `kubectl logs` shows
+everything and nothing is written to disk.
+
+Set `args.logDir` if you also want glog log files. The image runs on an empty
+filesystem, so you have to mount a writable volume at that same path:
+
+```yaml
+args:
+  logLevel: 5
+  logDir: /var/log/kube-monkey
+
+additionalVolumes:
+  - name: log
+    emptyDir: {}
+
+additionalVolumeMounts:
+  - name: log
+    mountPath: /var/log/kube-monkey
+```
+
+## Running as a non-root user
+
+Nothing beyond `podSecurityContext` is needed while logs go to stderr:
+
+```yaml
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+```
+
+If you also set `args.logDir`, add the volume shown above. Without it the user
+cannot create the directory and kube-monkey will not start.
