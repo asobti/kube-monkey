@@ -58,3 +58,25 @@ jobs:
         else
           ./hack/verify-release.sh --pre-release
         fi
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.x'
+        cache: pip
+        cache-dependency-path: requirements-docs.txt
+
+    - name: Install MkDocs
+      run: pip install -r requirements-docs.txt
+
+    # --strict fails the build on a broken link or anchor, so the site can
+    # never publish one.
+    - name: Build docs
+      run: mkdocs build --strict

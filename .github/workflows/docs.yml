@@ -1,0 +1,76 @@
+name: Publish docs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      - '.github/workflows/docs.yml'
+  # Lets the site be rebuilt without a docs change, for example after a
+  # theme release.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The chart publish writes to the same branch. Serialise so one does not
+# push onto a ref the other has already moved.
+concurrency:
+  group: gh-pages
+
+jobs:
+
+  publish-docs:
+
+    name: Publish docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
+
+      - name: Install MkDocs
+        run: pip install -r requirements-docs.txt
+
+      - name: Build site
+        run: mkdocs build --strict -d site
+
+      - name: Check out site branch
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Stage site
+        run: |
+          set -euo pipefail
+          # The Helm repo shares this branch, so the site owns everything
+          # except charts/. Excluded paths are protected from --delete.
+          rsync -a --delete \
+            --exclude=/.git \
+            --exclude=/charts \
+            --exclude=/.nojekyll \
+            site/ gh-pages/
+          # Serve the built files as they are. Jekyll would rebuild them for
+          # no gain and has opinions about paths the site does not control.
+          touch gh-pages/.nojekyll
+          # A missing chart index means the copy above reached too far. Stop
+          # before that is committed.
+          test -f gh-pages/charts/repo/index.yaml
+
+      - name: Publish
+        working-directory: gh-pages
+        run: |
+          "$GITHUB_WORKSPACE/hack/push-gh-pages.sh" "docs ${GITHUB_SHA::7}"

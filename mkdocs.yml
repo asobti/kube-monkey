@@ -1,0 +1,99 @@
+site_name: kube-monkey
+site_description: Chaos Monkey for Kubernetes. kube-monkey randomly deletes pods so you find out how your services really behave when one goes away.
+site_url: https://asobti.github.io/kube-monkey/
+repo_url: https://github.com/asobti/kube-monkey
+repo_name: asobti/kube-monkey
+edit_uri: edit/master/docs/
+copyright: Licensed under the Apache License 2.0
+
+theme:
+  name: material
+  features:
+    # Instant loading is deliberately left off. It intercepts same-origin links,
+    # and this site links to the raw Helm repo files served next to it.
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/asobti/kube-monkey
+      name: kube-monkey on GitHub
+    - icon: fontawesome/brands/slack
+      link: https://kubernetes.slack.com/messages/kube-monkey
+      name: "#kube-monkey on Kubernetes Slack"
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/r/ayushsobti/kube-monkey/
+      name: kube-monkey on Docker Hub
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - How it works: how-it-works.md
+  - Opting in to chaos: opting-in.md
+  - Configuration:
+      - Reference: configuration.md
+      - Notifications: notifications.md
+      - Metrics: metrics.md
+      - Logging: logging.md
+  - Installing:
+      - Helm chart: helm-chart.md
+      - Manual install: manual-install.md
+      - OpenShift: openshift.md
+  - Project:
+      - Contributing: contributing.md
+      - Releasing: releasing.md
