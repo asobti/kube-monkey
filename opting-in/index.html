@@ -1165,7 +1165,7 @@ and <code>kube-monkey/kill-value</code> supplies the number it needs.</p>
 <tr>
 <td><code>kill-all</code></td>
 <td>not used</td>
-<td><strong>Every</strong> pod, including ones that are not ready or not running</td>
+<td><strong>Every</strong> running pod</td>
 </tr>
 <tr>
 <td><code>fixed</code></td>
@@ -1187,7 +1187,7 @@ and <code>kube-monkey/kill-value</code> supplies the number it needs.</p>
 <p>With <code>fixed</code>, asking for more pods than exist kills all the running pods and logs a warning.</p>
 <div class="admonition danger">
 <p class="admonition-title">kill-all does what it says</p>
-<p><code>kill-all</code> takes out the whole app at once, regardless of pod status. Use it deliberately.</p>
+<p><code>kill-all</code> takes out every running pod of the app at once. Use it deliberately.</p>
 </div>
 <h2 id="where-to-put-the-labels">Where to put the labels<a class="headerlink" href="#where-to-put-the-labels" title="Permanent link">&para;</a></h2>
 <p>All of these labels go on the app's own <strong><code>metadata.labels</code></strong>. That is the only place
