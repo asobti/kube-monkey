@@ -3,6 +3,17 @@ entries:
   kube-monkey:
   - apiVersion: v2
     appVersion: 0.6.0
+    created: "2026-09-20T15:57:29.835540066Z"
+    description: A Helm chart for Kubernetes
+    digest: 54d7cfa8b3fcaa5f4de0f945d813f17ec90f3d0bee29b0b19035e41324edc064
+    kubeVersion: '>=1.9.0-0'
+    name: kube-monkey
+    type: application
+    urls:
+    - kube-monkey-1.9.1.tgz
+    version: 1.9.1
+  - apiVersion: v2
+    appVersion: 0.6.0
     created: "2026-09-20T13:31:03.417445421Z"
     description: A Helm chart for Kubernetes
     digest: 01815861a48e6f95d51151463772f9889f9bb30df4188faffec37b8d951cc349
@@ -75,4 +86,4 @@ entries:
     urls:
     - kube-monkey-1.3.0.tgz
     version: 1.3.0
-generated: "2026-09-20T13:31:03.416329477Z"
+generated: "2026-09-20T15:57:29.834735435Z"
