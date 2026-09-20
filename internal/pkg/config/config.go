@@ -72,6 +72,9 @@ func SetDefaults() {
 	viper.SetDefault(param.NotificationsProxy, nil)
 	viper.SetDefault(param.NotificationsReportSchedule, false)
 	viper.SetDefault(param.NotificationsAttacks, Receiver{})
+
+	viper.SetDefault(param.MetricsEnabled, false)
+	viper.SetDefault(param.MetricsAddress, ":8080")
 }
 
 func setupWatch() {
@@ -197,4 +200,12 @@ func NotificationsAttacks() Receiver {
 		glog.Errorf("Failed to parse notifications.attacks %v", err)
 	}
 	return receiver
+}
+
+func MetricsEnabled() bool {
+	return viper.GetBool(param.MetricsEnabled)
+}
+
+func MetricsAddress() string {
+	return viper.GetString(param.MetricsAddress)
 }

@@ -1,0 +1,22 @@
+{{- if .Values.config.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "kubemonkey.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "kubemonkey.name" . }}
+    chart: {{ template "kubemonkey.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: {{ .Values.config.metrics.port }}
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app: {{ template "kubemonkey.name" . }}
+    release: {{ .Release.Name }}
+{{- end }}

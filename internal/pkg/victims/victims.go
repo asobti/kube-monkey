@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"kube-monkey/internal/pkg/config"
+	"kube-monkey/internal/pkg/metrics"
 
 	"github.com/golang/glog"
 
@@ -133,7 +134,12 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	}
 
 	deleteOpts := v.GetDeleteOptsForPod()
-	return clientset.CoreV1().Pods(v.namespace).Delete(context.TODO(), podName, *deleteOpts)
+	if err := clientset.CoreV1().Pods(v.namespace).Delete(context.TODO(), podName, *deleteOpts); err != nil {
+		return err
+	}
+
+	metrics.RecordPodTermination(v.kind, v.namespace, v.name)
+	return nil
 }
 
 // Creates the DeleteOptions object

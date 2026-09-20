@@ -30,6 +30,16 @@ config:
    enabled: false
    proxy: ""
    attacks: ""
+  metrics:
+   enabled: false # serves Prometheus metrics on /metrics and creates a Service for them
+   port: 8080
+
+# Scrape the metrics endpoint with the Prometheus Operator. Needs config.metrics.enabled
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  additionalLabels: {}
 
 args:
   logLevel: 5
