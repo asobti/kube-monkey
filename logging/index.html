@@ -502,6 +502,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#timestamps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Timestamps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-log-files" class="md-nav__link">
     <span class="md-ellipsis">
       Writing log files
@@ -770,6 +779,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#timestamps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Timestamps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-log-files" class="md-nav__link">
     <span class="md-ellipsis">
       Writing log files
@@ -856,6 +874,18 @@ With the Helm chart, set <code>args.logLevel</code>.</p>
 </tbody>
 </table>
 <p>You can find them in the source with <code>grep -r 'V([0-9])' *</code>.</p>
+<h2 id="timestamps">Timestamps<a class="headerlink" href="#timestamps" title="Permanent link">&para;</a></h2>
+<p>Every timestamp kube-monkey prints is in <code>kubemonkey.time_zone</code>. That covers both the
+<code>I0919 11:32:04.123456</code> prefix glog puts on each line and the termination times inside the
+messages, so the two always agree and you can parse either one.</p>
+<p>The prefix carries no year and no zone, so a parser has to know the configured timezone.
+The termination times spell theirs out, for example
+<code>09/19/2019 15:32:04 +0200 CEST</code>, so prefer those if you want the offset in the line.</p>
+<div class="admonition note">
+<p class="admonition-title">Changing the timezone needs a restart</p>
+<p>kube-monkey picks up most config changes without a restart, but the timezone of the log
+timestamps is fixed when the process starts.</p>
+</div>
 <h2 id="writing-log-files">Writing log files<a class="headerlink" href="#writing-log-files" title="Permanent link">&para;</a></h2>
 <p>To also write glog log files, pass <code>-log_dir=/path/to/custom/log</code>.</p>
 <div class="admonition warning">
