@@ -2,6 +2,29 @@
 
 This page takes you from nothing to watching kube-monkey delete a pod on purpose.
 
+## Kubernetes compatibility
+
+kube-monkey talks to the cluster through
+[client-go](https://github.com/kubernetes/client-go). Each release is built against one
+version of it, pinned in `go.mod`. The client-go
+[compatibility matrix](https://github.com/kubernetes/client-go#compatibility-matrix) is the
+formal answer to which Kubernetes versions that covers: the matching minor version, give or
+take one.
+
+The real range is much wider, because kube-monkey only uses APIs that went stable years ago.
+
+| API | Used for | Stable since |
+| --- | --- | --- |
+| `apps/v1` | Finding the Deployments, StatefulSets and DaemonSets that opted in | 1.9 |
+| `core/v1` | Listing and deleting pods | 1.0 |
+| `rbac.authorization.k8s.io/v1` | The ClusterRole and binding the chart installs | 1.8 |
+
+There are no custom resources and no beta APIs, so 1.9 is the floor, and the Helm chart
+refuses to install below it. Anything between that floor and the version kube-monkey is built
+against is untested rather than unsupported. If an old cluster does give you trouble you will
+see it as a failure to list or delete pods in the log, so
+[open an issue](https://github.com/asobti/kube-monkey/issues) with the version and the error.
+
 ## 1. Install kube-monkey
 
 kube-monkey runs as a normal workload inside the cluster. It needs to live in a namespace
