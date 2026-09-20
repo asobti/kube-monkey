@@ -17,7 +17,7 @@
         <link rel="next" href="getting-started/">
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="assets/favicon.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
@@ -43,8 +43,8 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#kube-monkey" class="md-skip">
+        <a href="#chaos-on-a-timetable" class="md-skip">
           Skip to content
         </a>
       
@@ -94,8 +94,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="." title="kube-monkey" class="md-header__button md-logo" aria-label="kube-monkey" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="assets/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -167,6 +166,11 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
         <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -231,8 +235,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="." title="kube-monkey" class="md-nav__button md-logo" aria-label="kube-monkey" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="assets/logo.svg" alt="logo">
 
     </a>
     kube-monkey
@@ -303,6 +306,24 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#safe-by-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Safe by default
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-can-tune" class="md-nav__link">
+    <span class="md-ellipsis">
+      What you can tune
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#sixty-seconds-to-your-first-termination" class="md-nav__link">
@@ -749,6 +770,24 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#safe-by-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Safe by default
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-can-tune" class="md-nav__link">
+    <span class="md-ellipsis">
+      What you can tune
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sixty-seconds-to-your-first-termination" class="md-nav__link">
     <span class="md-ellipsis">
       Sixty seconds to your first termination
@@ -790,68 +829,89 @@
 
 
 <div class="km-hero">
-<h1 id="kube-monkey">kube-monkey<a class="headerlink" href="#kube-monkey" title="Permanent link">&para;</a></h1>
-<p>Your services claim to be resilient. kube-monkey finds out. It deletes pods at random
-during working hours, on apps that have opted in, so the failures happen while you are
-awake to watch them.</p>
+<h1 id="chaos-on-a-timetable">Chaos on a timetable<a class="headerlink" href="#chaos-on-a-timetable" title="Permanent link">&para;</a></h1>
+<p class="km-lede">kube-monkey deletes pods at random on apps that have opted in. It publishes
+the day's terminations each morning and runs them during working hours, while the people who
+own the service are still at their desks.</p>
 <p><a class="md-button md-button--primary" href="getting-started/">Get started</a>
 <a class="md-button" href="helm-chart/">Install with Helm</a></p>
+<div class="km-board">
+<div class="km-board-head">
+  <b>Today's schedule</b>
+  <span>4 terminations</span>
 </div>
-<div class="km-badges">
-<p><a href="https://github.com/asobti/kube-monkey/actions/workflows/go.yml"><img alt="Build" src="https://github.com/asobti/kube-monkey/actions/workflows/go.yml/badge.svg" /></a>
-<a href="https://goreportcard.com/report/github.com/asobti/kube-monkey"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/asobti/kube-monkey" /></a>
-<a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a>
-<a href="https://hub.docker.com/r/ayushsobti/kube-monkey/"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/ayushsobti/kube-monkey?label=Docker%20pulls&amp;logo=docker" /></a>
-<a href="https://artifacthub.io/packages/search?repo=kubemonkey"><img alt="Artifact Hub" src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubemonkey" /></a></p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Namespace</th>
+<th>Name</th>
+<th>Termination time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.Deployment</td>
+<td>default</td>
+<td>monkey-victim</td>
+<td>10:14:07</td>
+</tr>
+<tr>
+<td>v1.Deployment</td>
+<td>payments</td>
+<td>checkout-api</td>
+<td>11:32:55</td>
+</tr>
+<tr>
+<td>v1.StatefulSet</td>
+<td>payments</td>
+<td>ledger</td>
+<td>13:47:19</td>
+</tr>
+<tr>
+<td>v1.DaemonSet</td>
+<td>observability</td>
+<td>log-shipper</td>
+<td>15:02:41</td>
+</tr>
+</tbody>
+</table>
+<p class="km-board-foot">kube-monkey writes this to the log at <code>run_hour</code> every
+weekday. Every termination lands between <code>start_hour</code> and <code>end_hour</code>.</p>
+</div>
 </div>
 <p>kube-monkey is an implementation of <a href="https://github.com/Netflix/chaosmonkey">Netflix's Chaos Monkey</a>
 for <a href="https://kubernetes.io/">Kubernetes</a> clusters. It randomly deletes pods in the cluster,
 encouraging and validating the development of failure-resilient services.</p>
-<div class="grid cards">
-<ul>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 24c-3.26 0-6.19-2-7.4-5l-3.03-7.63a1 1 0 0 1 1.24-1.32l.79.26c.56.19 1.02.61 1.24 1.16L7.25 15H8V3.25a1.25 1.25 0 0 1 2.5 0V12h1V1.25a1.25 1.25 0 0 1 2.5 0V12h1V2.75a1.25 1.25 0 0 1 2.5 0V12h1V5.75a1.25 1.25 0 0 1 2.5 0V16c0 4.42-3.58 8-8 8"/></svg></span> <strong>Opt-in, never opt-out</strong></p>
-<hr />
-<p>Nothing is touched until an app asks for it with a label. A team adopts chaos when
-it is ready, not when the cluster operator flips a switch.</p>
-<p><a href="opting-in/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Opting in to chaos</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20a8 8 0 0 0 8-8 8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10 10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"/></svg></span> <strong>Office hours only</strong></p>
-<hr />
-<p>Terminations are scheduled inside a window you choose, on weekdays. Pods die while
-the people who own them are at their desks.</p>
-<p><a href="how-it-works/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> How it works</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0 9.821 9.821 0 0 0-17.64 0"/></svg></span> <strong>Dry run by default</strong></p>
-<hr />
-<p>Out of the box kube-monkey only logs what it would have killed. You see the blast
-radius on paper before anything real happens.</p>
-<p><a href="configuration/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Configuration</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 2v2.07A8 8 0 0 0 4.07 11H2v2h2.07A8 8 0 0 0 11 19.93V22h2v-2.07A8 8 0 0 0 19.93 13H22v-2h-2.07A8 8 0 0 0 13 4.07V2m-2 4.08V8h2V6.09c2.5.41 4.5 2.41 4.92 4.91H16v2h1.91c-.41 2.5-2.41 4.5-4.91 4.92V16h-2v1.91C8.5 17.5 6.5 15.5 6.08 13H8v-2H6.09C6.5 8.5 8.5 6.5 11 6.08M12 11a1 1 0 0 0-1 1 1 1 0 0 0 1 1 1 1 0 0 0 1-1 1 1 0 0 0-1-1"/></svg></span> <strong>Pick the blast radius</strong></p>
-<hr />
-<p>Kill one pod, a fixed number, a fixed percentage, a random percentage up to a cap,
-or the whole app. Per app, set by a label.</p>
-<p><a href="opting-in/#kill-modes"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Kill modes</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m16 11.78 4.24-7.33 1.73 1-5.23 9.05-6.51-3.75L5.46 19H22v2H2V3h2v14.54L9.5 8z"/></svg></span> <strong>Prometheus metrics</strong></p>
-<hr />
-<p>Schedules built, terminations attempted, pods actually deleted. Chart the chaos and
-alert on it like anything else.</p>
-<p><a href="metrics/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Metrics</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 21h4c0 1.1-.9 2-2 2s-2-.9-2-2m11-2v1H3v-1l2-2v-6c0-3.1 2-5.8 5-6.7V4c0-1.1.9-2 2-2s2 .9 2 2v.3c3 .9 5 3.6 5 6.7v6zm-4-8c0-2.8-2.2-5-5-5s-5 2.2-5 5v7h10z"/></svg></span> <strong>Tell your team</strong></p>
-<hr />
-<p>Post every attack to a Slack webhook or your own API, with placeholders for the
-victim, the time and the outcome.</p>
-<p><a href="notifications/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Notifications</a></p>
-</li>
-</ul>
+<div class="km-split">
+<div>
+<h3 id="safe-by-default">Safe by default<a class="headerlink" href="#safe-by-default" title="Permanent link">&para;</a></h3>
+<dl>
+<dt><a href="opting-in/">Opt in, never opt out</a></dt>
+<dd>Nothing is touched until an app asks for it with a label. A team adopts chaos when it is
+ready, not when the cluster operator flips a switch.</dd>
+<dt><a href="how-it-works/">Office hours only</a></dt>
+<dd>Terminations are scheduled inside a window you choose, on weekdays. Pods die while the
+people who own them are at their desks.</dd>
+<dt><a href="configuration/">Dry run until you say otherwise</a></dt>
+<dd>Out of the box kube-monkey only logs what it would have killed. You see the blast radius
+on paper before anything real happens.</dd>
+</dl>
+</div>
+<div>
+<h3 id="what-you-can-tune">What you can tune<a class="headerlink" href="#what-you-can-tune" title="Permanent link">&para;</a></h3>
+<dl>
+<dt><a href="opting-in/#kill-modes">Blast radius</a></dt>
+<dd>Kill one pod, a fixed number, a fixed percentage, a random percentage up to a cap, or the
+whole app. Set per app, by a label.</dd>
+<dt><a href="metrics/">Prometheus metrics</a></dt>
+<dd>Schedules built, terminations attempted, pods actually deleted. Chart the chaos and alert
+on it like anything else.</dd>
+<dt><a href="notifications/">Notifications</a></dt>
+<dd>Post every attack to a Slack webhook or your own API, with placeholders for the victim,
+the time and the outcome.</dd>
+</dl>
+</div>
 </div>
 <h2 id="sixty-seconds-to-your-first-termination">Sixty seconds to your first termination<a class="headerlink" href="#sixty-seconds-to-your-first-termination" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>kubemonkey<span class="w"> </span>https://asobti.github.io/kube-monkey/charts/repo
@@ -870,6 +930,12 @@ watch a real termination happen in debug mode before you trust it with a live na
 <h2 id="talk-to-us">Talk to us<a class="headerlink" href="#talk-to-us" title="Permanent link">&para;</a></h2>
 <p>Join <a href="https://kubernetes.slack.com/messages/kube-monkey">#kube-monkey</a> on Kubernetes Slack,
 or open an issue on <a href="https://github.com/asobti/kube-monkey/issues">GitHub</a>.</p>
+<div class="km-badges">
+<p><a href="https://github.com/asobti/kube-monkey/actions/workflows/go.yml"><img alt="Build" src="https://github.com/asobti/kube-monkey/actions/workflows/go.yml/badge.svg" /></a>
+<a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a>
+<a href="https://hub.docker.com/r/ayushsobti/kube-monkey/"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/ayushsobti/kube-monkey?label=Docker%20pulls&amp;logo=docker" /></a>
+<a href="https://artifacthub.io/packages/search?repo=kubemonkey"><img alt="Artifact Hub" src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubemonkey" /></a></p>
+</div>
 
 
 
@@ -892,6 +958,8 @@ or open an issue on <a href="https://github.com/asobti/kube-monkey/issues">GitHu
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -985,7 +1053,7 @@ or open an issue on <a href="https://github.com/asobti/kube-monkey/issues">GitHu
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tracking", "navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tracking", "navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "content.action.edit", "content.tabs.link", "content.tooltips", "search.suggest", "search.highlight", "search.share", "toc.follow"], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="assets/javascripts/bundle.83f73b43.min.js"></script>
