@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://asobti.github.io/kube-monkey/configuration/">
       
       
-        <link rel="prev" href="../opting-in/">
+        <link rel="prev" href="../custom-resources/">
       
       
         <link rel="next" href="../notifications/">
@@ -372,6 +372,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom-resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom resources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -390,10 +417,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -411,8 +438,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -504,6 +531,17 @@
     <span class="md-ellipsis">
       
         Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom resources
       
     </span>
   </a>
@@ -702,10 +740,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -723,8 +761,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -845,10 +883,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
             
   
   
@@ -866,8 +904,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -982,6 +1020,17 @@
     <span class="md-ellipsis">
       
         Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom resources
       
     </span>
   </a>
@@ -1185,6 +1234,36 @@ first termination. See <a href="../how-it-works/">How it works</a> for what happ
 opted in app lose pods more often, because <code>kube-monkey/mtbf</code> counts run days rather than
 calendar days. An app with an mtbf of <code>3d</code> expects a termination on a third of the run days,
 which is more terminations a week once the weekend is in the list.</p>
+<h2 id="custom-resources">Custom resources<a class="headerlink" href="#custom-resources" title="Permanent link">&para;</a></h2>
+<p>kube-monkey covers Deployments, StatefulSets and DaemonSets on its own. Any other kind, such
+as a resource managed by an operator, has to be listed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[[kubemonkey.custom_resources]]</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"postgresql.cnpg.io"</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"v1"</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">resource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"clusters"</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">pod_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cnpg.io/cluster"</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kubemonkey.custom_resources</code></td>
+<td>list of tables</td>
+<td><code>[]</code></td>
+<td>Custom resources to terminate pods for</td>
+</tr>
+</tbody>
+</table>
+<p>Each entry needs a <code>group</code>, a <code>version</code> and the lowercase plural <code>resource</code> name. <code>pod_label</code>
+names the label the operator puts on the pods it creates. kube-monkey also needs RBAC for
+each resource listed. See <a href="../custom-resources/">Custom resources</a>.</p>
 <h2 id="namespace-lists">Namespace lists<a class="headerlink" href="#namespace-lists" title="Permanent link">&para;</a></h2>
 <p>kube-monkey can be configured with two lists of namespaces:</p>
 <ul>
@@ -1282,8 +1361,8 @@ example because the certificate does not carry the right SAN. Two cases come up 
   explicitly, and carries a <code>// TODO: switch to using cluster DNS.</code> note in the code</li>
 <li>on an unauthenticated system you may need to force the http apiserver endpoint</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[kubernetes]</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://your-apiserver-url.com:apiport"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[kubernetes]</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://your-apiserver-url.com:apiport"</span>
 </code></pre></div>
 <h2 id="debug">Debug<a class="headerlink" href="#debug" title="Permanent link">&para;</a></h2>
 <p>Debug mode is for confirming an install works. It is not a setting to leave on.</p>
@@ -1323,9 +1402,9 @@ example because the certificate does not carry the right SAN. Two cases come up 
 </tr>
 </tbody>
 </table>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[debug]</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">schedule_immediate_kill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[debug]</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">schedule_immediate_kill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1344,26 +1423,26 @@ victim at a random point in the next 60 seconds. That 60 second spread is fixed,
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">config.toml</label><label for="__tabbed_1_2">Environment variables</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[kubemonkey]</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">dry_run</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                           </span><span class="c1"># Terminations are only logged</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">run_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"mon"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tue"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wed"</span><span class="p">,</span><span class="w"> </span><span class="s2">"thu"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fri"</span><span class="p">]</span><span class="w"> </span><span class="c1"># Build a schedule on weekdays only</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">run_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="w">                             </span><span class="c1"># Build the day's schedule at 8am. Nothing dies yet</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">start_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w">                          </span><span class="c1"># Don't schedule any pod deaths before 10am</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">end_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="w">                            </span><span class="c1"># Don't schedule any pod deaths after 4pm</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">blacklisted_namespaces</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"kube-system"</span><span class="p">]</span><span class="w"> </span><span class="c1"># Critical apps live here. Patterns like "*-prod" work too</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">whitelisted_namespaces</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">""</span><span class="p">]</span><span class="w">            </span><span class="c1"># Every namespace. Narrow it with names or patterns like "team-*"</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">time_zone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"America/New_York"</span><span class="w">           </span><span class="c1"># Set tzdata timezone example. Note the field is time_zone not timezone</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[kubemonkey]</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">dry_run</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                           </span><span class="c1"># Terminations are only logged</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">run_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"mon"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tue"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wed"</span><span class="p">,</span><span class="w"> </span><span class="s2">"thu"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fri"</span><span class="p">]</span><span class="w"> </span><span class="c1"># Build a schedule on weekdays only</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">run_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="w">                             </span><span class="c1"># Build the day's schedule at 8am. Nothing dies yet</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">start_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w">                          </span><span class="c1"># Don't schedule any pod deaths before 10am</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">end_hour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="w">                            </span><span class="c1"># Don't schedule any pod deaths after 4pm</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">blacklisted_namespaces</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"kube-system"</span><span class="p">]</span><span class="w"> </span><span class="c1"># Critical apps live here. Patterns like "*-prod" work too</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">whitelisted_namespaces</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">""</span><span class="p">]</span><span class="w">            </span><span class="c1"># Every namespace. Narrow it with names or patterns like "team-*"</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">time_zone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"America/New_York"</span><span class="w">           </span><span class="c1"># Set tzdata timezone example. Note the field is time_zone not timezone</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">KUBEMONKEY_DRY_RUN</span><span class="o">=</span><span class="nb">true</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">KUBEMONKEY_RUN_DAYS</span><span class="o">=</span><span class="s2">"mon tue wed thu fri"</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nv">KUBEMONKEY_RUN_HOUR</span><span class="o">=</span><span class="m">8</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nv">KUBEMONKEY_START_HOUR</span><span class="o">=</span><span class="m">10</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nv">KUBEMONKEY_END_HOUR</span><span class="o">=</span><span class="m">16</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nv">KUBEMONKEY_BLACKLISTED_NAMESPACES</span><span class="o">=</span>kube-system
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nv">KUBEMONKEY_WHITELISTED_NAMESPACES</span><span class="o">=</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nv">KUBEMONKEY_TIME_ZONE</span><span class="o">=</span>America/New_York
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">KUBEMONKEY_DRY_RUN</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">KUBEMONKEY_RUN_DAYS</span><span class="o">=</span><span class="s2">"mon tue wed thu fri"</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">KUBEMONKEY_RUN_HOUR</span><span class="o">=</span><span class="m">8</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nv">KUBEMONKEY_START_HOUR</span><span class="o">=</span><span class="m">10</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nv">KUBEMONKEY_END_HOUR</span><span class="o">=</span><span class="m">16</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nv">KUBEMONKEY_BLACKLISTED_NAMESPACES</span><span class="o">=</span>kube-system
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nv">KUBEMONKEY_WHITELISTED_NAMESPACES</span><span class="o">=</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nv">KUBEMONKEY_TIME_ZONE</span><span class="o">=</span>America/New_York
 </code></pre></div>
 </div>
 </div>
@@ -1407,7 +1486,7 @@ victim at a random point in the next 60 seconds. That 60 second spread is fixed,
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../opting-in/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Opting in to chaos">
+          <a href="../custom-resources/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Custom resources">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1417,7 +1496,7 @@ victim at a random point in the next 60 seconds. That 60 second spread is fixed,
                 Previous
               </span>
               <div class="md-ellipsis">
-                Opting in to chaos
+                Custom resources
               </div>
             </div>
           </a>

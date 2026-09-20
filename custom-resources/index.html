@@ -10,11 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://asobti.github.io/kube-monkey/releasing/">
+        <link rel="canonical" href="https://asobti.github.io/kube-monkey/custom-resources/">
       
       
-        <link rel="prev" href="../contributing/">
+        <link rel="prev" href="../opting-in/">
       
+      
+        <link rel="next" href="../configuration/">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>Releasing - kube-monkey</title>
+        <title>Custom resources - kube-monkey</title>
       
     
     
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#releasing" class="md-skip">
+        <a href="#custom-resources" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Releasing
+              Custom resources
             
           </span>
         </div>
@@ -370,10 +372,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../custom-resources/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom resources
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -389,6 +418,76 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-a-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuring a resource
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring a resource">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finding-the-pods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding the pods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#giving-kube-monkey-permission" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Giving kube-monkey permission
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opting-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opting in
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -711,8 +810,6 @@
       
   
   
-    
-  
   
   
     
@@ -725,11 +822,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -750,7 +847,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -793,37 +890,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Releasing
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../releasing/" class="md-nav__link">
         
   
   
@@ -839,81 +909,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#releasing-a-new-app-version" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Releasing a new app version
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#releasing-a-chart-only-change" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Releasing a chart-only change
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checking-before-you-tag" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Checking before you tag
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#if-the-chart-step-fails" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If the chart step fails
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#releasing-the-docs-site" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Releasing the docs site
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -953,10 +948,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#releasing-a-new-app-version" class="md-nav__link">
+  <a href="#configuring-a-resource" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Releasing a new app version
+        Configuring a resource
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring a resource">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finding-the-pods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding the pods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#giving-kube-monkey-permission" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Giving kube-monkey permission
       
     </span>
   </a>
@@ -964,43 +987,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#releasing-a-chart-only-change" class="md-nav__link">
+  <a href="#opting-in" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Releasing a chart-only change
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checking-before-you-tag" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Checking before you tag
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#if-the-chart-step-fails" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If the chart step fails
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#releasing-the-docs-site" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Releasing the docs site
+        Opting in
       
     </span>
   </a>
@@ -1024,7 +1014,7 @@
 
 
   
-    <a href="https://github.com/asobti/kube-monkey/edit/master/docs/releasing.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/asobti/kube-monkey/edit/master/docs/custom-resources.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1032,92 +1022,125 @@
   
 
 
-<h1 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">&para;</a></h1>
-<p>There are two version numbers, and they move independently.</p>
+<h1 id="custom-resources">Custom resources<a class="headerlink" href="#custom-resources" title="Permanent link">&para;</a></h1>
+<p>Out of the box kube-monkey kills pods belonging to Deployments, StatefulSets and DaemonSets.</p>
+<p>Plenty of apps are not run by any of those. An operator takes a custom resource, such as a
+CloudNativePG <code>Cluster</code> or a Strimzi <code>Kafka</code>, and creates the pods itself. kube-monkey never
+sees those pods, because nothing it looks at owns them.</p>
+<p>Listing a custom resource in the config fixes that. kube-monkey then reads the resource, the
+same way it reads a Deployment, and kills the pods the operator created for it.</p>
+<h2 id="configuring-a-resource">Configuring a resource<a class="headerlink" href="#configuring-a-resource" title="Permanent link">&para;</a></h2>
+<p>Each entry names one resource and says how to find its pods.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[[kubemonkey.custom_resources]]</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"postgresql.cnpg.io"</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"v1"</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">resource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"clusters"</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">pod_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cnpg.io/cluster"</span>
+</code></pre></div>
 <table>
 <thead>
 <tr>
-<th>Version</th>
-<th>Where</th>
-<th>What it covers</th>
-<th>Released by</th>
+<th>Key</th>
+<th>Required</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>App version, e.g. <code>0.6.0</code></td>
-<td><code>appVersion</code> in <code>helm/kubemonkey/Chart.yaml</code></td>
-<td>the binary and the Docker image</td>
-<td>pushing the git tag <code>v0.6.0</code></td>
+<td><code>group</code></td>
+<td>yes</td>
+<td>The API group, e.g. <code>postgresql.cnpg.io</code></td>
 </tr>
 <tr>
-<td>Chart version, e.g. <code>1.8.0</code></td>
-<td><code>version</code> in <code>helm/kubemonkey/Chart.yaml</code></td>
-<td>the Helm chart</td>
-<td>a commit on the <code>gh-pages</code> branch</td>
+<td><code>version</code></td>
+<td>yes</td>
+<td>The API version, e.g. <code>v1</code></td>
+</tr>
+<tr>
+<td><code>resource</code></td>
+<td>yes</td>
+<td>The lowercase plural resource name, e.g. <code>clusters</code></td>
+</tr>
+<tr>
+<td><code>pod_label</code></td>
+<td>no</td>
+<td>The label the operator puts on the pods it creates</td>
 </tr>
 </tbody>
 </table>
-<p>Charts are served from the <code>gh-pages</code> branch at
-<a href="https://asobti.github.io/kube-monkey/charts/repo">https://asobti.github.io/kube-monkey/charts/repo</a>. Images go to
-<a href="https://hub.docker.com/r/ayushsobti/kube-monkey">ayushsobti/kube-monkey</a>.</p>
-<p>This documentation site is served from the same branch, at the root. The two live side by
-side: the site owns everything except <code>charts/</code>, and the chart publish only ever touches
-<code>charts/repo</code>. Both publish through <code>hack/push-gh-pages.sh</code>, which rebases and retries if
-the other got there first.</p>
-<h2 id="releasing-a-new-app-version">Releasing a new app version<a class="headerlink" href="#releasing-a-new-app-version" title="Permanent link">&para;</a></h2>
-<p>Say the new version is <code>0.7.0</code>. Open one pull request that changes:</p>
-<ul>
-<li><code>helm/kubemonkey/Chart.yaml</code>: <code>appVersion</code> to <code>"0.7.0"</code>, and <code>version</code> to the next chart
-  version</li>
-<li><code>helm/kubemonkey/values.yaml</code>: <code>image.tag</code> to <code>v0.7.0</code></li>
-<li><code>helm/kubemonkey/README.md</code>: the <code>--version</code> line, the <code>image.tag</code> row in the table, and
-  the <code>tag:</code> line in the values example</li>
-<li><code>docs/helm-chart.md</code>: the same three places</li>
-</ul>
-<p><code>hack/verify-release.sh</code> checks both files, so a missed one fails the build rather than
-shipping a stale install command.</p>
-<p>The chart version has to move too. The chart now points at a different image, and publishing
-never overwrites a version that is already out there.</p>
-<p>Once it is merged, tag master:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>tag<span class="w"> </span>v0.7.0
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>v0.7.0
+<p>Repeat the block for each resource you want covered.</p>
+<div class="admonition warning">
+<p class="admonition-title"><code>resource</code> is the plural name, not the kind</p>
+<p>It is <code>clusters</code>, not <code>Cluster</code>. This is the name in the URL the API server serves the
+resource on, which is what <code>kubectl api-resources</code> prints in its first column.</p>
+</div>
+<h3 id="finding-the-pods">Finding the pods<a class="headerlink" href="#finding-the-pods" title="Permanent link">&para;</a></h3>
+<p><code>pod_label</code> is the important one, and it is what makes this work at all.</p>
+<p>An operator does <strong>not</strong> copy the labels you put on a custom resource onto the pods it
+creates. So the <code>kube-monkey/identifier</code> label that kube-monkey normally uses to find pods
+is not on them. Instead, operators label every pod with the name of the resource it belongs
+to. CloudNativePG uses <code>cnpg.io/cluster</code>, Strimzi uses <code>strimzi.io/cluster</code>, and so on.</p>
+<p>Tell kube-monkey which label that is, and it looks for pods carrying
+<code>&lt;pod_label&gt;: &lt;name of the resource&gt;</code>.</p>
+<p>Check what your operator uses before you set it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">$ </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>app<span class="w"> </span>--show-labels
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="go">NAME          READY   STATUS    LABELS</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="go">pg-cluster-1  1/1     Running   cnpg.io/cluster=pg-cluster,...</span>
 </code></pre></div>
-<p>That builds and pushes the image, adds the release entry on GitHub with notes from the merged
-pull requests, then packages the chart and commits it to <code>gh-pages</code>. The chart waits for the
-image, so it can never go out pointing at an image that does not exist yet.</p>
-<p>The chart lands on <code>gh-pages</code> before GitHub Pages rebuilds, which takes about a minute. Until
-then <code>helm repo update</code> still sees the old version.</p>
-<h2 id="releasing-a-chart-only-change">Releasing a chart-only change<a class="headerlink" href="#releasing-a-chart-only-change" title="Permanent link">&para;</a></h2>
-<p>Use this when the templates or the default values change but the app does not.</p>
-<p>Open a pull request that bumps <code>version</code> in <code>helm/kubemonkey/Chart.yaml</code> and the <code>--version</code>
-line in both <code>helm/kubemonkey/README.md</code> and <code>docs/helm-chart.md</code>. Leave <code>appVersion</code>,
-<code>values.yaml</code> and the image references alone.</p>
-<p>Once it is merged, go to Actions, pick the <strong>Publish release</strong> workflow, and run it on
-<code>master</code>. It skips the image build and only publishes the chart.</p>
-<h2 id="checking-before-you-tag">Checking before you tag<a class="headerlink" href="#checking-before-you-tag" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./hack/verify-release.sh
+<p>Leave <code>pod_label</code> out only if you have asked the operator to pass your own labels down to
+the pods, and <code>kube-monkey/identifier</code> is among them. Without either, kube-monkey finds no
+pods and quietly kills nothing.</p>
+<h2 id="giving-kube-monkey-permission">Giving kube-monkey permission<a class="headerlink" href="#giving-kube-monkey-permission" title="Permanent link">&para;</a></h2>
+<p>kube-monkey can only read a resource it has RBAC for. The Helm chart adds a rule for every
+resource you list, so this is handled if you configure them through
+<code>config.customResources</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">config</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">customResources</span><span class="p">:</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql.cnpg.io</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clusters</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nt">podLabel</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cnpg.io/cluster</span>
 </code></pre></div>
-<p>This is the same script CI runs. It checks the chart pins the image its <code>appVersion</code> names,
-the README matches, the chart lints and renders, and the chart version is not already
-published.</p>
-<p>Run on its own it expects the tag to already exist. To check a tag you have not pushed yet:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">RELEASE_TAG</span><span class="o">=</span>v0.7.0<span class="w"> </span>./hack/verify-release.sh
+<p>Installing by hand means adding the rule yourself:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">apiGroups</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql.cnpg.io</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clusters</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">verbs</span><span class="p">:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">list</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">watch</span>
 </code></pre></div>
-<p>Every pull request runs the same checks, minus the ones that need the tag. The check for a
-version that is already published only runs when the pull request changes something under
-<code>helm/</code>.</p>
-<h2 id="if-the-chart-step-fails">If the chart step fails<a class="headerlink" href="#if-the-chart-step-fails" title="Permanent link">&para;</a></h2>
-<p>The image is already pushed by then, so there is no need to tag again. Fix the chart on
-master, then run the <strong>Publish release</strong> workflow by hand as above.</p>
-<h2 id="releasing-the-docs-site">Releasing the docs site<a class="headerlink" href="#releasing-the-docs-site" title="Permanent link">&para;</a></h2>
-<p>There is nothing to release. Merging a change under <code>docs/</code> or to <code>mkdocs.yml</code> on master
-publishes the site, and GitHub Pages picks it up about a minute later.</p>
-<p>The publish rebuilds the whole site and mirrors it onto <code>gh-pages</code>, deleting anything that is
-no longer part of it. <code>charts/</code> is excluded from that, and the job refuses to commit if the
-chart index has gone missing.</p>
-<p>To rebuild without a docs change, for example after a theme release, run the <strong>Publish docs</strong>
-workflow by hand from Actions.</p>
+<p>Without it kube-monkey logs an error on each scheduling run and schedules nothing for that
+resource.</p>
+<p>A resource whose CRD is not installed is skipped quietly, so one config can cover a fleet of
+clusters that do not all run the same operators.</p>
+<h2 id="opting-in">Opting in<a class="headerlink" href="#opting-in" title="Permanent link">&para;</a></h2>
+<p>The labels are the same ones every other app uses, on the custom resource's own
+<code>metadata.labels</code>. See <a href="../opting-in/">Opting in to chaos</a>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nn">---</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql.cnpg.io/v1</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Cluster</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nt">metadata</span><span class="p">:</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pg-cluster</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">kube-monkey/enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enabled</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">kube-monkey/identifier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pg-cluster</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">kube-monkey/mtbf</span><span class="p">:</span><span class="w"> </span><span class="s">'2'</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="nt">kube-monkey/kill-mode</span><span class="p">:</span><span class="w"> </span><span class="s">"fixed"</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="nt">kube-monkey/kill-value</span><span class="p">:</span><span class="w"> </span><span class="s">'1'</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="nt">spec</span><span class="p">:</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">  </span><span class="nt">instances</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</code></pre></div>
+<p>With the config above, kube-monkey schedules this cluster about every other run day and
+kills one of the pods labelled <code>cnpg.io/cluster: pg-cluster</code>.</p>
+<div class="admonition danger">
+<p class="admonition-title">The operator will rebuild what you kill</p>
+<p>That is the point, and it is also the risk. Killing the primary of a database cluster
+triggers a failover. Start in <code>dry_run</code> mode, and start with <code>kill-mode: fixed</code> and a
+<code>kill-value</code> of <code>1</code>.</p>
+</div>
 
 
 
@@ -1155,7 +1178,7 @@ workflow by hand from Actions.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../contributing/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Contributing">
+          <a href="../opting-in/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Opting in to chaos">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1165,11 +1188,27 @@ workflow by hand from Actions.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Contributing
+                Opting in to chaos
               </div>
             </div>
           </a>
         
+        
+          
+          <a href="../configuration/" class="md-footer__link md-footer__link--next" aria-label="Next: Reference">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Reference
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
         
       </nav>
     
