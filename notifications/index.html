@@ -550,10 +550,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#header-placeholders" class="md-nav__link">
+  <a href="#environment-variable-placeholders" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Header placeholders
+        Environment variable placeholders
       
     </span>
   </a>
@@ -972,10 +972,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#header-placeholders" class="md-nav__link">
+  <a href="#environment-variable-placeholders" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Header placeholders
+        Environment variable placeholders
       
     </span>
   </a>
@@ -1128,13 +1128,26 @@ or a custom API.</p>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">          </span><span class="s2">"when"</span><span class="err">:</span><span class="w"> </span><span class="err">{$</span><span class="n">timestamp</span><span class="err">}</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">         </span><span class="err">}</span><span class="s1">'</span>
 </code></pre></div>
-<h2 id="header-placeholders">Header placeholders<a class="headerlink" href="#header-placeholders" title="Permanent link">&para;</a></h2>
-<p>Headers support a special placeholder that reads an environment variable. This is useful when
-calling an API with a protected endpoint. The typical case is an API token passed to the
-kube-monkey container from a Kubernetes Secret.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"api-key:{$env:API_TOKEN}"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Content-Type:application/json"</span><span class="p">]</span>
+<h2 id="environment-variable-placeholders">Environment variable placeholders<a class="headerlink" href="#environment-variable-placeholders" title="Permanent link">&para;</a></h2>
+<p>The endpoint and the headers support a special placeholder that reads an environment
+variable. This keeps secrets out of the config, which is usually a ConfigMap and so is
+readable by anyone who can read the namespace. The typical cases are an API token and a
+webhook URL that carries its own token, passed to the kube-monkey container from a
+Kubernetes Secret.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{$env:WEBHOOK_URL}"</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"api-key:{$env:API_TOKEN}"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Content-Type:application/json"</span><span class="p">]</span>
 </code></pre></div>
 <p><code>{$env:API_TOKEN}</code> is replaced by the value of the <code>API_TOKEN</code> environment variable.</p>
+<p>The whole value must be the placeholder. <code>https://example.com/{$env:TOKEN}</code> is sent as
+written, with no substitution.</p>
+<p>With the Helm chart, pass the variable in through <code>extraEnv</code> or <code>extraEnvFrom</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">extraEnv</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WEBHOOK_URL</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">valueFrom</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">      </span><span class="nt">secretKeyRef</span><span class="p">:</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kube-monkey-notifications</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">        </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">webhook-url</span>
+</code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">A missing variable does not stop the notification</p>
 <p>If the environment variable does not exist, the notification call is <strong>not</strong> cancelled.
@@ -1144,11 +1157,11 @@ The value resolves to an empty string and a warning shows up in the logs.</p>
 <p>A ready-made example lives at
 <a href="https://github.com/asobti/kube-monkey/tree/master/examples/notifications-configmap.yaml"><code>examples/notifications-configmap.yaml</code></a>.</p>
 <h2 id="with-the-helm-chart">With the Helm chart<a class="headerlink" href="#with-the-helm-chart" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>install<span class="w"> </span>my-release<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.enabled<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.endpoint<span class="o">=</span>http://localhost:8080/path<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.message<span class="o">=</span><span class="s2">"{\"foo\":\"bar\"}"</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.headers<span class="o">=</span><span class="s2">"Content-Type:application/json\"\,\"client-id:kubemonkey"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>helm<span class="w"> </span>install<span class="w"> </span>my-release<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.enabled<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.endpoint<span class="o">=</span>http://localhost:8080/path<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.message<span class="o">=</span><span class="s2">"{\"foo\":\"bar\"}"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--set<span class="w"> </span>config.notifications.headers<span class="o">=</span><span class="s2">"Content-Type:application/json\"\,\"client-id:kubemonkey"</span>
 </code></pre></div>
 
 
