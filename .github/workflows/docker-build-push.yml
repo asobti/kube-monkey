@@ -76,6 +76,10 @@ jobs:
     if: always() && needs.publish-docker.result != 'failure' && needs.publish-docker.result != 'cancelled'
     permissions:
       contents: write
+    # The docs publish writes to the same branch. Serialise so one does not
+    # push onto a ref the other has already moved.
+    concurrency:
+      group: gh-pages
 
     steps:
       - name: Check out code
@@ -113,9 +117,5 @@ jobs:
       - name: Publish chart
         working-directory: gh-pages
         run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add charts/repo
-          git commit -m "helm chart ${{ steps.verify.outputs.chart_version }}"
-          git push
+          "$GITHUB_WORKSPACE/hack/push-gh-pages.sh" \
+            "helm chart ${{ steps.verify.outputs.chart_version }}" charts/repo

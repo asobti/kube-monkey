@@ -1,0 +1,30 @@
+.km-hero {
+  padding: 2.5rem 0 1.5rem;
+  text-align: center;
+}
+
+.km-hero h1 {
+  font-weight: 700;
+  margin-bottom: .4rem;
+}
+
+.km-hero p {
+  font-size: .85rem;
+  max-width: 34rem;
+  margin: 0 auto 1.4rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.km-hero .md-button {
+  margin: .2rem .3rem;
+}
+
+.km-badges {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.km-badges img {
+  margin: 0 .15rem;
+  vertical-align: middle;
+}

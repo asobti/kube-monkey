@@ -40,12 +40,16 @@ if [ "$image_tag" != "v$app_version" ]; then
 fi
 
 # The install instructions are the first thing users copy, so keep them current.
-if ! grep -qF -- "--version $chart_version" "$chart_dir/README.md"; then
-  fail "$chart_dir/README.md does not mention --version $chart_version"
-fi
-if ! grep -qF -- "$image_tag" "$chart_dir/README.md"; then
-  fail "$chart_dir/README.md does not mention image tag $image_tag"
-fi
+# The chart README ships inside the tarball and is what Artifact Hub renders;
+# the docs page is what the website shows. Both go stale the same way.
+for doc in "$chart_dir/README.md" docs/helm-chart.md; do
+  if ! grep -qF -- "--version $chart_version" "$doc"; then
+    fail "$doc does not mention --version $chart_version"
+  fi
+  if ! grep -qF -- "$image_tag" "$doc"; then
+    fail "$doc does not mention image tag $image_tag"
+  fi
+done
 
 helm lint "$chart_dir"
 

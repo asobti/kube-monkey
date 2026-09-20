@@ -6,3 +6,5 @@ kube-monkey
 bin/
 .vscode/
 .DS_Store
+site/
+.venv/
