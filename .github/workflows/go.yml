@@ -25,3 +25,24 @@ jobs:
 
     - name: Build
       run: make test
+
+  chart:
+    name: Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Check out chart repo
+      # Lets the check see which chart versions are already published.
+      uses: actions/checkout@v7
+      with:
+        ref: gh-pages
+        path: gh-pages
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v5
+
+    # Catches a broken or stale chart here rather than when the release runs.
+    - name: Verify chart
+      run: ./hack/verify-release.sh --pre-release gh-pages/charts/repo
