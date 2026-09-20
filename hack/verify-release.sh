@@ -3,8 +3,8 @@
 # Run it before pushing a release tag. CI runs the same script.
 #
 # usage: hack/verify-release.sh [--pre-release] [published-chart-dir]
-#   --pre-release  only check the chart is self consistent, for PRs where the
-#                  release tag does not exist yet
+#   --pre-release  skip the checks that need the release tag, for pull requests
+#                  where that tag does not exist yet
 #   RELEASE_TAG    when set, appVersion must match this tag
 set -euo pipefail
 
@@ -49,6 +49,12 @@ fi
 
 helm lint "$chart_dir"
 
+# Publishing never overwrites, so a reused version has to be caught. This runs
+# on pull requests too, where forgetting the bump is easy to fix.
+if [ -n "$published_dir" ] && [ -e "$published_dir/kube-monkey-$chart_version.tgz" ]; then
+  fail "chart $chart_version is already published, bump version in $chart_dir/Chart.yaml"
+fi
+
 if [ -n "$pre_release" ]; then
   echo "chart $chart_version (app v$app_version) is self consistent"
   exit 0
@@ -63,10 +69,6 @@ else
   if ! git rev-parse -q --verify "refs/tags/v$app_version" >/dev/null; then
     fail "no tag v$app_version exists, so image $image_tag was never built"
   fi
-fi
-
-if [ -n "$published_dir" ] && [ -e "$published_dir/kube-monkey-$chart_version.tgz" ]; then
-  fail "chart $chart_version is already published, bump version in $chart_dir/Chart.yaml"
 fi
 
 echo "chart $chart_version (app v$app_version) is ready to publish"

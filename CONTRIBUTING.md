@@ -11,3 +11,7 @@ git checkout --track -b feature/branchname
 Then code & stuff. 
 
 Make sure to test your branch from scratch and run `make test`!
+
+## Releasing
+
+See [RELEASING.md](RELEASING.md).
