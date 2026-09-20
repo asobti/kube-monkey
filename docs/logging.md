@@ -28,6 +28,21 @@ The levels are used consistently, so you can pick how much you want to see:
 
 You can find them in the source with `grep -r 'V([0-9])' *`.
 
+## Timestamps
+
+Every timestamp kube-monkey prints is in `kubemonkey.time_zone`. That covers both the
+`I0919 11:32:04.123456` prefix glog puts on each line and the termination times inside the
+messages, so the two always agree and you can parse either one.
+
+The prefix carries no year and no zone, so a parser has to know the configured timezone.
+The termination times spell theirs out, for example
+`09/19/2019 15:32:04 +0200 CEST`, so prefer those if you want the offset in the line.
+
+!!! note "Changing the timezone needs a restart"
+
+    kube-monkey picks up most config changes without a restart, but the timezone of the log
+    timestamps is fixed when the process starts.
+
 ## Writing log files
 
 To also write glog log files, pass `-log_dir=/path/to/custom/log`.
