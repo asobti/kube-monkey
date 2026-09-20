@@ -32,6 +32,9 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v7
+      with:
+        # Needed to tell whether this change touches the chart.
+        fetch-depth: 0
 
     - name: Check out chart repo
       # Lets the check see which chart versions are already published.
@@ -45,4 +48,13 @@ jobs:
 
     # Catches a broken or stale chart here rather than when the release runs.
     - name: Verify chart
-      run: ./hack/verify-release.sh --pre-release gh-pages/charts/repo
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      run: |
+        # The published version only matters when the chart itself changes.
+        # Every other change would otherwise fail on a version it never touched.
+        if [ -n "$BASE_SHA" ] && ! git diff --quiet "$BASE_SHA" HEAD -- helm/; then
+          ./hack/verify-release.sh --pre-release gh-pages/charts/repo
+        else
+          ./hack/verify-release.sh --pre-release
+        fi
