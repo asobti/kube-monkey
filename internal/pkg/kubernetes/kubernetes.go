@@ -14,6 +14,7 @@ import (
 	cfg "kube-monkey/internal/pkg/config"
 
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	kube "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -33,6 +34,36 @@ func CreateClient() (*kube.Clientset, error) {
 
 // NewInClusterClient only creates an initialized instance of k8 clientset
 func NewInClusterClient() (*kube.Clientset, error) {
+	config, err := inClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	clientset, err := kube.NewForConfig(config)
+	if err != nil {
+		glog.Errorf("failed to create clientset in NewForConfig: %v", err)
+		return nil, err
+	}
+	return clientset, nil
+}
+
+// NewDynamicClient creates a client that reads resources the typed clientset
+// has no Go type for, which is how custom resources are reached
+func NewDynamicClient() (dynamic.Interface, error) {
+	config, err := inClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := dynamic.NewForConfig(config)
+	if err != nil {
+		glog.Errorf("failed to create dynamic client in NewForConfig: %v", err)
+		return nil, err
+	}
+	return client, nil
+}
+
+func inClusterConfig() (*rest.Config, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		glog.Errorf("failed to obtain config from InClusterConfig: %v", err)
@@ -44,12 +75,7 @@ func NewInClusterClient() (*kube.Clientset, error) {
 		config.Host = apiserverHost
 	}
 
-	clientset, err := kube.NewForConfig(config)
-	if err != nil {
-		glog.Errorf("failed to create clientset in NewForConfig: %v", err)
-		return nil, err
-	}
-	return clientset, nil
+	return config, nil
 }
 
 func VerifyClient(client discovery.DiscoveryInterface) bool {

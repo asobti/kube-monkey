@@ -45,6 +45,27 @@ opted in app lose pods more often, because `kube-monkey/mtbf` counts run days ra
 calendar days. An app with an mtbf of `3d` expects a termination on a third of the run days,
 which is more terminations a week once the weekend is in the list.
 
+## Custom resources
+
+kube-monkey covers Deployments, StatefulSets and DaemonSets on its own. Any other kind, such
+as a resource managed by an operator, has to be listed:
+
+```toml
+[[kubemonkey.custom_resources]]
+group = "postgresql.cnpg.io"
+version = "v1"
+resource = "clusters"
+pod_label = "cnpg.io/cluster"
+```
+
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `kubemonkey.custom_resources` | list of tables | `[]` | Custom resources to terminate pods for |
+
+Each entry needs a `group`, a `version` and the lowercase plural `resource` name. `pod_label`
+names the label the operator puts on the pods it creates. kube-monkey also needs RBAC for
+each resource listed. See [Custom resources](custom-resources.md).
+
 ## Namespace lists
 
 kube-monkey can be configured with two lists of namespaces:

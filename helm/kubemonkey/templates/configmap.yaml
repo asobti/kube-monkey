@@ -17,6 +17,15 @@ data:
       whitelisted_namespaces = [ {{- range .Values.config.whitelistedNamespaces }} {{ . | trim | quote }}, {{- end }} ]
       {{- end }}
       time_zone = {{ .Values.config.timeZone | quote }}
+      {{- range .Values.config.customResources }}
+      [[kubemonkey.custom_resources]]
+      group = {{ .group | quote }}
+      version = {{ .version | quote }}
+      resource = {{ .resource | quote }}
+      {{- if .podLabel }}
+      pod_label = {{ .podLabel | quote }}
+      {{- end }}
+      {{- end }}
       [debug]
       enabled = {{ .Values.config.debug.enabled }}
       schedule_delay = {{ .Values.config.debug.schedule_delay }}

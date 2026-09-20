@@ -97,6 +97,7 @@ helm get manifest my-release
 | `config.whitelistedNamespaces` | pods in this namespace that opt in will be killed | |
 | `config.blacklistedNamespaces` | pods in this namespace will not be killed | `kube-system` |
 | `config.timeZone` | time zone in tzdata format | `America/New_York` |
+| `config.customResources` | custom resources to terminate pods for, each `{group, version, resource, podLabel}`. The chart grants read access to each one. See [Custom resources](custom-resources.md) | `[]` |
 | `config.debug.enabled` | debug mode, needed to see debugging behaviour | `false` |
 | `config.debug.schedule_delay` | seconds to wait before each scheduling run | `30` |
 | `config.debug.force_should_kill` | schedule a termination for every eligible app | `false` |

@@ -9,6 +9,7 @@ import (
 	"kube-monkey/internal/pkg/config/param"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -239,4 +240,52 @@ func (s *ConfigTestSuite) TestNotificationsAttacks() {
 
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(ConfigTestSuite))
+}
+
+// Reads the custom resource list the way the chart writes it, as a TOML array
+// of tables, because that is a different shape to every other config value
+func TestCustomResourcesFromToml(t *testing.T) {
+	SetDefaults()
+
+	toml := `
+[kubemonkey]
+time_zone = "UTC"
+
+[[kubemonkey.custom_resources]]
+group = "postgresql.cnpg.io"
+version = "v1"
+resource = "clusters"
+pod_label = "cnpg.io/cluster"
+
+[[kubemonkey.custom_resources]]
+group = "kafka.strimzi.io"
+version = "v1beta2"
+resource = "kafkas"
+`
+
+	viper.SetConfigType("toml")
+	assert.NoError(t, viper.ReadConfig(strings.NewReader(toml)))
+
+	resources := CustomResources()
+
+	assert.Len(t, resources, 2)
+	assert.Equal(t, CustomResource{
+		Group:    "postgresql.cnpg.io",
+		Version:  "v1",
+		Resource: "clusters",
+		PodLabel: "cnpg.io/cluster",
+	}, resources[0])
+	assert.Equal(t, "kafkas.kafka.strimzi.io", resources[1].Name())
+	assert.Empty(t, resources[1].PodLabel)
+
+	// ReadConfig replaces the whole config, so put back a clean baseline for
+	// whatever test runs next
+	viper.Reset()
+	SetDefaults()
+}
+
+func TestCustomResourcesDefaultsToNone(t *testing.T) {
+	SetDefaults()
+
+	assert.Empty(t, CustomResources())
 }

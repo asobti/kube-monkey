@@ -1,0 +1,22 @@
+---
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: kube-monkey-config-map
+    namespace: kube-system
+  data:
+    config.toml: |
+      [kubemonkey]
+      run_hour = 8
+      start_hour = 10
+      end_hour = 16
+      blacklisted_namespaces = ["kube-system"]
+
+      # Kill pods of CloudNativePG clusters as well as deployments,
+      # statefulsets and daemonsets. kube-monkey also needs RBAC to read
+      # clusters.postgresql.cnpg.io
+      [[kubemonkey.custom_resources]]
+      group = "postgresql.cnpg.io"
+      version = "v1"
+      resource = "clusters"
+      pod_label = "cnpg.io/cluster"

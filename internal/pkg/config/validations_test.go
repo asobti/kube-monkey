@@ -121,3 +121,46 @@ func TestIsValidHeader(t *testing.T) {
 	header = "header1Key:"
 	assert.False(t, isValidHeader(header))
 }
+
+func TestValidateCustomResources(t *testing.T) {
+	SetDefaults()
+
+	// Other tests leave hours set, and a set value wins over a default
+	viper.Set(param.RunHour, 8)
+	viper.Set(param.StartHour, 10)
+	viper.Set(param.EndHour, 16)
+
+	cnpg := map[string]string{
+		"group":     "postgresql.cnpg.io",
+		"version":   "v1",
+		"resource":  "clusters",
+		"pod_label": "cnpg.io/cluster",
+	}
+
+	viper.Set(param.CustomResources, []map[string]string{cnpg})
+	assert.Nil(t, ValidateConfigs())
+
+	// The pod label is optional, pods can carry the identifier label instead
+	withoutPodLabel := map[string]string{"group": "postgresql.cnpg.io", "version": "v1", "resource": "clusters"}
+	viper.Set(param.CustomResources, []map[string]string{withoutPodLabel})
+	assert.Nil(t, ValidateConfigs())
+
+	viper.Set(param.CustomResources, []map[string]string{{"group": "postgresql.cnpg.io", "resource": "clusters"}})
+	assert.EqualError(t, ValidateConfigs(), "CustomResources: "+param.CustomResources+" has an entry without a version and a resource")
+
+	viper.Set(param.CustomResources, []map[string]string{{"group": "postgresql.cnpg.io", "version": "v1"}})
+	assert.EqualError(t, ValidateConfigs(), "CustomResources: "+param.CustomResources+" has an entry without a version and a resource")
+
+	// The kind rather than the plural resource name is the easy mistake, and it
+	// would 404 against the apiserver
+	viper.Set(param.CustomResources, []map[string]string{{"group": "postgresql.cnpg.io", "version": "v1", "resource": "Cluster"}})
+	assert.EqualError(t, ValidateConfigs(), `CustomResources: "Cluster" should be the lowercase plural resource name, e.g. "cluster" rather than the kind`)
+
+	viper.Set(param.CustomResources, []map[string]string{{"version": "v1", "resource": "clusters", "pod_label": "not a label"}})
+	assert.ErrorContains(t, ValidateConfigs(), "is not a valid label key")
+
+	viper.Set(param.CustomResources, []map[string]string{cnpg, cnpg})
+	assert.EqualError(t, ValidateConfigs(), "CustomResources: clusters.postgresql.cnpg.io is listed more than once")
+
+	viper.Set(param.CustomResources, []map[string]string{})
+}
