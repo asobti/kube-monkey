@@ -1062,8 +1062,11 @@
 </code></pre></div>
 <p>This deploys kube-monkey with the default configuration, which is dry run mode with no
 whitelisted namespaces. It kills nothing until you tell it to.</p>
+<p>The chart declares the oldest Kubernetes it can run on and Helm checks it before installing.
+See <a href="../getting-started/#kubernetes-compatibility">Kubernetes compatibility</a> for the range and
+the reasoning.</p>
 <p>Pin the chart version if you want a repeatable install:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>helm<span class="w"> </span>install<span class="w"> </span>my-release<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.9.0
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>helm<span class="w"> </span>install<span class="w"> </span>my-release<span class="w"> </span>kubemonkey/kube-monkey<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.9.1
 </code></pre></div>
 <h2 id="uninstall">Uninstall<a class="headerlink" href="#uninstall" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>delete<span class="w"> </span>my-release

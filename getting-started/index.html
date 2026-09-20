@@ -354,6 +354,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#kubernetes-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kubernetes compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-install-kube-monkey" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -948,6 +959,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#kubernetes-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kubernetes compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-install-kube-monkey" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1051,6 +1073,45 @@
 
 <h1 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <p>This page takes you from nothing to watching kube-monkey delete a pod on purpose.</p>
+<h2 id="kubernetes-compatibility">Kubernetes compatibility<a class="headerlink" href="#kubernetes-compatibility" title="Permanent link">&para;</a></h2>
+<p>kube-monkey talks to the cluster through
+<a href="https://github.com/kubernetes/client-go">client-go</a>. Each release is built against one
+version of it, pinned in <code>go.mod</code>. The client-go
+<a href="https://github.com/kubernetes/client-go#compatibility-matrix">compatibility matrix</a> is the
+formal answer to which Kubernetes versions that covers: the matching minor version, give or
+take one.</p>
+<p>The real range is much wider, because kube-monkey only uses APIs that went stable years ago.</p>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Used for</th>
+<th>Stable since</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/v1</code></td>
+<td>Finding the Deployments, StatefulSets and DaemonSets that opted in</td>
+<td>1.9</td>
+</tr>
+<tr>
+<td><code>core/v1</code></td>
+<td>Listing and deleting pods</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><code>rbac.authorization.k8s.io/v1</code></td>
+<td>The ClusterRole and binding the chart installs</td>
+<td>1.8</td>
+</tr>
+</tbody>
+</table>
+<p>There are no custom resources and no beta APIs, so 1.9 is the floor, and the Helm chart
+refuses to install below it. Anything between that floor and the version kube-monkey is built
+against is untested rather than unsupported. If an old cluster does give you trouble you will
+see it as a failure to list or delete pods in the log, so
+<a href="https://github.com/asobti/kube-monkey/issues">open an issue</a> with the version and the error.</p>
 <h2 id="1-install-kube-monkey">1. Install kube-monkey<a class="headerlink" href="#1-install-kube-monkey" title="Permanent link">&para;</a></h2>
 <p>kube-monkey runs as a normal workload inside the cluster. It needs to live in a namespace
 allowed to delete pods in other namespaces, so <code>kube-system</code> is the usual home.</p>
