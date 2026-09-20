@@ -10,11 +10,8 @@ import (
 	"github.com/golang/glog"
 )
 
+// Placeholders the configured message is written with
 const (
-	// header
-	EnvVariableRegex = "^{\\$env:\\w+\\}$"
-
-	// body (message)
 	Name         = "{$name}"
 	Kind         = "{$kind}"
 	Namespace    = "{$namespace}"
@@ -25,58 +22,53 @@ const (
 	KubeMonkeyID = "{$kubemonkeyid}"
 )
 
-func toHeaders(headersArray []string) map[string]string {
-	headersMap := make(map[string]string)
+// A header value or the endpoint can be given as {$env:NAME} to keep a secret
+// out of the config file
+var envPlaceholder = regexp.MustCompile(`^\{\$env:(\w+)\}$`)
 
-	for _, h := range headersArray {
-		kv := strings.SplitN(h, ":", 2)
-		if len(kv) == 1 {
-			glog.Errorf("Cannot find ':' separator in supplied header %s", h)
-			headersMap[strings.TrimSpace(kv[0])] = ""
-			continue
+// toHeaders turns the configured "key:value" lines into request headers
+func toHeaders(headerLines []string) map[string]string {
+	headers := make(map[string]string, len(headerLines))
+
+	for _, line := range headerLines {
+		key, value, found := strings.Cut(line, ":")
+		if !found {
+			glog.Errorf("Cannot find ':' separator in supplied header %s", line)
 		}
-		headersMap[strings.TrimSpace(kv[0])] = replaceEnvVariablePlaceholder(strings.TrimSpace(kv[1]))
+		headers[strings.TrimSpace(key)] = resolveEnvPlaceholder(strings.TrimSpace(value))
 	}
-	return headersMap
+
+	return headers
 }
 
-func replaceEnvVariablePlaceholder(value string) string {
-	envVariableRegex := regexp.MustCompile(EnvVariableRegex)
-	if envVariableRegex.MatchString(value) {
-		prefix, _ := envVariableRegex.LiteralPrefix()
-		envVariableName := value[len(prefix) : len(value)-1]
-		envVariableValue := os.Getenv(envVariableName)
-		if len(envVariableValue) == 0 {
-			glog.Errorf("Cannot find environment variable %s", envVariableName)
-		}
-		value = envVariableRegex.ReplaceAllString(value, envVariableValue)
+// resolveEnvPlaceholder swaps a whole {$env:NAME} value for what NAME holds,
+// and leaves anything else alone
+func resolveEnvPlaceholder(value string) string {
+	match := envPlaceholder.FindStringSubmatch(value)
+	if match == nil {
+		return value
 	}
-	return value
+
+	name := match[1]
+	resolved := os.Getenv(name)
+	if resolved == "" {
+		glog.Errorf("Cannot find environment variable %s", name)
+	}
+
+	return resolved
 }
 
+// ReplacePlaceholders fills the placeholders in the configured message with the
+// details of one attack
 func ReplacePlaceholders(msg string, name string, kind string, namespace string, err string, attackTime time.Time, kubeMonkeyID string) string {
-	msg = strings.Replace(msg, Name, name, -1)
-	msg = strings.Replace(msg, Kind, kind, -1)
-	msg = strings.Replace(msg, Namespace, namespace, -1)
-	msg = strings.Replace(msg, Timestamp, timeToEpoch(attackTime), -1)
-	msg = strings.Replace(msg, Time, timeToTime(attackTime), -1)
-	msg = strings.Replace(msg, Date, timeToDate(attackTime), -1)
-	msg = strings.Replace(msg, Error, err, -1)
-	msg = strings.Replace(msg, KubeMonkeyID, kubeMonkeyID, -1)
-
-	return msg
-}
-
-func timeToEpoch(time time.Time) string {
-	epoch := time.UnixNano() / 1000000
-
-	return strconv.FormatInt(epoch, 10)
-}
-
-func timeToDate(time time.Time) string {
-	return time.Format("2006-01-02")
-}
-
-func timeToTime(time time.Time) string {
-	return time.Format("15:04:05 MST")
+	return strings.NewReplacer(
+		Name, name,
+		Kind, kind,
+		Namespace, namespace,
+		Timestamp, strconv.FormatInt(attackTime.UnixMilli(), 10),
+		Time, attackTime.Format("15:04:05 MST"),
+		Date, attackTime.Format("2006-01-02"),
+		Error, err,
+		KubeMonkeyID, kubeMonkeyID,
+	).Replace(msg)
 }

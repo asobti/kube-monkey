@@ -1,48 +1,57 @@
 package notifications
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/golang/glog"
 )
+
+const requestTimeout = 10 * time.Second
 
 type Client struct {
 	httpClient *http.Client
 }
 
-// CreateClient creates a new client with a default timeout
-func CreateClient(proxy *string) Client {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	transport := http.Transport{
+// CreateClient creates a client for the notification endpoint. An empty proxy
+// means the endpoint is reached directly.
+func CreateClient(proxy string) Client {
+	// Notification endpoints are often internal services with a certificate
+	// kube-monkey's image has no root for, and there is nothing secret in a
+	// notification, so the certificate is not checked
+	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	if proxy != nil && *proxy != "" {
-		proxyUrl, _ := url.Parse(*proxy)
-		transport.Proxy = http.ProxyURL(proxyUrl)
+
+	if proxy != "" {
+		proxyURL, err := url.Parse(proxy)
+		if err != nil {
+			glog.Errorf("Ignoring the notifications proxy %s because it is not a valid URL. Error: %v", proxy, err)
+		} else {
+			transport.Proxy = http.ProxyURL(proxyURL)
+		}
 	}
-	client.Transport = &transport
-	return Client{httpClient: client}
+
+	return Client{httpClient: &http.Client{
+		Timeout:   requestTimeout,
+		Transport: transport,
+	}}
 }
 
-// Request sends an http request and returns error also if response code is NOT 2XX
+// Request posts the body to the endpoint. A response outside the 2xx range is
+// an error.
 //
 // Errors leave the endpoint out because it can carry a secret token in its
 // path, and callers log these errors
 func (c Client) Request(endpoint string, requestBody string, headers map[string]string) error {
-	body := bytes.NewBufferString(requestBody)
-
-	req, err := http.NewRequest("POST", endpoint, body)
+	req, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(requestBody))
 	if err != nil {
-		return fmt.Errorf("new http request: %s: %v", "POST", err)
+		return fmt.Errorf("new http request: %v", err)
 	}
 
 	for k, v := range headers {
@@ -55,14 +64,13 @@ func (c Client) Request(endpoint string, requestBody string, headers map[string]
 	}
 	defer resp.Body.Close()
 
+	// Read the body either way: on failure it tells the user why, and on success
+	// draining it lets the connection be reused
+	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode/100 != 2 {
-		b, _ := ioutil.ReadAll(resp.Body) // try to read response body as well to give user more info why request failed
-		return fmt.Errorf("%s returned %d %s, expected 2xx",
-			"POST", resp.StatusCode, strings.TrimSuffix(string(b), "\n"))
+		return fmt.Errorf("POST returned %d %s, expected 2xx", resp.StatusCode, strings.TrimSuffix(string(body), "\n"))
 	}
 
-	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("read response body: %s: %v", "POST", err)
-	}
 	return nil
 }

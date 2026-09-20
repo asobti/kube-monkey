@@ -1,7 +1,6 @@
 /*
-Package factory is responsible for generating eligible victim kinds
-
-New types of kinds can be added easily
+Package factory finds the victims that have opted in to kube-monkey, so the
+scheduler has something to draw a schedule from.
 */
 package factory
 
@@ -12,25 +11,22 @@ import (
 	"kube-monkey/internal/pkg/kubernetes"
 	"kube-monkey/internal/pkg/victims"
 	"kube-monkey/internal/pkg/victims/factory/customresources"
-	"kube-monkey/internal/pkg/victims/factory/daemonsets"
-	"kube-monkey/internal/pkg/victims/factory/deployments"
-	"kube-monkey/internal/pkg/victims/factory/statefulsets"
+	"kube-monkey/internal/pkg/victims/factory/workloads"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/apimachinery/pkg/util/sets"
+	kube "k8s.io/client-go/kubernetes"
 )
 
-// EligibleVictims gathers list of enabled/enrolled kinds for judgement by
-// the scheduler
+// EligibleVictims gathers the victims that opted in, for the scheduler to judge.
 //
 // The namespace lists hold patterns rather than names, so they cannot be turned
 // into API paths. Each kind is fetched across the whole cluster in one call and
 // the namespace lists are applied to the result. The enrollment filter already
 // narrows the fetch to opted-in workloads, which keeps the response small.
-func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
+func EligibleVictims() ([]*victims.Victim, error) {
 	clientset, err := kubernetes.CreateClient()
 	if err != nil {
 		return nil, err
@@ -42,47 +38,40 @@ func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 		return nil, err
 	}
 
-	// Fetch deployments
-	deployments, err := deployments.EligibleDeployments(clientset, metav1.NamespaceAll, filter)
-	if err != nil {
-		// Allow pass through to schedule other kinds. A failure here is worth
-		// shouting about because it leaves the schedule empty for this kind
-		// across the whole cluster
-		glog.Errorf("Failed to fetch eligible deployments due to error: %s", err.Error())
+	// A slice rather than a map so the schedule always lists the kinds in the
+	// same order
+	builtIn := []struct {
+		kind string
+		list func(kube.Interface, string, metav1.ListOptions) ([]*victims.Victim, error)
+	}{
+		{"deployments", workloads.EligibleDeployments},
+		{"statefulsets", workloads.EligibleStatefulSets},
+		{"daemonsets", workloads.EligibleDaemonSets},
 	}
-	eligibleVictims = append(eligibleVictims, deployments...)
 
-	// Fetch statefulsets
-	statefulsets, err := statefulsets.EligibleStatefulSets(clientset, metav1.NamespaceAll, filter)
-	if err != nil {
-		// Allow pass through to schedule other kinds. A failure here is worth
-		// shouting about because it leaves the schedule empty for this kind
-		// across the whole cluster
-		glog.Errorf("Failed to fetch eligible statefulsets due to error: %s", err.Error())
+	var eligible []*victims.Victim
+	for _, kind := range builtIn {
+		found, err := kind.list(clientset, metav1.NamespaceAll, filter)
+		if err != nil {
+			// Carry on with the other kinds. A failure here is worth shouting
+			// about because it leaves the schedule empty for this kind across
+			// the whole cluster
+			glog.Errorf("Failed to fetch eligible %s due to error: %s", kind.kind, err)
+			continue
+		}
+		eligible = append(eligible, found...)
 	}
-	eligibleVictims = append(eligibleVictims, statefulsets...)
 
-	// Fetch daemonsets
-	daemonsets, err := daemonsets.EligibleDaemonSets(clientset, metav1.NamespaceAll, filter)
-	if err != nil {
-		// Allow pass through to schedule other kinds. A failure here is worth
-		// shouting about because it leaves the schedule empty for this kind
-		// across the whole cluster
-		glog.Errorf("Failed to fetch eligible daemonsets due to error: %s", err.Error())
-	}
-	eligibleVictims = append(eligibleVictims, daemonsets...)
+	eligible = append(eligible, eligibleCustomResources(filter)...)
 
-	// Fetch the custom resources named in the config
-	eligibleVictims = append(eligibleVictims, eligibleCustomResources(filter)...)
-
-	return InAllowedNamespace(eligibleVictims), nil
+	return inAllowedNamespace(eligible), nil
 }
 
 // eligibleCustomResources fetches every custom resource kind the config names.
 //
 // The dynamic client is only built when there is something to use it for, so a
 // config without custom resources needs no extra permissions.
-func eligibleCustomResources(filter *metav1.ListOptions) (eligibleVictims []victims.Victim) {
+func eligibleCustomResources(filter metav1.ListOptions) []*victims.Victim {
 	resources := config.CustomResources()
 	if len(resources) == 0 {
 		return nil
@@ -90,62 +79,56 @@ func eligibleCustomResources(filter *metav1.ListOptions) (eligibleVictims []vict
 
 	client, err := kubernetes.NewDynamicClient()
 	if err != nil {
-		glog.Errorf("Failed to create a client for custom resources due to error: %s", err.Error())
+		glog.Errorf("Failed to create a client for custom resources due to error: %s", err)
 		return nil
 	}
 
+	var eligible []*victims.Victim
 	for _, resource := range resources {
-		customResources, err := customresources.EligibleCustomResources(client, resource, metav1.NamespaceAll, filter)
-		if err != nil {
+		found, err := customresources.EligibleCustomResources(client, resource, metav1.NamespaceAll, filter)
+		switch {
+		case apierrors.IsNotFound(err):
 			// A resource nobody has installed the CRD for is worth a word but
 			// not a shout, because a single config can cover a fleet of
 			// clusters that do not all run the same operators
-			if apierrors.IsNotFound(err) {
-				glog.V(4).Infof("Skipping %s because the cluster does not serve it", resource.Name())
-				continue
-			}
+			glog.V(4).Infof("Skipping %s because the cluster does not serve it", resource.Name())
+		case err != nil:
 			// Anything else, a missing RBAC rule most likely, leaves the
 			// schedule empty for this kind and is worth shouting about
-			glog.Errorf("Failed to fetch eligible %s due to error: %s", resource.Name(), err.Error())
-			continue
+			glog.Errorf("Failed to fetch eligible %s due to error: %s", resource.Name(), err)
+		default:
+			eligible = append(eligible, found...)
 		}
-		eligibleVictims = append(eligibleVictims, customResources...)
 	}
 
-	return
+	return eligible
 }
 
-// InAllowedNamespace keeps the victims whose namespace is whitelisted and not
+// inAllowedNamespace keeps the victims whose namespace is whitelisted and not
 // blacklisted. The blacklist wins where the two overlap.
-func InAllowedNamespace(candidates []victims.Victim) (allowed []victims.Victim) {
+func inAllowedNamespace(candidates []*victims.Victim) []*victims.Victim {
+	allowed := make([]*victims.Victim, 0, len(candidates))
+
 	for _, victim := range candidates {
-		if victim.IsBlacklisted() {
+		switch {
+		case victim.IsBlacklisted():
 			glog.V(6).Infof("Skipping %s %s because namespace %s is blacklisted", victim.Kind(), victim.Name(), victim.Namespace())
-			continue
-		}
-
-		if !victim.IsWhitelisted() {
+		case !victim.IsWhitelisted():
 			glog.V(6).Infof("Skipping %s %s because namespace %s is not whitelisted", victim.Kind(), victim.Name(), victim.Namespace())
-			continue
+		default:
+			allowed = append(allowed, victim)
 		}
-
-		allowed = append(allowed, victim)
 	}
 
-	return
+	return allowed
 }
 
-// Verifies opt-in of victims
-func enrollmentFilter() (*metav1.ListOptions, error) {
-	req, err := enrollmentRequirement()
+// enrollmentFilter narrows a list call to the objects carrying the enabled label
+func enrollmentFilter() (metav1.ListOptions, error) {
+	enrolled, err := labels.NewRequirement(config.EnabledLabelKey, selection.Equals, []string{config.EnabledLabelValue})
 	if err != nil {
-		return nil, err
+		return metav1.ListOptions{}, err
 	}
-	return &metav1.ListOptions{
-		LabelSelector: labels.NewSelector().Add(*req).String(),
-	}, nil
-}
 
-func enrollmentRequirement() (*labels.Requirement, error) {
-	return labels.NewRequirement(config.EnabledLabelKey, selection.Equals, sets.NewString(config.EnabledLabelValue).UnsortedList())
+	return metav1.ListOptions{LabelSelector: labels.NewSelector().Add(*enrolled).String()}, nil
 }

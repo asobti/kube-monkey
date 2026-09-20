@@ -1,7 +1,7 @@
 package calendar
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"testing"
 	"time"
 
@@ -197,7 +197,7 @@ func TestKillTimesInRangeOddsForMtbfLongerThanADay(t *testing.T) {
 	} {
 		const days = 20000
 		kills := 0
-		for day := 0; day < days; day++ {
+		for range days {
 			kills += len(killTimesInRange(now, r, mtbf, 10, 16, loc))
 		}
 
@@ -205,6 +205,8 @@ func TestKillTimesInRangeOddsForMtbfLongerThanADay(t *testing.T) {
 	}
 }
 
+// testRand is seeded, so a test that depends on the draws gets the same ones
+// every run
 func testRand() *rand.Rand {
-	return rand.New(rand.NewSource(1))
+	return rand.New(rand.NewPCG(1, 2))
 }

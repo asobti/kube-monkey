@@ -76,9 +76,8 @@ func (s *ConfigTestSuite) TestEndHour() {
 }
 
 func (s *ConfigTestSuite) TestGracePeriodSeconds() {
-	g := int64(100)
 	viper.Set(param.GracePeriodSec, 100)
-	s.Equal(&g, GracePeriodSeconds())
+	s.Equal(int64(100), GracePeriodSeconds())
 }
 
 func (s *ConfigTestSuite) TestBlacklistedNamespacesEnv() {
@@ -86,21 +85,13 @@ func (s *ConfigTestSuite) TestBlacklistedNamespacesEnv() {
 	envname := "KUBEMONKEY_BLACKLISTED_NAMESPACES"
 	defer os.Setenv(envname, os.Getenv(envname))
 	os.Setenv(envname, strings.Join(blns, " "))
-	ns := BlacklistedNamespaces()
-	s.Len(ns, len(blns))
-	for _, v := range blns {
-		s.Contains(ns, v)
-	}
+	s.ElementsMatch(blns, BlacklistedNamespaces())
 }
 
 func (s *ConfigTestSuite) TestBlacklistedNamespaces() {
 	blns := []string{"namespace1", "namespace2"}
 	viper.Set(param.BlacklistedNamespaces, blns)
-	ns := BlacklistedNamespaces()
-	s.Len(ns, len(blns))
-	for _, v := range blns {
-		s.Contains(ns, v)
-	}
+	s.ElementsMatch(blns, BlacklistedNamespaces())
 }
 
 func (s *ConfigTestSuite) TestIsBlacklistedNamespace() {
@@ -132,11 +123,7 @@ func (s *ConfigTestSuite) TestIsBlacklistedNamespaceWithInvalidPattern() {
 func (s *ConfigTestSuite) TestWhitelistedNamespaces() {
 	wlns := []string{"namespace1", "namespace2"}
 	viper.Set(param.WhitelistedNamespaces, wlns)
-	ns := WhitelistedNamespaces()
-	s.Len(ns, len(wlns))
-	for _, v := range wlns {
-		s.Contains(ns, v)
-	}
+	s.ElementsMatch(wlns, WhitelistedNamespaces())
 }
 
 func (s *ConfigTestSuite) TestIsWhitelistedNamespace() {
@@ -175,6 +162,14 @@ func (s *ConfigTestSuite) TestBlacklistEnabled() {
 	s.True(BlacklistEnabled())
 	viper.Set(param.BlacklistedNamespaces, []string{metav1.NamespaceNone})
 	s.False(BlacklistEnabled())
+}
+
+// An empty list is not the same as the default "everything", so a whitelist
+// someone emptied out still blocks every namespace
+func (s *ConfigTestSuite) TestWhitelistEnabledForAnEmptyList() {
+	viper.Set(param.WhitelistedNamespaces, []string{})
+	s.True(WhitelistEnabled())
+	s.False(IsWhitelistedNamespace("default"))
 }
 
 func (s *ConfigTestSuite) TestWhitelistEnabled() {
@@ -228,10 +223,6 @@ func (s *ConfigTestSuite) TestNotificationsAttacks() {
 	receiver := map[string]interface{}{"endpoint": "endpoint1", "message": "message1", "headers": headers}
 	viper.Set(param.NotificationsAttacks, receiver)
 	actual := NotificationsAttacks()
-
-	s.Equal(receiver["endpoint"], actual.Endpoint)
-	s.Equal(receiver["message"], actual.Message)
-	s.Equal(receiver["headers"], actual.Headers)
 
 	s.Equal(receiver["endpoint"], actual.Endpoint)
 	s.Equal(receiver["message"], actual.Message)

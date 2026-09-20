@@ -6,41 +6,24 @@ import (
 	"kube-monkey/internal/pkg/config"
 	"kube-monkey/internal/pkg/config/param"
 	"kube-monkey/internal/pkg/victims"
-	"kube-monkey/internal/pkg/victims/factory/deployments"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func victimInNamespace(t *testing.T, namespace string) victims.Victim {
-	t.Helper()
-
-	victim, err := deployments.New(&appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "app",
-			Namespace: namespace,
-			Labels: map[string]string{
-				config.IdentLabelKey: "app",
-				config.MtbfLabelKey:  "1",
-			},
-		},
-		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "app"}},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": "app"}},
-			},
-		},
-	})
-	assert.NoError(t, err)
-
-	return victim
+func TestMain(m *testing.M) {
+	config.SetDefaults()
+	m.Run()
 }
 
-func namespacesOf(allowed []victims.Victim) []string {
+func victimInNamespace(namespace string) *victims.Victim {
+	return victims.New(victims.Spec{Kind: "v1.Deployment", Name: "app", Namespace: namespace})
+}
+
+func namespacesOf(allowed []*victims.Victim) []string {
 	namespaces := make([]string, 0, len(allowed))
 	for _, victim := range allowed {
 		namespaces = append(namespaces, victim.Namespace())
@@ -49,33 +32,54 @@ func namespacesOf(allowed []victims.Victim) []string {
 }
 
 func TestInAllowedNamespace(t *testing.T) {
-	viper.Reset()
-	config.SetDefaults()
 	viper.Set(param.WhitelistedNamespaces, []string{"team-*"})
 	viper.Set(param.BlacklistedNamespaces, []string{"*-prod"})
+	t.Cleanup(func() {
+		viper.Reset()
+		config.SetDefaults()
+	})
 
-	candidates := []victims.Victim{
-		victimInNamespace(t, "team-shop"),
-		victimInNamespace(t, "team-checkout"),
-		victimInNamespace(t, "team-shop-prod"),
-		victimInNamespace(t, "default"),
-	}
+	allowed := inAllowedNamespace([]*victims.Victim{
+		victimInNamespace("team-shop"),
+		victimInNamespace("team-checkout"),
+		victimInNamespace("team-shop-prod"),
+		victimInNamespace("default"),
+	})
 
-	allowed := InAllowedNamespace(candidates)
-
-	assert.ElementsMatch(t, []string{"team-shop", "team-checkout"}, namespacesOf(allowed))
+	assert.Equal(t, []string{"team-shop", "team-checkout"}, namespacesOf(allowed))
 }
 
+// Where the two lists overlap the blacklist has to win, otherwise a namespace
+// someone deliberately protected could be opted back in by a broad whitelist
+func TestInAllowedNamespaceBlacklistBeatsWhitelist(t *testing.T) {
+	viper.Set(param.WhitelistedNamespaces, []string{"*"})
+	viper.Set(param.BlacklistedNamespaces, []string{"team-shop"})
+	t.Cleanup(func() {
+		viper.Reset()
+		config.SetDefaults()
+	})
+
+	allowed := inAllowedNamespace([]*victims.Victim{
+		victimInNamespace("team-shop"),
+		victimInNamespace("team-checkout"),
+	})
+
+	assert.Equal(t, []string{"team-checkout"}, namespacesOf(allowed))
+}
+
+// kube-system is blocked out of the box, everything else is open
 func TestInAllowedNamespaceWithDefaultConfig(t *testing.T) {
-	viper.Reset()
-	config.SetDefaults()
-
-	candidates := []victims.Victim{
-		victimInNamespace(t, metav1.NamespaceDefault),
-		victimInNamespace(t, metav1.NamespaceSystem),
-	}
-
-	allowed := InAllowedNamespace(candidates)
+	allowed := inAllowedNamespace([]*victims.Victim{
+		victimInNamespace(metav1.NamespaceDefault),
+		victimInNamespace(metav1.NamespaceSystem),
+	})
 
 	assert.Equal(t, []string{metav1.NamespaceDefault}, namespacesOf(allowed))
+}
+
+func TestEnrollmentFilterOnlyAsksForWorkloadsThatOptedIn(t *testing.T) {
+	filter, err := enrollmentFilter()
+
+	require.NoError(t, err)
+	assert.Equal(t, config.EnabledLabelKey+"="+config.EnabledLabelValue, filter.LabelSelector)
 }

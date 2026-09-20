@@ -7,6 +7,7 @@ It's recommended to create a new clientset after a period of inactivity
 package kubernetes
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/golang/glog"
@@ -21,19 +22,19 @@ import (
 
 // CreateClient creates, verifies and returns an instance of k8 clientset
 func CreateClient() (*kube.Clientset, error) {
-	client, err := NewInClusterClient()
+	client, err := newInClusterClient()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to generate NewInClusterClient: %v", err)
+		return nil, fmt.Errorf("failed to create a client for the apiserver: %v", err)
 	}
 
-	if VerifyClient(client) {
+	if verifyClient(client) {
 		return client, nil
 	}
-	return nil, fmt.Errorf("Unable to verify client connectivity to Kubernetes apiserver")
+	return nil, errors.New("unable to verify client connectivity to the kubernetes apiserver")
 }
 
-// NewInClusterClient only creates an initialized instance of k8 clientset
-func NewInClusterClient() (*kube.Clientset, error) {
+// newInClusterClient only creates an initialized instance of k8 clientset
+func newInClusterClient() (*kube.Clientset, error) {
 	config, err := inClusterConfig()
 	if err != nil {
 		return nil, err
@@ -78,7 +79,8 @@ func inClusterConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func VerifyClient(client discovery.DiscoveryInterface) bool {
+// verifyClient reports whether the apiserver answers
+func verifyClient(client discovery.DiscoveryInterface) bool {
 	_, err := client.ServerVersion()
 	return err == nil
 }

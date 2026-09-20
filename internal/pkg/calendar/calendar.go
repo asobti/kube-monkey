@@ -2,9 +2,9 @@ package calendar
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -153,10 +153,10 @@ func killTimesInRange(now time.Time, r *rand.Rand, mtbf time.Duration, startHour
 	}
 
 	killtimes := make([]time.Time, 0, count)
-	for i := 0; i < count; i++ {
-		killtimes = append(killtimes, start.Add(time.Duration(r.Int63n(int64(remaining)))))
+	for range count {
+		killtimes = append(killtimes, start.Add(time.Duration(r.Int64N(int64(remaining)))))
 	}
-	sort.Slice(killtimes, func(i, j int) bool { return killtimes[i].Before(killtimes[j]) })
+	slices.SortFunc(killtimes, func(a, b time.Time) int { return a.Compare(b) })
 
 	return killtimes
 }
@@ -167,7 +167,7 @@ func randomTimeInRange(now time.Time, r *rand.Rand, startHour int, endHour int, 
 		return time.Time{}, false
 	}
 
-	return start.Add(time.Duration(r.Int63n(int64(remaining)))), true
+	return start.Add(time.Duration(r.Int64N(int64(remaining)))), true
 }
 
 // rangeToday returns the part of today's range that is still ahead of now, plus
@@ -191,6 +191,8 @@ func rangeToday(now time.Time, startHour int, endHour int, loc *time.Location) (
 	return start, remaining, full
 }
 
+// newRand draws a generator from the global one, which is seeded for us. Kill
+// times are only generated from a seeded generator so tests can pin them down.
 func newRand() *rand.Rand {
-	return rand.New(rand.NewSource(time.Now().UnixNano()))
+	return rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64()))
 }
