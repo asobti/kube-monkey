@@ -43,24 +43,30 @@ func EligibleVictims() (eligibleVictims []victims.Victim, err error) {
 	// Fetch deployments
 	deployments, err := deployments.EligibleDeployments(clientset, metav1.NamespaceAll, filter)
 	if err != nil {
-		//allow pass through to schedule other kinds
-		glog.Warningf("Failed to fetch eligible deployments due to error: %s", err.Error())
+		// Allow pass through to schedule other kinds. A failure here is worth
+		// shouting about because it leaves the schedule empty for this kind
+		// across the whole cluster
+		glog.Errorf("Failed to fetch eligible deployments due to error: %s", err.Error())
 	}
 	eligibleVictims = append(eligibleVictims, deployments...)
 
 	// Fetch statefulsets
 	statefulsets, err := statefulsets.EligibleStatefulSets(clientset, metav1.NamespaceAll, filter)
 	if err != nil {
-		//allow pass through to schedule other kinds
-		glog.Warningf("Failed to fetch eligible statefulsets due to error: %s", err.Error())
+		// Allow pass through to schedule other kinds. A failure here is worth
+		// shouting about because it leaves the schedule empty for this kind
+		// across the whole cluster
+		glog.Errorf("Failed to fetch eligible statefulsets due to error: %s", err.Error())
 	}
 	eligibleVictims = append(eligibleVictims, statefulsets...)
 
 	// Fetch daemonsets
 	daemonsets, err := daemonsets.EligibleDaemonSets(clientset, metav1.NamespaceAll, filter)
 	if err != nil {
-		//allow pass through to schedule other kinds
-		glog.Warningf("Failed to fetch eligible daemonsets due to error: %s", err.Error())
+		// Allow pass through to schedule other kinds. A failure here is worth
+		// shouting about because it leaves the schedule empty for this kind
+		// across the whole cluster
+		glog.Errorf("Failed to fetch eligible daemonsets due to error: %s", err.Error())
 	}
 	eligibleVictims = append(eligibleVictims, daemonsets...)
 

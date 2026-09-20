@@ -32,6 +32,11 @@ Namespace names never contain `*` or `?`, so a plain name still matches nothing 
 
 Patterns are checked when the config loads, and a malformed one stops kube-monkey from starting.
 
+Because the lists hold patterns, kube-monkey lists workloads across the whole cluster and applies the lists to
+the result. It therefore needs permission to list deployments, statefulsets and daemonsets cluster-wide, which
+the Helm chart grants. An install that limits kube-monkey to a Role in each namespace will log an error and
+schedule nothing.
+
 To disable the blacklist provide `[""]` in the `blacklisted_namespaces` config.param. The whitelist is off by default, which is `[""]`
 in `whitelisted_namespaces` and means every namespace.
 
