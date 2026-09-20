@@ -27,7 +27,7 @@ because that is its section name.
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
 | `kubemonkey.dry_run` | bool | `true` | Log terminations instead of carrying them out |
-| `kubemonkey.time_zone` | string | `America/Los_Angeles` | tzdata timezone the hours below are read in. Note the key is `time_zone`, not `timezone` |
+| `kubemonkey.time_zone` | string | `America/Los_Angeles` | tzdata timezone the hours below are read in, and the timezone of every log timestamp. Note the key is `time_zone`, not `timezone` |
 | `kubemonkey.run_days` | list | `["mon", "tue", "wed", "thu", "fri"]` | Days of the week a schedule is built on. Short or full day names, in any case. Must name at least one day |
 | `kubemonkey.run_hour` | int | `8` | Hour of the weekday when the day's schedule is built. Nothing is terminated at this hour. Must be less than `start_hour`, and in `[0,23]` |
 | `kubemonkey.start_hour` | int | `10` | Earliest hour a termination may happen. Must be less than `end_hour`, and in `[0,23]` |

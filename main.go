@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -56,6 +57,13 @@ func initConfig() {
 	if err := config.Init(); err != nil {
 		glog.Fatal(err.Error())
 	}
+
+	// glog stamps every line with the process local time, so without this the
+	// line prefix and the times inside the messages would sit in different
+	// zones. Set once here, before any goroutine starts, because time.Local is
+	// read without locking everywhere else. A later config reload does not move
+	// it; that needs a restart.
+	time.Local = config.Timezone()
 }
 
 func main() {
