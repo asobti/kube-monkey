@@ -42,6 +42,14 @@ spec:
               containerPort: {{ .Values.config.metrics.port }}
               protocol: TCP
           {{- end }}
+          {{- if .Values.extraEnv }}
+          env:
+{{- toYaml .Values.extraEnv | trimSuffix "\n" | nindent 12 }}
+          {{- end }}
+          {{- if .Values.extraEnvFrom }}
+          envFrom:
+{{- toYaml .Values.extraEnvFrom | trimSuffix "\n" | nindent 12 }}
+          {{- end }}
           resources:
 {{- toYaml .Values.resources | trimSuffix "\n" | nindent 12 }}
           volumeMounts:

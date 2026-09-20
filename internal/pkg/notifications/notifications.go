@@ -26,7 +26,7 @@ func ReportSchedule(client Client, schedule *schedule.Schedule) bool {
 	msg := fmt.Sprintf("{\"text\": \"\n%s\n\"}", schedule)
 
 	glog.V(1).Infof("reporting next schedule")
-	if err := Send(client, receiver.Endpoint, msg, toHeaders(receiver.Headers)); err != nil {
+	if err := Send(client, replaceEnvVariablePlaceholder(receiver.Endpoint), msg, toHeaders(receiver.Headers)); err != nil {
 		glog.Errorf("error reporting next schedule")
 		success = false
 	}
@@ -43,8 +43,10 @@ func ReportAttack(client Client, result *chaos.Result, time time.Time) bool {
 		errorString = result.Error().Error()
 	}
 	msg := ReplacePlaceholders(receiver.Message, result.Victim().Name(), result.Victim().Kind(), result.Victim().Namespace(), errorString, time, os.Getenv("KUBE_MONKEY_ID"))
+	// Logs show the configured endpoint, not the resolved one, because a
+	// resolved endpoint can carry a secret token in its path
 	glog.V(1).Infof("reporting attack for %s %s to %s with message %s\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg)
-	if err := Send(client, receiver.Endpoint, msg, toHeaders(receiver.Headers)); err != nil {
+	if err := Send(client, replaceEnvVariablePlaceholder(receiver.Endpoint), msg, toHeaders(receiver.Headers)); err != nil {
 		glog.Errorf("error reporting attack for %s %s to %s with message %s, error: %v\n", result.Victim().Kind(), result.Victim().Name(), receiver.Endpoint, msg, err)
 		success = false
 	}

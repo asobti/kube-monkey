@@ -85,6 +85,20 @@ additionalVolumeMounts: []
 # - name: log
 #   mountPath: "/var/log/kube-monkey"
 
+# Extra environment variables for the kube-monkey container. Use these to keep
+# secrets out of the config, such as a notification endpoint or an API token.
+# Refer to them in the config with the {$env:NAME} placeholder.
+extraEnv: []
+# - name: WEBHOOK_URL
+#   valueFrom:
+#     secretKeyRef:
+#       name: kube-monkey-notifications
+#       key: webhook-url
+
+extraEnvFrom: []
+# - secretRef:
+#     name: kube-monkey-notifications
+
 # Running as a non-root user needs no extra setup while logs go to stderr. If
 # you also set args.logDir, mount a writable volume at that path, otherwise the
 # user cannot create the directory and kube-monkey will not start.

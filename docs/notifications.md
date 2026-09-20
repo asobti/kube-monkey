@@ -47,17 +47,34 @@ message = '{
          }'
 ```
 
-## Header placeholders
+## Environment variable placeholders
 
-Headers support a special placeholder that reads an environment variable. This is useful when
-calling an API with a protected endpoint. The typical case is an API token passed to the
-kube-monkey container from a Kubernetes Secret.
+The endpoint and the headers support a special placeholder that reads an environment
+variable. This keeps secrets out of the config, which is usually a ConfigMap and so is
+readable by anyone who can read the namespace. The typical cases are an API token and a
+webhook URL that carries its own token, passed to the kube-monkey container from a
+Kubernetes Secret.
 
 ```toml
+endpoint = "{$env:WEBHOOK_URL}"
 headers = ["api-key:{$env:API_TOKEN}", "Content-Type:application/json"]
 ```
 
 `{$env:API_TOKEN}` is replaced by the value of the `API_TOKEN` environment variable.
+
+The whole value must be the placeholder. `https://example.com/{$env:TOKEN}` is sent as
+written, with no substitution.
+
+With the Helm chart, pass the variable in through `extraEnv` or `extraEnvFrom`:
+
+```yaml
+extraEnv:
+  - name: WEBHOOK_URL
+    valueFrom:
+      secretKeyRef:
+        name: kube-monkey-notifications
+        key: webhook-url
+```
 
 !!! note "A missing variable does not stop the notification"
 
