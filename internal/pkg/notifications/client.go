@@ -34,12 +34,15 @@ func CreateClient(proxy *string) Client {
 }
 
 // Request sends an http request and returns error also if response code is NOT 2XX
+//
+// Errors leave the endpoint out because it can carry a secret token in its
+// path, and callers log these errors
 func (c Client) Request(endpoint string, requestBody string, headers map[string]string) error {
 	body := bytes.NewBufferString(requestBody)
 
 	req, err := http.NewRequest("POST", endpoint, body)
 	if err != nil {
-		return fmt.Errorf("new http request: %s %s: %v", "POST", endpoint, err)
+		return fmt.Errorf("new http request: %s: %v", "POST", err)
 	}
 
 	for k, v := range headers {
@@ -54,12 +57,12 @@ func (c Client) Request(endpoint string, requestBody string, headers map[string]
 
 	if resp.StatusCode/100 != 2 {
 		b, _ := ioutil.ReadAll(resp.Body) // try to read response body as well to give user more info why request failed
-		return fmt.Errorf("%s %s returned %d %s, expected 2xx",
-			"POST", endpoint, resp.StatusCode, strings.TrimSuffix(string(b), "\n"))
+		return fmt.Errorf("%s returned %d %s, expected 2xx",
+			"POST", resp.StatusCode, strings.TrimSuffix(string(b), "\n"))
 	}
 
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("read response body: %s %s: %v", "POST", endpoint, err)
+		return fmt.Errorf("read response body: %s: %v", "POST", err)
 	}
 	return nil
 }

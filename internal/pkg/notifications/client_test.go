@@ -1,7 +1,6 @@
 package notifications
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -34,7 +33,7 @@ func TestRequestFails(t *testing.T) {
 	c := CreateClient(nil)
 	body := ""
 	err := c.Request(server.URL, body, map[string]string{})
-	expectedErr := fmt.Sprintf("POST %s returned 403 Unauthorized, expected 2xx", server.URL)
+	expectedErr := "POST returned 403 Unauthorized, expected 2xx"
 	if want, have := expectedErr, err.Error(); want != have {
 		t.Errorf("unexpected error, want %q, have %q", want, have)
 	}
