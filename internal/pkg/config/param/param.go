@@ -12,7 +12,15 @@ const (
 	// Default: America/Los_Angeles
 	Timezone = "kubemonkey.time_zone"
 
-	// RunHour specifies the hour of the weekday
+	// RunDays specifies the days of the week on which the
+	// scheduler should run to schedule terminations
+	// Day names are read in any case, short or full,
+	// e.g. "mon" or "Monday"
+	// Type: list
+	// Default: [ "mon", "tue", "wed", "thu", "fri" ]
+	RunDays = "kubemonkey.run_days"
+
+	// RunHour specifies the hour of a run day
 	// when the scheduler should run to schedule terminations
 	// Must be less than StartHour, and [0,23]
 	// Type: int

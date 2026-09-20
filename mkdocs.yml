@@ -8,6 +8,8 @@ copyright: Licensed under the Apache License 2.0
 
 theme:
   name: material
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
   features:
     # Instant loading is deliberately left off. It intercepts same-origin links,
     # and this site links to the raw Helm repo files served next to it.
@@ -17,21 +19,23 @@ theme:
     - navigation.footer
     - content.code.copy
     - content.action.edit
+    - content.tabs.link
+    - content.tooltips
     - search.suggest
     - search.highlight
+    - search.share
     - toc.follow
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
@@ -54,8 +58,10 @@ extra:
       name: kube-monkey on Docker Hub
 
 markdown_extensions:
+  - abbr
   - admonition
   - attr_list
+  - def_list
   - md_in_html
   - tables
   - toc:

@@ -1,5 +1,5 @@
+[![Documentation](https://img.shields.io/badge/docs-kube--monkey-blue?logo=materialformkdocs&logoColor=white)](https://asobti.github.io/kube-monkey/)
 [![Build](https://github.com/asobti/kube-monkey/actions/workflows/go.yml/badge.svg)](https://github.com/asobti/kube-monkey/actions/workflows/go.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docker Pulls](https://img.shields.io/docker/pulls/ayushsobti/kube-monkey?label=Docker%20pulls&logo=docker)](https://hub.docker.com/r/ayushsobti/kube-monkey/)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubemonkey)](https://artifacthub.io/packages/search?repo=kubemonkey)
@@ -10,8 +10,8 @@ kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/
 for [Kubernetes](https://kubernetes.io/) clusters. It randomly deletes pods in the cluster,
 encouraging and validating the development of failure-resilient services.
 
-Apps opt in with a label, terminations happen during working hours on weekdays, and dry run
-is the default, so nothing dies until you say so.
+Apps opt in with a label, terminations happen during the hours and days you pick, and dry
+run is the default, so nothing dies until you say so.
 
 **📖 [Documentation](https://asobti.github.io/kube-monkey/)**
 
@@ -33,8 +33,8 @@ metadata:
     kube-monkey/mtbf: "2"
 ```
 
-That is a kube-monkey in dry run mode and an app that expects to lose a pod every second
-weekday. See [Getting started](https://asobti.github.io/kube-monkey/getting-started/) for the
+That is a kube-monkey in dry run mode and an app that expects to lose a pod on about one run
+day in two. See [Getting started](https://asobti.github.io/kube-monkey/getting-started/) for the
 walk through, including how to watch a real termination before you trust it with a live
 namespace.
 
