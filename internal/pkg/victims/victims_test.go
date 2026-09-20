@@ -60,7 +60,7 @@ func generateNRunningPods(namePrefix string, n int) []runtime.Object {
 }
 
 func newVictimBase() *VictimBase {
-	return New(KIND, NAME, NAMESPACE, IDENTIFIER, 24*time.Hour)
+	return New(KIND, NAME, NAMESPACE, IDENTIFIER, 24*time.Hour, IdentifierSelector(IDENTIFIER))
 }
 
 func getPodList(client kube.Interface) *corev1.PodList {
@@ -305,7 +305,7 @@ func TestIsBlacklisted(t *testing.T) {
 	b := v.IsBlacklisted()
 	assert.False(t, b, "%s namespace should not be blacklisted", NAMESPACE)
 
-	v = New("Pod", "name", metav1.NamespaceSystem, IDENTIFIER, 1)
+	v = New("Pod", "name", metav1.NamespaceSystem, IDENTIFIER, 1, IdentifierSelector(IDENTIFIER))
 	b = v.IsBlacklisted()
 	assert.True(t, b, "%s namespace should be blacklisted", metav1.NamespaceSystem)
 
@@ -338,4 +338,97 @@ func TestGetDeleteOptsForPod(t *testing.T) {
 
 	assert.Equal(t, deleteOpts.GracePeriodSeconds, configuredGracePeriod)
 
+}
+
+func newPodWithLabels(name string, podLabels map[string]string) corev1.Pod {
+	pod := newPod(name, corev1.PodRunning)
+	pod.Labels = podLabels
+	return pod
+}
+
+func TestNewPodSelectorUsesIdentifierFromPodTemplate(t *testing.T) {
+
+	selector, err := NewPodSelector(KIND, NAME, IDENTIFIER,
+		map[string]string{config.IdentLabelKey: IDENTIFIER, "app": "victim"},
+		&metav1.LabelSelector{MatchLabels: map[string]string{"app": "victim"}},
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, config.IdentLabelKey+"="+IDENTIFIER, selector.String())
+}
+
+func TestNewPodSelectorPrefersMetadataIdentifierWhenTemplateConflicts(t *testing.T) {
+
+	selector, err := NewPodSelector(KIND, NAME, IDENTIFIER,
+		map[string]string{config.IdentLabelKey: "a-different-id"},
+		&metav1.LabelSelector{MatchLabels: map[string]string{"app": "victim"}},
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, config.IdentLabelKey+"="+IDENTIFIER, selector.String())
+}
+
+func TestNewPodSelectorFallsBackToWorkloadSelector(t *testing.T) {
+
+	selector, err := NewPodSelector(KIND, NAME, IDENTIFIER,
+		map[string]string{"app": "victim"},
+		&metav1.LabelSelector{MatchLabels: map[string]string{"app": "victim"}},
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "app=victim", selector.String())
+}
+
+func TestNewPodSelectorFallsBackToMatchExpressions(t *testing.T) {
+
+	selector, err := NewPodSelector(KIND, NAME, IDENTIFIER,
+		map[string]string{"app": "victim"},
+		&metav1.LabelSelector{
+			MatchExpressions: []metav1.LabelSelectorRequirement{
+				{Key: "app", Operator: metav1.LabelSelectorOpIn, Values: []string{"victim"}},
+			},
+		},
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "app in (victim)", selector.String())
+}
+
+func TestNewPodSelectorRejectsMissingWorkloadSelector(t *testing.T) {
+
+	_, err := NewPodSelector(KIND, NAME, IDENTIFIER, map[string]string{"app": "victim"}, nil)
+	assert.Error(t, err, "Expected an error when there is nothing to select pods with")
+
+	_, err = NewPodSelector(KIND, NAME, IDENTIFIER, nil, &metav1.LabelSelector{})
+	assert.Error(t, err, "Expected an error when the workload selector is empty")
+}
+
+func TestPodsRefusesAnEmptySelector(t *testing.T) {
+
+	client := fake.NewSimpleClientset(generateNRunningPods("pod", 3)...)
+	v := New(KIND, NAME, NAMESPACE, IDENTIFIER, 24*time.Hour, nil)
+
+	_, err := v.Pods(client)
+
+	assert.EqualError(t, err, KIND+" "+NAME+" has no selector to find its pods with")
+}
+
+func TestPodsFoundByWorkloadSelector(t *testing.T) {
+
+	mine := newPodWithLabels("mine", map[string]string{"app": "victim"})
+	theirs := newPodWithLabels("theirs", map[string]string{"app": "bystander"})
+	client := fake.NewSimpleClientset(&mine, &theirs)
+
+	selector, err := NewPodSelector(KIND, NAME, IDENTIFIER,
+		map[string]string{"app": "victim"},
+		&metav1.LabelSelector{MatchLabels: map[string]string{"app": "victim"}},
+	)
+	assert.NoError(t, err)
+
+	v := New(KIND, NAME, NAMESPACE, IDENTIFIER, 24*time.Hour, selector)
+	pods, err := v.Pods(client)
+
+	assert.NoError(t, err)
+	assert.Len(t, pods, 1)
+	assert.Equal(t, "mine", pods[0].Name)
 }

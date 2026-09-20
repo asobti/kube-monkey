@@ -26,15 +26,18 @@ func New(dep *appsv1.Deployment) (*Deployment, error) {
 		return nil, err
 	}
 	kind := fmt.Sprintf("%T", *dep)
+	podSelector, err := victims.NewPodSelector(kind, dep.Name, ident, dep.Spec.Template.Labels, dep.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
 
-	return &Deployment{VictimBase: victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
+	return &Deployment{VictimBase: victims.New(kind, dep.Name, dep.Namespace, ident, mtbf, podSelector)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey
-// from the deployment labels
-// This label should be unique to a deployment, and is used to
-// identify the pods that belong to this deployment, as pods
-// inherit labels from the Deployment
+// from the deployment metadata labels
+// This label should be unique to a deployment. It also picks out the pods that
+// belong to this deployment when the pod template passes the label down to them
 func identifier(kubekind *appsv1.Deployment) (string, error) {
 	identifier, ok := kubekind.Labels[config.IdentLabelKey]
 	if !ok {

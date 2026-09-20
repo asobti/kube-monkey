@@ -30,8 +30,9 @@ if set to **`"3d"`**, the k8s app can expect to have a Pod killed approximately 
 to lose a Pod every two hours. A value without a unit is read as days, so **`"3"`** and **`"3d"`** mean the same thing. The shortest mean time
 between failure is one minute. Note that all terminations happen inside the daily run window (see `start_hour` and `end_hour`), so an mtbf
 shorter than a day packs that day's terminations into that window.  
-**`kube-monkey/identifier`**: A unique identifier for the k8s apps. This is used to identify the pods
-that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-monkey detects that app `foo` has enrolled to be a victim, kube-monkey will look for all pods that have the label `kube-monkey/identifier: foo` to determine which pods are candidates for killing. The recommendation is to set this value to be the same as the app's name.  
+**`kube-monkey/identifier`**: A unique identifier for the k8s app. The recommendation is to set this value to be the same as the app's name.
+It also gives you a way to pick the victim's pods by hand: if you repeat this label on the pod template, kube-monkey looks for pods carrying
+`kube-monkey/identifier: foo` instead of using the app's own pod selector. Two apps sharing an identifier are then treated as one pool of pods.  
 **`kube-monkey/kill-mode`**: Default behavior is for kube-monkey to kill only ONE pod of your app. You can override this behavior by setting the value to:
 * `kill-all` if you want kube-monkey to kill **ALL** of your pods regardless of status (including not ready and not running pods). Does not require `kill-value`. **Use this label carefully.**
 * `fixed` if you want to kill a specific number of running pods with `kill-value`. If you overspecify, it will kill **all** running pods and issue a warning.
@@ -44,28 +45,15 @@ that belong to a k8s app as Pods inherit labels from their k8s app. So, if kube-
 * if `random-max-percent`, provide a number from `0`-`100` to specify the max `%` of pods kube-monkey can kill
 * if `fixed-percent`, provide a number from `0`-`100` to specify the `%` of pods to kill
 
+#### Where to put the labels
+
+All of these labels go on the k8s app's own **`metadata.labels`**. That is the only place kube-monkey reads them from, both when it
+builds the daily schedule and when it re-checks the app at termination time.
+
+You do not need to repeat them on **`spec.template.metadata.labels`**. To find the pods to kill, kube-monkey falls back to the app's own
+pod selector (`spec.selector`), which every Deployment, StatefulSet and DaemonSet already has.
+
 #### Example of opted-in Deployment killing one pod per purge
-
-```yaml
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: monkey-victim
-  namespace: app-namespace
-spec:
-  template:
-    metadata:
-      labels:
-        kube-monkey/enabled: enabled
-        kube-monkey/identifier: monkey-victim
-        kube-monkey/mtbf: '2'
-        kube-monkey/kill-mode: "fixed"
-        kube-monkey/kill-value: '1'
-[... omitted ...]
-```
-
-For newer versions of kubernetes you may need to add the labels to the k8s app metadata as well.
 
 ```yaml
 ---
@@ -81,11 +69,13 @@ metadata:
     kube-monkey/kill-mode: "fixed"
     kube-monkey/kill-value: '1'
 spec:
+  selector:
+    matchLabels:
+      app: monkey-victim
   template:
     metadata:
       labels:
-        kube-monkey/enabled: enabled
-        kube-monkey/identifier: monkey-victim
+        app: monkey-victim
 [... omitted ...]
 ```
 

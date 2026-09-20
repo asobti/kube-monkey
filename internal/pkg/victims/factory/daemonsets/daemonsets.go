@@ -26,15 +26,18 @@ func New(dep *appsv1.DaemonSet) (*DaemonSet, error) {
 		return nil, err
 	}
 	kind := fmt.Sprintf("%T", *dep)
+	podSelector, err := victims.NewPodSelector(kind, dep.Name, ident, dep.Spec.Template.Labels, dep.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
 
-	return &DaemonSet{VictimBase: victims.New(kind, dep.Name, dep.Namespace, ident, mtbf)}, nil
+	return &DaemonSet{VictimBase: victims.New(kind, dep.Name, dep.Namespace, ident, mtbf, podSelector)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey
-// from the DaemonSet labels
-// This label should be unique to a DaemonSet, and is used to
-// identify the pods that belong to this DaemonSet, as pods
-// inherit labels from the DaemonSet
+// from the DaemonSet metadata labels
+// This label should be unique to a DaemonSet. It also picks out the pods that
+// belong to this DaemonSet when the pod template passes the label down to them
 func identifier(kubekind *appsv1.DaemonSet) (string, error) {
 	identifier, ok := kubekind.Labels[config.IdentLabelKey]
 	if !ok {

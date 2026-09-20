@@ -17,8 +17,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 type Victim interface {
@@ -63,17 +61,18 @@ type VictimKillNumberGenerator interface {
 }
 
 type VictimBase struct {
-	kind       string
-	name       string
-	namespace  string
-	identifier string
-	mtbf       time.Duration
+	kind        string
+	name        string
+	namespace   string
+	identifier  string
+	mtbf        time.Duration
+	podSelector labels.Selector
 
 	VictimBaseTemplate
 }
 
-func New(kind, name, namespace, identifier string, mtbf time.Duration) *VictimBase {
-	return &VictimBase{kind: kind, name: name, namespace: namespace, identifier: identifier, mtbf: mtbf}
+func New(kind, name, namespace, identifier string, mtbf time.Duration, podSelector labels.Selector) *VictimBase {
+	return &VictimBase{kind: kind, name: name, namespace: namespace, identifier: identifier, mtbf: mtbf, podSelector: podSelector}
 }
 
 func (v *VictimBase) Kind() string {
@@ -96,6 +95,11 @@ func (v *VictimBase) Mtbf() time.Duration {
 	return v.mtbf
 }
 
+// PodSelector returns the selector used to find the pods belonging to this victim
+func (v *VictimBase) PodSelector() labels.Selector {
+	return v.podSelector
+}
+
 // RunningPods returns a list of running pods for the victim
 func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []corev1.Pod, err error) {
 	pods, err := v.Pods(clientset)
@@ -114,12 +118,13 @@ func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []corev1
 
 // Pods returns a list of pods under the victim
 func (v *VictimBase) Pods(clientset kube.Interface) ([]corev1.Pod, error) {
-	labelSelector, err := labelFilterForPods(v.identifier)
-	if err != nil {
-		return nil, err
+	// An empty selector matches every pod in the namespace, so refuse to send one
+	if v.podSelector == nil || v.podSelector.Empty() {
+		return nil, fmt.Errorf("%s %s has no selector to find its pods with", v.kind, v.name)
 	}
 
-	podlist, err := clientset.CoreV1().Pods(v.namespace).List(context.TODO(), *labelSelector)
+	listOpts := metav1.ListOptions{LabelSelector: v.podSelector.String()}
+	podlist, err := clientset.CoreV1().Pods(v.namespace).List(context.TODO(), listOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -234,22 +239,38 @@ func (v *VictimBase) IsWhitelisted() bool {
 	return true
 }
 
-// Create a label filter to filter only for pods that belong to the this
-// victim. This is done using the identifier label
-func labelFilterForPods(identifier string) (*metav1.ListOptions, error) {
-	req, err := labelRequirementForPods(identifier)
-	if err != nil {
-		return nil, err
-	}
-	labelFilter := &metav1.ListOptions{
-		LabelSelector: labels.NewSelector().Add(*req).String(),
-	}
-	return labelFilter, nil
+// IdentifierSelector matches the pods carrying the given identifier label
+func IdentifierSelector(identifier string) labels.Selector {
+	return labels.SelectorFromSet(labels.Set{config.IdentLabelKey: identifier})
 }
 
-// Create a labels.Requirement that can be used to build a filter
-func labelRequirementForPods(identifier string) (*labels.Requirement, error) {
-	return labels.NewRequirement(config.IdentLabelKey, selection.Equals, sets.NewString(identifier).UnsortedList())
+// NewPodSelector works out how to find the pods belonging to a victim.
+//
+// The identifier label is used whenever the pod template carries it, so several
+// workloads can share one identifier and be treated as a single pool of pods.
+// A pod template without the label falls back to the workload's own pod
+// selector, which lets an app opt in to chaos using only the labels on its
+// metadata.
+func NewPodSelector(kind, name, identifier string, podTemplateLabels map[string]string, workloadSelector *metav1.LabelSelector) (labels.Selector, error) {
+	if templateIdentifier, ok := podTemplateLabels[config.IdentLabelKey]; ok {
+		if templateIdentifier != identifier {
+			glog.Warningf("%s %s has conflicting %s labels: %q on the metadata and %q on the pod template. Pods are matched on the metadata value, so this will most likely find no pods", kind, name, config.IdentLabelKey, identifier, templateIdentifier)
+		}
+		return IdentifierSelector(identifier), nil
+	}
+
+	// An absent or empty selector converts to one that matches everything, which
+	// would put every pod in the namespace at risk
+	if workloadSelector == nil || len(workloadSelector.MatchLabels)+len(workloadSelector.MatchExpressions) == 0 {
+		return nil, fmt.Errorf("%s %s has no %s label on its pod template and no pod selector to fall back on", kind, name, config.IdentLabelKey)
+	}
+
+	selector, err := metav1.LabelSelectorAsSelector(workloadSelector)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s has an unusable pod selector: %w", kind, name, err)
+	}
+
+	return selector, nil
 }
 
 // RandomPodName picks a random pod name from a list of Pods

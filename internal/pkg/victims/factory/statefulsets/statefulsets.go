@@ -26,15 +26,18 @@ func New(ss *corev1.StatefulSet) (*StatefulSet, error) {
 		return nil, err
 	}
 	kind := fmt.Sprintf("%T", *ss)
+	podSelector, err := victims.NewPodSelector(kind, ss.Name, ident, ss.Spec.Template.Labels, ss.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
 
-	return &StatefulSet{VictimBase: victims.New(kind, ss.Name, ss.Namespace, ident, mtbf)}, nil
+	return &StatefulSet{VictimBase: victims.New(kind, ss.Name, ss.Namespace, ident, mtbf, podSelector)}, nil
 }
 
 // Returns the value of the label defined by config.IdentLabelKey
-// from the statefulset labels
-// This label should be unique to a statefulset, and is used to
-// identify the pods that belong to this statefulset, as pods
-// inherit labels from the StatefulSet
+// from the statefulset metadata labels
+// This label should be unique to a statefulset. It also picks out the pods that
+// belong to this statefulset when the pod template passes the label down to them
 func identifier(kubekind *corev1.StatefulSet) (string, error) {
 	identifier, ok := kubekind.Labels[config.IdentLabelKey]
 	if !ok {
