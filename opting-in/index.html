@@ -956,15 +956,15 @@ explicitly agreed to have their pods killed.</p>
 <h3 id="kube-monkeymtbf"><code>kube-monkey/mtbf</code><a class="headerlink" href="#kube-monkeymtbf" title="Permanent link">&para;</a></h3>
 <p>Mean time between failures, as a whole number and a unit: <code>d</code> for days, <code>h</code> for hours or <code>m</code>
 for minutes.</p>
-<p>Set to <code>"3d"</code> and the app can expect to have a pod killed approximately every third weekday.
+<p>Set to <code>"3d"</code> and the app can expect to have a pod killed on about one run day in three.
 Set to <code>"2h"</code> and it can expect to lose a pod every two hours.</p>
 <p>A value with no unit is read as days, so <code>"3"</code> and <code>"3d"</code> mean the same thing. The shortest
 mean time between failures is one minute.</p>
 <div class="admonition note">
 <p class="admonition-title">Short mtbf values still respect the window</p>
-<p>All terminations happen inside the daily run window set by <code>start_hour</code> and <code>end_hour</code>.
-An mtbf shorter than a day packs that day's terminations into that window rather than
-spreading them around the clock.</p>
+<p>All terminations happen inside the daily run window set by <code>start_hour</code> and <code>end_hour</code>,
+on the days set by <code>run_days</code>. An mtbf shorter than a day packs that day's terminations
+into that window rather than spreading them around the clock.</p>
 </div>
 <h3 id="kube-monkeyidentifier"><code>kube-monkey/identifier</code><a class="headerlink" href="#kube-monkeyidentifier" title="Permanent link">&para;</a></h3>
 <p>A unique identifier for the app. The recommendation is to use the app's own name.</p>
