@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -13,6 +14,15 @@ import (
 )
 
 const requestTimeout = 10 * time.Second
+
+// The proxy schemes net/http knows what to do with. Anything else reaches the
+// transport and fails every single notification, so it is worth catching here:
+// "localhost:3128" parses happily as a scheme of its own with no host at all.
+var proxySchemes = []string{"http", "https", "socks5", "socks5h"}
+
+func usableProxy(proxy *url.URL) bool {
+	return proxy.Host != "" && slices.Contains(proxySchemes, proxy.Scheme)
+}
 
 type Client struct {
 	httpClient *http.Client
@@ -30,9 +40,13 @@ func CreateClient(proxy string) Client {
 
 	if proxy != "" {
 		proxyURL, err := url.Parse(proxy)
-		if err != nil {
+		switch {
+		case err != nil:
 			glog.Errorf("Ignoring the notifications proxy %s because it is not a valid URL. Error: %v", proxy, err)
-		} else {
+		case !usableProxy(proxyURL):
+			// Sending notifications straight out beats sending none at all
+			glog.Errorf("Ignoring the notifications proxy %s because it is not a %s URL with a host, e.g. http://proxy:3128", proxy, strings.Join(proxySchemes, ", "))
+		default:
 			transport.Proxy = http.ProxyURL(proxyURL)
 		}
 	}

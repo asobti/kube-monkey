@@ -157,7 +157,10 @@ func (v *Victim) KillType(clientset kube.Interface) (string, error) {
 }
 
 // KillValue returns the number the kill mode works off, which is a count of
-// pods or a percentage depending on the mode
+// pods or a percentage depending on the mode.
+//
+// Zero is allowed because it means "kill none of them" to the percentage
+// modes. It is the kill mode that decides whether zero makes sense.
 func (v *Victim) KillValue(clientset kube.Interface) (int, error) {
 	current, err := v.currentLabels(clientset)
 	if err != nil {
@@ -170,8 +173,8 @@ func (v *Victim) KillValue(clientset kube.Interface) (int, error) {
 	}
 
 	killValue, err := strconv.Atoi(value)
-	if err != nil || killValue <= 0 {
-		return 0, fmt.Errorf("%s %s has an invalid %s label %q: expected a whole number greater than zero", v.kind, v.name, config.KillValueLabelKey, value)
+	if err != nil || killValue < 0 {
+		return 0, fmt.Errorf("%s %s has an invalid %s label %q: expected a whole number that is not negative", v.kind, v.name, config.KillValueLabelKey, value)
 	}
 
 	return killValue, nil
@@ -285,8 +288,14 @@ func (v *Victim) KillNumberForMaxPercentage(clientset kube.Interface, maxPercent
 		return 0, err
 	}
 
-	// +1 because IntN draws from [0,n) and the range is meant to include maxPercentage
-	return v.killNumberForPercentage(clientset, rand.IntN(maxPercentage+1))
+	return v.killNumberForPercentage(clientset, randomPercentage(maxPercentage))
+}
+
+// randomPercentage draws a percentage between 0 and max, both ends included.
+// A variable so tests can pin the draw down.
+var randomPercentage = func(max int) int {
+	// +1 because IntN draws from [0,n) and the range is meant to include max
+	return rand.IntN(max + 1)
 }
 
 func (v *Victim) killNumberForPercentage(clientset kube.Interface, killPercentage int) (int, error) {

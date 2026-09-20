@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -84,10 +85,26 @@ func TestCreateClientWithAProxy(t *testing.T) {
 	assert.Equal(t, "http://example.test/hook", proxied)
 }
 
-// A proxy nobody can parse should not stop the notification going out directly
-func TestCreateClientWithAProxyThatIsNotAURL(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
-	defer server.Close()
+// A proxy kube-monkey cannot use should not stop the notification going out
+// directly. "localhost:3128" is the trap here: url.Parse takes it happily as a
+// scheme of its own with no host, and it would then fail every notification.
+func TestCreateClientWithAProxyItCannotUse(t *testing.T) {
+	for _, proxy := range []string{"://nonsense", "localhost:3128", "proxy.internal:3128", "ftp://proxy:3128", "http://"} {
+		t.Run(proxy, func(t *testing.T) {
+			var reached bool
+			server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { reached = true }))
+			defer server.Close()
 
-	assert.NoError(t, CreateClient("://nonsense").Request(server.URL, "", nil))
+			assert.NoError(t, CreateClient(proxy).Request(server.URL, "", nil))
+			assert.True(t, reached, "the notification should have gone out directly")
+		})
+	}
+}
+
+func TestUsableProxy(t *testing.T) {
+	for _, proxy := range []string{"http://proxy:3128", "https://proxy:3128", "socks5://proxy:1080", "socks5h://proxy:1080"} {
+		parsed, err := url.Parse(proxy)
+		require.NoError(t, err)
+		assert.True(t, usableProxy(parsed), proxy)
+	}
 }

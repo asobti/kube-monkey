@@ -160,21 +160,47 @@ func TestTerminateKillsTheRightNumberOfPods(t *testing.T) {
 }
 
 // The percentage is drawn per termination, so all this can promise is that it
-// never kills more than the maximum asks for
+// never kills more than the maximum asks for, and never fails for trying
 func TestTerminateWithARandomMaxPercentage(t *testing.T) {
-	for range 20 {
+	for range 50 {
 		client := clientWithRunningPods(10)
 
 		err := newChaos(killLabels(config.KillRandomMaxLabelValue, "50")).terminate(client)
 
-		// A draw of 0 percent asks for no pods, which is reported as an error
-		if err != nil {
-			assert.EqualError(t, err, "no terminations requested for "+KIND+" "+NAME)
-			assert.Equal(t, 10, podsLeft(t, client))
-			continue
-		}
+		require.NoError(t, err)
 		assert.GreaterOrEqual(t, podsLeft(t, client), 5, "should never kill more than half of them")
 	}
+}
+
+// A percentage that works out to no pods is the victim getting away with it,
+// not a termination that went wrong. Reporting it as an error would count it
+// in the failure metric and send a failure notification.
+func TestTerminateWhenThePercentageWorksOutToNoPods(t *testing.T) {
+	for name, labels := range map[string]map[string]string{
+		"a fixed percentage of zero":          killLabels(config.KillFixedPercentageLabelValue, "0"),
+		"a maximum percentage of zero":        killLabels(config.KillRandomMaxLabelValue, "0"),
+		"a percentage too small to reach one": killLabels(config.KillFixedPercentageLabelValue, "1"),
+	} {
+		t.Run(name, func(t *testing.T) {
+			client := clientWithRunningPods(10)
+
+			err := newChaos(labels).terminate(client)
+
+			assert.NoError(t, err)
+			assert.Equal(t, 10, podsLeft(t, client), "no pods should be killed")
+		})
+	}
+}
+
+// Zero is a no-op for the percentage modes, but asking to kill a fixed zero
+// pods is a misconfiguration worth reporting
+func TestTerminateWithAFixedCountOfZero(t *testing.T) {
+	client := clientWithRunningPods(3)
+
+	err := newChaos(killLabels(config.KillFixedLabelValue, "0")).terminate(client)
+
+	assert.EqualError(t, err, "no terminations requested for "+KIND+" "+NAME)
+	assert.Equal(t, 3, podsLeft(t, client))
 }
 
 func TestTerminateRejectsAVictimItCannotUnderstand(t *testing.T) {
@@ -196,7 +222,7 @@ func TestTerminateRejectsAVictimItCannotUnderstand(t *testing.T) {
 		},
 		"a kill value that makes no sense": {
 			labels:      killLabels(config.KillFixedLabelValue, "some"),
-			expectedErr: "failed to check " + config.KillValueLabelKey + " label for " + KIND + " " + NAME + ": " + KIND + " " + NAME + ` has an invalid ` + config.KillValueLabelKey + ` label "some": expected a whole number greater than zero`,
+			expectedErr: "failed to check " + config.KillValueLabelKey + " label for " + KIND + " " + NAME + ": " + KIND + " " + NAME + ` has an invalid ` + config.KillValueLabelKey + ` label "some": expected a whole number that is not negative`,
 		},
 		"a percentage beyond 100": {
 			labels:      killLabels(config.KillFixedPercentageLabelValue, "150"),

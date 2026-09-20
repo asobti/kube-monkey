@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang/glog"
+
 	"kube-monkey/internal/pkg/config"
 	"kube-monkey/internal/pkg/kubernetes"
 	"kube-monkey/internal/pkg/victims"
@@ -99,7 +101,19 @@ func (c *Chaos) terminate(clientset kube.Interface) error {
 		return err
 	}
 
+	// A percentage can legitimately work out to no pods at all, from a draw of
+	// zero or from a small percentage of a handful of pods. That is the victim
+	// getting away with it today, not a termination that went wrong.
+	if killNum == 0 && isPercentage(killType) {
+		glog.V(6).Infof("Not terminating any pods for %s %s, the kill percentage worked out to none", c.victim.Kind(), c.victim.Name())
+		return nil
+	}
+
 	return c.victim.DeleteRandomPods(clientset, killNum)
+}
+
+func isPercentage(killType string) bool {
+	return killType == config.KillFixedPercentageLabelValue || killType == config.KillRandomMaxLabelValue
 }
 
 // killNumber works out how many pods the kill mode asks for

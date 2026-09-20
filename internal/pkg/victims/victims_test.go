@@ -351,7 +351,7 @@ func TestKillValue(t *testing.T) {
 func TestKillValueRejectsWhatItCannotUse(t *testing.T) {
 	// The message has to name the value, because that is what the owner of the
 	// workload has to go and fix
-	for _, value := range []string{"lots", "0", "-1", "1.5", "", " 2"} {
+	for _, value := range []string{"lots", "-1", "1.5", "", " 2"} {
 		t.Run(value, func(t *testing.T) {
 			_, err := victimWithLabels(map[string]string{config.KillValueLabelKey: value}).KillValue(nil)
 
@@ -359,6 +359,15 @@ func TestKillValueRejectsWhatItCannotUse(t *testing.T) {
 			assert.ErrorContains(t, err, `"`+value+`"`)
 		})
 	}
+}
+
+// Zero means "kill none of them" to the percentage modes, so it is the kill
+// mode that decides whether it makes sense, not this parser
+func TestKillValueAcceptsZero(t *testing.T) {
+	killValue, err := victimWithLabels(map[string]string{config.KillValueLabelKey: "0"}).KillValue(nil)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 0, killValue)
 }
 
 func TestKillValueWithoutTheLabel(t *testing.T) {
@@ -432,22 +441,50 @@ func TestKillNumberRejectsPercentagesOutsideTheRange(t *testing.T) {
 	}
 }
 
-// The number drawn is a percentage between 0 and the maximum, so over enough
-// draws both ends of the range should turn up and nothing beyond them
-func TestKillNumberForMaxPercentageStaysWithinTheRange(t *testing.T) {
-	client := fake.NewSimpleClientset(runningPods("app", 100)...)
+// drawExactly pins the random percentage down for one test
+func drawExactly(t *testing.T, percentage int) {
+	t.Helper()
 
+	original := randomPercentage
+	randomPercentage = func(int) int { return percentage }
+	t.Cleanup(func() { randomPercentage = original })
+}
+
+func TestKillNumberForMaxPercentageUsesTheDraw(t *testing.T) {
+	// Both ends of the range, so the maximum is shown to be included and a
+	// draw of nothing is shown to kill nothing
+	for _, tc := range []struct{ draw, expected int }{{0, 0}, {13, 13}, {50, 50}} {
+		t.Run(fmt.Sprint(tc.draw), func(t *testing.T) {
+			drawExactly(t, tc.draw)
+			client := fake.NewSimpleClientset(runningPods("app", 100)...)
+
+			killNum, err := newVictim().KillNumberForMaxPercentage(client, 50)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, killNum)
+		})
+	}
+}
+
+// The draw has to cover both ends of the range. With a maximum of 1 a run of
+// 200 draws that misses either end is not chance, it is a bug.
+func TestRandomPercentageCoversBothEnds(t *testing.T) {
 	seen := map[int]bool{}
-	for range 500 {
-		killNum, err := newVictim().KillNumberForMaxPercentage(client, 50)
-		require.NoError(t, err)
-		require.GreaterOrEqual(t, killNum, 0)
-		require.LessOrEqual(t, killNum, 50)
-		seen[killNum] = true
+	for range 200 {
+		draw := randomPercentage(1)
+		require.GreaterOrEqual(t, draw, 0)
+		require.LessOrEqual(t, draw, 1)
+		seen[draw] = true
 	}
 
 	assert.True(t, seen[0], "a draw of 0 should be possible")
-	assert.True(t, seen[50], "a draw of the maximum should be possible")
+	assert.True(t, seen[1], "a draw of the maximum should be possible")
+}
+
+func TestRandomPercentageOfZeroDrawsZero(t *testing.T) {
+	for range 20 {
+		assert.Equal(t, 0, randomPercentage(0))
+	}
 }
 
 func TestKillNumberWhenThePodsCannotBeListed(t *testing.T) {
