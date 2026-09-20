@@ -55,6 +55,8 @@ const (
 	// BlacklistedNamespaces specifies a list of namespaces
 	// for which terminations should never
 	// be carried out.
+	// Entries are shell-style patterns, so "team-*" blocks
+	// every namespace with that prefix
 	// Default is defined by metav1.NamespaceSystem
 	// To block no namespaces use [""]
 	// Type: list

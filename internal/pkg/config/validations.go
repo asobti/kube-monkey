@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net"
+	"path"
 	"regexp"
 
 	"kube-monkey/internal/pkg/config/param"
@@ -35,6 +36,14 @@ func ValidateConfigs() error {
 	// RunHour should be < StartHour
 	if !(runHour < startHour) {
 		return fmt.Errorf("RunHour: %s should be less than %s", param.RunHour, param.StartHour)
+	}
+
+	// Blacklist entries are patterns, so a typo like "[foo" would silently
+	// stop blocking the namespaces it was meant to cover
+	for _, pattern := range BlacklistedNamespaces().UnsortedList() {
+		if _, err := path.Match(pattern, ""); err != nil {
+			return fmt.Errorf("BlacklistedNamespaces: %s contains an invalid pattern %q: %v", param.BlacklistedNamespaces, pattern, err)
+		}
 	}
 
 	notificationsReceiver := NotificationsAttacks()

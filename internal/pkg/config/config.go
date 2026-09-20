@@ -1,6 +1,7 @@
 package config
 
 import (
+	"path"
 	"strings"
 	"time"
 
@@ -141,6 +142,34 @@ func BlacklistedNamespaces() sets.String {
 	// Return as set for O(1) membership checks
 	namespaces := viper.GetStringSlice(param.BlacklistedNamespaces)
 	return sets.NewString(namespaces...)
+}
+
+// IsBlacklistedNamespace reports whether a namespace is covered by the blacklist.
+//
+// Entries are shell-style patterns, so "team-*" covers every namespace with
+// that prefix. A namespace name can only hold lowercase letters, digits and
+// "-", so it never contains a wildcard character, and a plain entry still
+// matches nothing but itself.
+func IsBlacklistedNamespace(namespace string) bool {
+	if !BlacklistEnabled() {
+		return false
+	}
+
+	for _, pattern := range BlacklistedNamespaces().UnsortedList() {
+		matched, err := path.Match(pattern, namespace)
+		if err != nil {
+			// Patterns are checked when the config loads, so a bad one here
+			// means validation was skipped. Blocking nothing is the unsafe
+			// reading, so treat it as a match
+			glog.Warningf("Treating namespace %s as blacklisted because pattern %q is invalid: %v", namespace, pattern, err)
+			return true
+		}
+		if matched {
+			return true
+		}
+	}
+
+	return false
 }
 
 func WhitelistedNamespaces() sets.String {

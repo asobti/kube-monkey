@@ -102,6 +102,28 @@ func (s *ConfigTestSuite) TestBlacklistedNamespaces() {
 	}
 }
 
+func (s *ConfigTestSuite) TestIsBlacklistedNamespace() {
+	viper.Set(param.BlacklistedNamespaces, []string{"kube-system", "team-?", "*-prod"})
+
+	for _, namespace := range []string{"kube-system", "team-a", "shop-prod"} {
+		s.True(IsBlacklistedNamespace(namespace), "%s should be blacklisted", namespace)
+	}
+
+	for _, namespace := range []string{"kube-system-2", "team-ab", "prod-shop", "default"} {
+		s.False(IsBlacklistedNamespace(namespace), "%s should not be blacklisted", namespace)
+	}
+}
+
+func (s *ConfigTestSuite) TestIsBlacklistedNamespaceWhenBlacklistDisabled() {
+	viper.Set(param.BlacklistedNamespaces, []string{metav1.NamespaceNone})
+	s.False(IsBlacklistedNamespace(metav1.NamespaceSystem))
+}
+
+func (s *ConfigTestSuite) TestIsBlacklistedNamespaceWithInvalidPattern() {
+	viper.Set(param.BlacklistedNamespaces, []string{"[kube-system"})
+	s.True(IsBlacklistedNamespace("anything"))
+}
+
 func (s *ConfigTestSuite) TestWhitelistedNamespaces() {
 	wlns := []string{"namespace1", "namespace2"}
 	viper.Set(param.WhitelistedNamespaces, wlns)

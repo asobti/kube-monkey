@@ -16,6 +16,17 @@ Pod death sometime during the same day. The time-range during the day when the r
 kube-monkey can be configured with a list of namespaces
 * to blacklist (any deployments within a blacklisted namespace will not be touched)
 
+Blacklist entries are shell-style patterns, so a namespace is blacklisted when it matches any entry:
+
+| Entry | Matches |
+| --- | --- |
+| `kube-system` | `kube-system` only |
+| `team-?` | `team-a`, `team-b`, but not `team-ab` |
+| `*-prod` | `shop-prod`, `checkout-prod` |
+| `*` | every namespace |
+
+Namespace names never contain `*` or `?`, so a plain name still matches nothing but itself.
+
 To disable the blacklist provide `[""]` in the `blacklisted_namespaces` config.param.
 
 ## Opting-In to Chaos
@@ -133,7 +144,7 @@ dry_run = true                           # Terminations are only logged
 run_hour = 8                             # Run scheduling at 8am on weekdays
 start_hour = 10                          # Don't schedule any pod deaths before 10am
 end_hour = 16                            # Don't schedule any pod deaths after 4pm
-blacklisted_namespaces = ["kube-system"] # Critical apps live here
+blacklisted_namespaces = ["kube-system"] # Critical apps live here. Patterns like "*-prod" work too
 time_zone = "America/New_York"           # Set tzdata timezone example. Note the field is time_zone not timezone
 ```
 
