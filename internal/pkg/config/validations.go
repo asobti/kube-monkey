@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net"
+	"path"
 	"regexp"
 
 	"kube-monkey/internal/pkg/config/param"
@@ -37,6 +38,16 @@ func ValidateConfigs() error {
 		return fmt.Errorf("RunHour: %s should be less than %s", param.RunHour, param.StartHour)
 	}
 
+	// Namespace entries are patterns, so a typo like "[foo" would silently
+	// stop matching the namespaces it was meant to cover
+	if err := validateNamespacePatterns("BlacklistedNamespaces", param.BlacklistedNamespaces, BlacklistedNamespaces().UnsortedList()); err != nil {
+		return err
+	}
+
+	if err := validateNamespacePatterns("WhitelistedNamespaces", param.WhitelistedNamespaces, WhitelistedNamespaces().UnsortedList()); err != nil {
+		return err
+	}
+
 	notificationsReceiver := NotificationsAttacks()
 
 	// Notification headers should be in a valid format
@@ -53,6 +64,15 @@ func ValidateConfigs() error {
 		}
 	}
 
+	return nil
+}
+
+func validateNamespacePatterns(name, key string, patterns []string) error {
+	for _, pattern := range patterns {
+		if _, err := path.Match(pattern, ""); err != nil {
+			return fmt.Errorf("%s: %s contains an invalid pattern %q: %v", name, key, pattern, err)
+		}
+	}
 	return nil
 }
 

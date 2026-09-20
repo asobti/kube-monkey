@@ -1,6 +1,7 @@
 package config
 
 import (
+	"path"
 	"strings"
 	"time"
 
@@ -141,6 +142,65 @@ func BlacklistedNamespaces() sets.String {
 	// Return as set for O(1) membership checks
 	namespaces := viper.GetStringSlice(param.BlacklistedNamespaces)
 	return sets.NewString(namespaces...)
+}
+
+// IsBlacklistedNamespace reports whether a namespace is covered by the blacklist.
+//
+// Entries are shell-style patterns, so "team-*" covers every namespace with
+// that prefix. A namespace name can only hold lowercase letters, digits and
+// "-", so it never contains a wildcard character, and a plain entry still
+// matches nothing but itself.
+func IsBlacklistedNamespace(namespace string) bool {
+	if !BlacklistEnabled() {
+		return false
+	}
+
+	matched, invalid := matchesNamespace(BlacklistedNamespaces().UnsortedList(), namespace)
+
+	// A pattern that does not parse cannot be shown to leave the namespace
+	// alone, so block it rather than guess
+	return matched || invalid
+}
+
+// IsWhitelistedNamespace reports whether a namespace is covered by the
+// whitelist. Entries are shell-style patterns, in the same form the blacklist
+// takes.
+//
+// The whitelist is off when it holds nothing but an empty entry, which is the
+// default and allows every namespace. An empty entry sitting alongside real
+// entries matches nothing, because a namespace name is never empty.
+func IsWhitelistedNamespace(namespace string) bool {
+	if !WhitelistEnabled() {
+		return true
+	}
+
+	matched, invalid := matchesNamespace(WhitelistedNamespaces().UnsortedList(), namespace)
+
+	// A list holding a pattern that does not parse no longer describes what the
+	// operator meant, so grant nothing rather than act on the half of it that
+	// still reads
+	return matched && !invalid
+}
+
+// matchesNamespace reports whether the namespace matches any of the patterns,
+// and separately whether any pattern was malformed. Patterns are checked when
+// the config loads, so a malformed one means validation was skipped, and each
+// caller picks the side it is safe to fail on.
+//
+// Every pattern is read even once a match is found, so invalid always covers
+// the whole list.
+func matchesNamespace(patterns []string, namespace string) (matched bool, invalid bool) {
+	for _, pattern := range patterns {
+		ok, err := path.Match(pattern, namespace)
+		if err != nil {
+			glog.Warningf("Ignoring namespace pattern %q because it is invalid: %v", pattern, err)
+			invalid = true
+			continue
+		}
+		matched = matched || ok
+	}
+
+	return matched, invalid
 }
 
 func WhitelistedNamespaces() sets.String {

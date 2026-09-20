@@ -46,15 +46,19 @@ const (
 
 	// WhitelistedNamespaces specifies a list of
 	// namespaces where terminations are valid
-	// Default is defined by metav1.NamespaceDefault
+	// Entries are shell-style patterns, so "team-*" allows
+	// every namespace with that prefix
+	// Default is defined by metav1.NamespaceAll
 	// To allow all namespaces use [""]
 	// Type: list
-	// Default: [ "default" ]
+	// Default: [ "" ]
 	WhitelistedNamespaces = "kubemonkey.whitelisted_namespaces"
 
 	// BlacklistedNamespaces specifies a list of namespaces
 	// for which terminations should never
 	// be carried out.
+	// Entries are shell-style patterns, so "team-*" blocks
+	// every namespace with that prefix
 	// Default is defined by metav1.NamespaceSystem
 	// To block no namespaces use [""]
 	// Type: list

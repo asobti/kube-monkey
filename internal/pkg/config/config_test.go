@@ -102,6 +102,32 @@ func (s *ConfigTestSuite) TestBlacklistedNamespaces() {
 	}
 }
 
+func (s *ConfigTestSuite) TestIsBlacklistedNamespace() {
+	viper.Set(param.BlacklistedNamespaces, []string{"kube-system", "team-?", "*-prod"})
+
+	for _, namespace := range []string{"kube-system", "team-a", "shop-prod"} {
+		s.True(IsBlacklistedNamespace(namespace), "%s should be blacklisted", namespace)
+	}
+
+	for _, namespace := range []string{"kube-system-2", "team-ab", "prod-shop", "default"} {
+		s.False(IsBlacklistedNamespace(namespace), "%s should not be blacklisted", namespace)
+	}
+}
+
+func (s *ConfigTestSuite) TestIsBlacklistedNamespaceWhenBlacklistDisabled() {
+	viper.Set(param.BlacklistedNamespaces, []string{metav1.NamespaceNone})
+	s.False(IsBlacklistedNamespace(metav1.NamespaceSystem))
+}
+
+func (s *ConfigTestSuite) TestIsBlacklistedNamespaceWithInvalidPattern() {
+	viper.Set(param.BlacklistedNamespaces, []string{"[kube-system"})
+	s.True(IsBlacklistedNamespace("anything"))
+
+	// An entry that still reads does not soften the rest of the list
+	viper.Set(param.BlacklistedNamespaces, []string{"nothing-matches-this", "[kube-system"})
+	s.True(IsBlacklistedNamespace("anything"))
+}
+
 func (s *ConfigTestSuite) TestWhitelistedNamespaces() {
 	wlns := []string{"namespace1", "namespace2"}
 	viper.Set(param.WhitelistedNamespaces, wlns)
@@ -110,6 +136,38 @@ func (s *ConfigTestSuite) TestWhitelistedNamespaces() {
 	for _, v := range wlns {
 		s.Contains(ns, v)
 	}
+}
+
+func (s *ConfigTestSuite) TestIsWhitelistedNamespace() {
+	viper.Set(param.WhitelistedNamespaces, []string{"default", "team-?", "*-staging"})
+
+	for _, namespace := range []string{"default", "team-a", "shop-staging"} {
+		s.True(IsWhitelistedNamespace(namespace), "%s should be whitelisted", namespace)
+	}
+
+	for _, namespace := range []string{"default-2", "team-ab", "staging-shop", "kube-system"} {
+		s.False(IsWhitelistedNamespace(namespace), "%s should not be whitelisted", namespace)
+	}
+}
+
+func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWhenWhitelistDisabled() {
+	s.True(IsWhitelistedNamespace("any-namespace"))
+}
+
+func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWithInvalidPattern() {
+	viper.Set(param.WhitelistedNamespaces, []string{"[default"})
+	s.False(IsWhitelistedNamespace("anything"))
+
+	// An entry that still reads does not rescue the rest of the list
+	viper.Set(param.WhitelistedNamespaces, []string{"*", "[default"})
+	s.False(IsWhitelistedNamespace("anything"))
+}
+
+func (s *ConfigTestSuite) TestIsWhitelistedNamespaceWithEmptyEntryAlongsideOthers() {
+	viper.Set(param.WhitelistedNamespaces, []string{"", "team-*"})
+
+	s.True(IsWhitelistedNamespace("team-shop"))
+	s.False(IsWhitelistedNamespace("default"))
 }
 
 func (s *ConfigTestSuite) TestBlacklistEnabled() {

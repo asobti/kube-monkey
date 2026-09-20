@@ -55,6 +55,29 @@ func TestValidateMetricsAddress(t *testing.T) {
 	assert.Nil(t, ValidateConfigs())
 }
 
+func TestValidateNamespacePatterns(t *testing.T) {
+	SetDefaults()
+
+	// Other tests leave hours set, and a set value wins over a default
+	viper.Set(param.RunHour, 8)
+	viper.Set(param.StartHour, 10)
+	viper.Set(param.EndHour, 16)
+
+	defer viper.Set(param.BlacklistedNamespaces, []string{"kube-system"})
+	defer viper.Set(param.WhitelistedNamespaces, []string{""})
+
+	viper.Set(param.BlacklistedNamespaces, []string{"kube-*", "team-?"})
+	viper.Set(param.WhitelistedNamespaces, []string{"*-staging"})
+	assert.Nil(t, ValidateConfigs())
+
+	viper.Set(param.BlacklistedNamespaces, []string{"[kube-system"})
+	assert.ErrorContains(t, ValidateConfigs(), "BlacklistedNamespaces: "+param.BlacklistedNamespaces+" contains an invalid pattern")
+	viper.Set(param.BlacklistedNamespaces, []string{"kube-system"})
+
+	viper.Set(param.WhitelistedNamespaces, []string{"[default"})
+	assert.ErrorContains(t, ValidateConfigs(), "WhitelistedNamespaces: "+param.WhitelistedNamespaces+" contains an invalid pattern")
+}
+
 func TestIsValidHour(t *testing.T) {
 	for i := 0; i <= 23; i++ {
 		assert.True(t, IsValidHour(i))
