@@ -173,6 +173,7 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 		return fmt.Errorf("no terminations requested for %s %s", v.kind, v.name)
 	case numPods < killNum:
 		glog.Warningf("%s %s has only %d currently running pods, but %d terminations requested", v.kind, v.name, numPods, killNum)
+		killNum = numPods
 		fallthrough
 	case numPods == killNum:
 		glog.V(6).Infof("Killing ALL %d running pods for %s %s", numPods, v.kind, v.name)
@@ -184,16 +185,15 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 		return fmt.Errorf("unexpected behavior for terminating %s %s", v.kind, v.name)
 	}
 
+	// Deleting a pod that is already going away succeeds but kills nothing extra,
+	// so take the victims off a shuffled list to keep every pick a different pod
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r.Shuffle(numPods, func(i, j int) { pods[i], pods[j] = pods[j], pods[i] })
 
-	for i := 0; i < killNum; i++ {
-		victimIndex := r.Intn(numPods)
-		targetPod := pods[victimIndex].Name
+	for _, pod := range pods[:killNum] {
+		glog.V(6).Infof("Terminating pod %s for %s %s/%s\n", pod.Name, v.kind, v.namespace, v.name)
 
-		glog.V(6).Infof("Terminating pod %s for %s %s/%s\n", targetPod, v.kind, v.namespace, v.name)
-
-		err = v.DeletePod(clientset, targetPod)
-		if err != nil {
+		if err := v.DeletePod(clientset, pod.Name); err != nil {
 			return err
 		}
 	}

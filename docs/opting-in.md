@@ -53,7 +53,7 @@ and `kube-monkey/kill-value` supplies the number it needs.
 | `kill-mode` | `kill-value` | Result |
 | --- | --- | --- |
 | unset | not used | One pod |
-| `kill-all` | not used | **Every** pod, including ones that are not ready or not running |
+| `kill-all` | not used | **Every** running pod |
 | `fixed` | whole number | That many running pods |
 | `fixed-percent` | `0` to `100` | That percentage of running pods |
 | `random-max-percent` | `0` to `100` | A uniform random percentage of running pods, up to this cap |
@@ -62,7 +62,7 @@ With `fixed`, asking for more pods than exist kills all the running pods and log
 
 !!! danger "kill-all does what it says"
 
-    `kill-all` takes out the whole app at once, regardless of pod status. Use it deliberately.
+    `kill-all` takes out every running pod of the app at once. Use it deliberately.
 
 ## Where to put the labels
 

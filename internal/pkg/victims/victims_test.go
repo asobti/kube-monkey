@@ -154,6 +154,36 @@ func TestDeleteRandomPods(t *testing.T) {
 	assert.EqualError(t, err, KIND+" "+NAME+" has no running pods at the moment")
 }
 
+func TestDeleteRandomPodsPicksEachPodOnce(t *testing.T) {
+
+	v := newVictimBase()
+	pods := generateNRunningPods("app", 10)
+
+	client := fake.NewSimpleClientset(pods...)
+
+	err := v.DeleteRandomPods(client, len(pods))
+	assert.Nil(t, err, "Expected err to be nil but got %v", err)
+
+	podList := getPodList(client).Items
+	assert.Lenf(t, podList, 0, "Expected every running pod to be terminated, got %d left", len(podList))
+}
+
+func TestDeleteRandomPodsMoreThanRunning(t *testing.T) {
+
+	v := newVictimBase()
+	pod1 := newPod("app1", corev1.PodRunning)
+	pod2 := newPod("app2", corev1.PodPending)
+
+	client := fake.NewSimpleClientset(&pod1, &pod2)
+
+	err := v.DeleteRandomPods(client, 5)
+	assert.Nil(t, err, "Expected err to be nil but got %v", err)
+
+	podList := getPodList(client).Items
+	assert.Lenf(t, podList, 1, "Expected the pod that is not running to survive, got %d pods left", len(podList))
+	assert.Equalf(t, "app2", podList[0].GetName(), "Expected not running pods not be deleted")
+}
+
 func TestKillNumberForMaxPercentage(t *testing.T) {
 
 	v := newVictimBase()
