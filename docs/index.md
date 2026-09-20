@@ -7,24 +7,33 @@ hide:
 
 <div class="km-hero" markdown>
 
-# kube-monkey
+# Chaos on a timetable
 
-Your services claim to be resilient. kube-monkey finds out. It deletes pods at random
-during working hours, on apps that have opted in, so the failures happen while you are
-awake to watch them.
+<p class="km-lede">kube-monkey deletes pods at random on apps that have opted in. It publishes
+the day's terminations each morning and runs them during working hours, while the people who
+own the service are still at their desks.</p>
 
 [Get started](getting-started.md){ .md-button .md-button--primary }
 [Install with Helm](helm-chart.md){ .md-button }
 
+<div class="km-board" markdown>
+
+<div class="km-board-head">
+  <b>Today's schedule</b>
+  <span>4 terminations</span>
 </div>
 
-<div class="km-badges" markdown>
+| Kind | Namespace | Name | Termination time |
+| --- | --- | --- | --- |
+| v1.Deployment | default | monkey-victim | 10:14:07 |
+| v1.Deployment | payments | checkout-api | 11:32:55 |
+| v1.StatefulSet | payments | ledger | 13:47:19 |
+| v1.DaemonSet | observability | log-shipper | 15:02:41 |
 
-[![Build](https://github.com/asobti/kube-monkey/actions/workflows/go.yml/badge.svg)](https://github.com/asobti/kube-monkey/actions/workflows/go.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/asobti/kube-monkey)](https://goreportcard.com/report/github.com/asobti/kube-monkey)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docker Pulls](https://img.shields.io/docker/pulls/ayushsobti/kube-monkey?label=Docker%20pulls&logo=docker)](https://hub.docker.com/r/ayushsobti/kube-monkey/)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubemonkey)](https://artifacthub.io/packages/search?repo=kubemonkey)
+<p class="km-board-foot">kube-monkey writes this to the log at <code>run_hour</code> every
+weekday. Every termination lands between <code>start_hour</code> and <code>end_hour</code>.</p>
+
+</div>
 
 </div>
 
@@ -32,62 +41,41 @@ kube-monkey is an implementation of [Netflix's Chaos Monkey](https://github.com/
 for [Kubernetes](https://kubernetes.io/) clusters. It randomly deletes pods in the cluster,
 encouraging and validating the development of failure-resilient services.
 
-<div class="grid cards" markdown>
+<div class="km-split" markdown>
+<div markdown>
 
--   :material-hand-back-right:{ .lg .middle } __Opt-in, never opt-out__
+### Safe by default
 
-    ---
+[Opt in, never opt out](opting-in.md)
+:   Nothing is touched until an app asks for it with a label. A team adopts chaos when it is
+    ready, not when the cluster operator flips a switch.
 
-    Nothing is touched until an app asks for it with a label. A team adopts chaos when
-    it is ready, not when the cluster operator flips a switch.
+[Office hours only](how-it-works.md)
+:   Terminations are scheduled inside a window you choose, on weekdays. Pods die while the
+    people who own them are at their desks.
 
-    [:octicons-arrow-right-24: Opting in to chaos](opting-in.md)
+[Dry run until you say otherwise](configuration.md)
+:   Out of the box kube-monkey only logs what it would have killed. You see the blast radius
+    on paper before anything real happens.
 
--   :material-clock-outline:{ .lg .middle } __Office hours only__
+</div>
+<div markdown>
 
-    ---
+### What you can tune
 
-    Terminations are scheduled inside a window you choose, on weekdays. Pods die while
-    the people who own them are at their desks.
+[Blast radius](opting-in.md#kill-modes)
+:   Kill one pod, a fixed number, a fixed percentage, a random percentage up to a cap, or the
+    whole app. Set per app, by a label.
 
-    [:octicons-arrow-right-24: How it works](how-it-works.md)
+[Prometheus metrics](metrics.md)
+:   Schedules built, terminations attempted, pods actually deleted. Chart the chaos and alert
+    on it like anything else.
 
--   :material-eye-outline:{ .lg .middle } __Dry run by default__
+[Notifications](notifications.md)
+:   Post every attack to a Slack webhook or your own API, with placeholders for the victim,
+    the time and the outcome.
 
-    ---
-
-    Out of the box kube-monkey only logs what it would have killed. You see the blast
-    radius on paper before anything real happens.
-
-    [:octicons-arrow-right-24: Configuration](configuration.md)
-
--   :material-target:{ .lg .middle } __Pick the blast radius__
-
-    ---
-
-    Kill one pod, a fixed number, a fixed percentage, a random percentage up to a cap,
-    or the whole app. Per app, set by a label.
-
-    [:octicons-arrow-right-24: Kill modes](opting-in.md#kill-modes)
-
--   :material-chart-line:{ .lg .middle } __Prometheus metrics__
-
-    ---
-
-    Schedules built, terminations attempted, pods actually deleted. Chart the chaos and
-    alert on it like anything else.
-
-    [:octicons-arrow-right-24: Metrics](metrics.md)
-
--   :material-bell-outline:{ .lg .middle } __Tell your team__
-
-    ---
-
-    Post every attack to a Slack webhook or your own API, with placeholders for the
-    victim, the time and the outcome.
-
-    [:octicons-arrow-right-24: Notifications](notifications.md)
-
+</div>
 </div>
 
 ## Sixty seconds to your first termination
@@ -115,3 +103,12 @@ watch a real termination happen in debug mode before you trust it with a live na
 
 Join [#kube-monkey](https://kubernetes.slack.com/messages/kube-monkey) on Kubernetes Slack,
 or open an issue on [GitHub](https://github.com/asobti/kube-monkey/issues).
+
+<div class="km-badges" markdown>
+
+[![Build](https://github.com/asobti/kube-monkey/actions/workflows/go.yml/badge.svg)](https://github.com/asobti/kube-monkey/actions/workflows/go.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ayushsobti/kube-monkey?label=Docker%20pulls&logo=docker)](https://hub.docker.com/r/ayushsobti/kube-monkey/)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubemonkey)](https://artifacthub.io/packages/search?repo=kubemonkey)
+
+</div>
