@@ -14,7 +14,6 @@ import (
 	"kube-monkey/internal/pkg/config/param"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -139,13 +138,19 @@ func DryRun() bool {
 	return viper.GetBool(param.DryRun)
 }
 
+// Timezone is the zone kill times are worked out in
 func Timezone() *time.Location {
-	tz := viper.GetString(param.Timezone)
-	location, err := time.LoadLocation(tz)
+	location, err := parseTimezone()
 	if err != nil {
+		// Unreachable: ValidateConfigs rejects an unknown zone at startup and
+		// on reload
 		glog.Fatal(err.Error())
 	}
 	return location
+}
+
+func parseTimezone() (*time.Location, error) {
+	return time.LoadLocation(viper.GetString(param.Timezone))
 }
 
 // RunDays lists the days of the week kube-monkey builds a schedule on
@@ -187,15 +192,14 @@ func EndHour() int {
 	return viper.GetInt(param.EndHour)
 }
 
-func GracePeriodSeconds() *int64 {
-	gpInt64 := viper.GetInt64(param.GracePeriodSec)
-	return &gpInt64
+// GracePeriodSeconds is how long a pod is given to shut down cleanly
+func GracePeriodSeconds() int64 {
+	return viper.GetInt64(param.GracePeriodSec)
 }
 
-func BlacklistedNamespaces() sets.String {
-	// Return as set for O(1) membership checks
-	namespaces := viper.GetStringSlice(param.BlacklistedNamespaces)
-	return sets.NewString(namespaces...)
+// BlacklistedNamespaces lists the namespace patterns terminations never happen in
+func BlacklistedNamespaces() []string {
+	return viper.GetStringSlice(param.BlacklistedNamespaces)
 }
 
 // IsBlacklistedNamespace reports whether a namespace is covered by the blacklist.
@@ -209,7 +213,7 @@ func IsBlacklistedNamespace(namespace string) bool {
 		return false
 	}
 
-	matched, invalid := matchesNamespace(BlacklistedNamespaces().UnsortedList(), namespace)
+	matched, invalid := matchesNamespace(BlacklistedNamespaces(), namespace)
 
 	// A pattern that does not parse cannot be shown to leave the namespace
 	// alone, so block it rather than guess
@@ -228,7 +232,7 @@ func IsWhitelistedNamespace(namespace string) bool {
 		return true
 	}
 
-	matched, invalid := matchesNamespace(WhitelistedNamespaces().UnsortedList(), namespace)
+	matched, invalid := matchesNamespace(WhitelistedNamespaces(), namespace)
 
 	// A list holding a pattern that does not parse no longer describes what the
 	// operator meant, so grant nothing rather than act on the half of it that
@@ -257,18 +261,38 @@ func matchesNamespace(patterns []string, namespace string) (matched bool, invali
 	return matched, invalid
 }
 
-func WhitelistedNamespaces() sets.String {
-	// Return as set for O(1) membership checks
-	namespaces := viper.GetStringSlice(param.WhitelistedNamespaces)
-	return sets.NewString(namespaces...)
+// WhitelistedNamespaces lists the namespace patterns terminations are allowed in
+func WhitelistedNamespaces() []string {
+	return viper.GetStringSlice(param.WhitelistedNamespaces)
 }
 
+// BlacklistEnabled reports whether the blacklist blocks anything. A list holding
+// nothing but an empty entry turns it off.
 func BlacklistEnabled() bool {
-	return !BlacklistedNamespaces().Equal(sets.NewString(metav1.NamespaceNone))
+	return !onlyHolds(BlacklistedNamespaces(), metav1.NamespaceNone)
 }
 
+// WhitelistEnabled reports whether the whitelist narrows anything down. A list
+// holding nothing but an empty entry, which is the default, turns it off.
 func WhitelistEnabled() bool {
-	return !WhitelistedNamespaces().Equal(sets.NewString(metav1.NamespaceAll))
+	return !onlyHolds(WhitelistedNamespaces(), metav1.NamespaceAll)
+}
+
+// onlyHolds reports whether the list holds the given value and nothing else. An
+// empty list does not count, so a whitelist someone emptied out still blocks
+// everything rather than quietly allowing the whole cluster.
+func onlyHolds(namespaces []string, value string) bool {
+	if len(namespaces) == 0 {
+		return false
+	}
+
+	for _, namespace := range namespaces {
+		if namespace != value {
+			return false
+		}
+	}
+
+	return true
 }
 
 // CustomResources lists the custom resources to treat as victims. An unreadable

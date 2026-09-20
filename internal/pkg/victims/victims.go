@@ -1,12 +1,23 @@
+/*
+Package victims turns a kubernetes object that opted in to kube-monkey into
+something whose pods can be counted and terminated.
+
+Every kind of victim works the same way once it has been found: kube-monkey
+reads its own labels off the object to learn how many pods to kill, and uses a
+label selector to find the pods. Only the API call that reaches the object
+differs between kinds, which is what CurrentLabels stands in for.
+*/
 package victims
 
 import (
 	"context"
 	"fmt"
 	"math"
-	"math/rand"
+	"math/rand/v2"
+	"strconv"
 	"time"
 
+	"kube-monkey/internal/pkg/calendar"
 	"kube-monkey/internal/pkg/config"
 	"kube-monkey/internal/pkg/metrics"
 
@@ -19,105 +30,158 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-type Victim interface {
-	VictimBaseTemplate
-	VictimSpecificAPICalls
-	VictimKillNumberGenerator
+// Victim is a workload kube-monkey can terminate pods for
+type Victim struct {
+	kind          string
+	name          string
+	namespace     string
+	identifier    string
+	mtbf          time.Duration
+	podSelector   labels.Selector
+	currentLabels CurrentLabels
 }
 
-type VictimBaseTemplate interface {
-	// Get value methods
-	Kind() string
-	Name() string
-	Namespace() string
-	Identifier() string
-	Mtbf() time.Duration
+// CurrentLabels reads the labels the victim carries right now. Terminations are
+// scheduled hours in advance, so the labels are read again at kill time and a
+// victim that opted out or changed its settings in the meantime is respected.
+type CurrentLabels func(kube.Interface) (map[string]string, error)
 
-	VictimAPICalls
+// Spec is everything kube-monkey needs to know about a victim
+type Spec struct {
+	Kind          string
+	Name          string
+	Namespace     string
+	Identifier    string
+	Mtbf          time.Duration
+	PodSelector   labels.Selector
+	CurrentLabels CurrentLabels
 }
 
-type VictimSpecificAPICalls interface {
-	// Depends on which version i.e. apps/v1 or extensions/v1beta2
-	IsEnrolled(kube.Interface) (bool, error) // Get updated enroll status
-	KillType(kube.Interface) (string, error) // Get updated kill config type
-	KillValue(kube.Interface) (int, error)   // Get updated kill config value
+func New(spec Spec) *Victim {
+	if spec.CurrentLabels == nil {
+		// Reporting a termination as failed is the safe way to be short of a
+		// label reader, because nothing gets killed either way
+		spec.CurrentLabels = func(kube.Interface) (map[string]string, error) {
+			return nil, fmt.Errorf("%s %s has no way to read its labels back", spec.Kind, spec.Name)
+		}
+	}
+
+	return &Victim{
+		kind:          spec.Kind,
+		name:          spec.Name,
+		namespace:     spec.Namespace,
+		identifier:    spec.Identifier,
+		mtbf:          spec.Mtbf,
+		podSelector:   spec.PodSelector,
+		currentLabels: spec.CurrentLabels,
+	}
 }
 
-type VictimAPICalls interface {
-	// Exposed Api Calls
-	RunningPods(kube.Interface) ([]corev1.Pod, error)
-	Pods(kube.Interface) ([]corev1.Pod, error)
-	DeletePod(kube.Interface, string) error
-	DeleteRandomPod(kube.Interface) error // Deprecated, but faster than DeleteRandomPods for single pod termination
-	DeleteRandomPods(kube.Interface, int) error
-	IsBlacklisted() bool
-	IsWhitelisted() bool
+// SpecFromLabels reads the kube-monkey configuration an object carries in its
+// labels. The caller fills in the pod selector and the label reader, which are
+// the two things that differ between kinds of victim.
+func SpecFromLabels(kind, name, namespace string, objectLabels map[string]string) (Spec, error) {
+	identifier, ok := objectLabels[config.IdentLabelKey]
+	if !ok {
+		return Spec{}, fmt.Errorf("%s %s does not have %s label", kind, name, config.IdentLabelKey)
+	}
+
+	mtbfLabel, ok := objectLabels[config.MtbfLabelKey]
+	if !ok {
+		return Spec{}, fmt.Errorf("%s %s does not have %s label", kind, name, config.MtbfLabelKey)
+	}
+
+	mtbf, err := calendar.ParseMtbf(mtbfLabel)
+	if err != nil {
+		return Spec{}, fmt.Errorf("%s %s has an %w", kind, name, err)
+	}
+
+	return Spec{
+		Kind:       kind,
+		Name:       name,
+		Namespace:  namespace,
+		Identifier: identifier,
+		Mtbf:       mtbf,
+	}, nil
 }
 
-type VictimKillNumberGenerator interface {
-	KillNumberForMaxPercentage(kube.Interface, int) (int, error)
-	KillNumberForKillingAll(kube.Interface) (int, error)
-	KillNumberForFixedPercentage(kube.Interface, int) (int, error)
-}
-
-type VictimBase struct {
-	kind        string
-	name        string
-	namespace   string
-	identifier  string
-	mtbf        time.Duration
-	podSelector labels.Selector
-
-	VictimBaseTemplate
-}
-
-func New(kind, name, namespace, identifier string, mtbf time.Duration, podSelector labels.Selector) *VictimBase {
-	return &VictimBase{kind: kind, name: name, namespace: namespace, identifier: identifier, mtbf: mtbf, podSelector: podSelector}
-}
-
-func (v *VictimBase) Kind() string {
+func (v *Victim) Kind() string {
 	return v.kind
 }
 
-func (v *VictimBase) Name() string {
+func (v *Victim) Name() string {
 	return v.name
 }
 
-func (v *VictimBase) Namespace() string {
+func (v *Victim) Namespace() string {
 	return v.namespace
 }
 
-func (v *VictimBase) Identifier() string {
+func (v *Victim) Identifier() string {
 	return v.identifier
 }
 
-func (v *VictimBase) Mtbf() time.Duration {
+func (v *Victim) Mtbf() time.Duration {
 	return v.mtbf
 }
 
 // PodSelector returns the selector used to find the pods belonging to this victim
-func (v *VictimBase) PodSelector() labels.Selector {
+func (v *Victim) PodSelector() labels.Selector {
 	return v.podSelector
 }
 
-// RunningPods returns a list of running pods for the victim
-func (v *VictimBase) RunningPods(clientset kube.Interface) (runningPods []corev1.Pod, err error) {
-	pods, err := v.Pods(clientset)
+// IsEnrolled reports whether the victim is still opted in to kube-monkey
+func (v *Victim) IsEnrolled(clientset kube.Interface) (bool, error) {
+	current, err := v.currentLabels(clientset)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	for _, pod := range pods {
-		if pod.Status.Phase == corev1.PodRunning {
-			runningPods = append(runningPods, pod)
-		}
-	}
-
-	return runningPods, nil
+	return current[config.EnabledLabelKey] == config.EnabledLabelValue, nil
 }
 
-// Pods returns a list of pods under the victim
-func (v *VictimBase) Pods(clientset kube.Interface) ([]corev1.Pod, error) {
+// KillType returns how the victim wants its pods picked, which is one of the
+// kill mode label values
+func (v *Victim) KillType(clientset kube.Interface) (string, error) {
+	current, err := v.currentLabels(clientset)
+	if err != nil {
+		return "", err
+	}
+
+	killType, ok := current[config.KillTypeLabelKey]
+	if !ok {
+		return "", fmt.Errorf("%s %s does not have %s label", v.kind, v.name, config.KillTypeLabelKey)
+	}
+
+	return killType, nil
+}
+
+// KillValue returns the number the kill mode works off, which is a count of
+// pods or a percentage depending on the mode.
+//
+// Zero is allowed because it means "kill none of them" to the percentage
+// modes. It is the kill mode that decides whether zero makes sense.
+func (v *Victim) KillValue(clientset kube.Interface) (int, error) {
+	current, err := v.currentLabels(clientset)
+	if err != nil {
+		return 0, err
+	}
+
+	value, ok := current[config.KillValueLabelKey]
+	if !ok {
+		return 0, fmt.Errorf("%s %s does not have %s label", v.kind, v.name, config.KillValueLabelKey)
+	}
+
+	killValue, err := strconv.Atoi(value)
+	if err != nil || killValue < 0 {
+		return 0, fmt.Errorf("%s %s has an invalid %s label %q: expected a whole number that is not negative", v.kind, v.name, config.KillValueLabelKey, value)
+	}
+
+	return killValue, nil
+}
+
+// Pods returns the pods belonging to the victim
+func (v *Victim) Pods(clientset kube.Interface) ([]corev1.Pod, error) {
 	// An empty selector matches every pod in the namespace, so refuse to send one
 	if v.podSelector == nil || v.podSelector.Empty() {
 		return nil, fmt.Errorf("%s %s has no selector to find its pods with", v.kind, v.name)
@@ -128,18 +192,37 @@ func (v *VictimBase) Pods(clientset kube.Interface) ([]corev1.Pod, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return podlist.Items, nil
 }
 
-// DeletePod removes specified pod for victim
-func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
+// RunningPods returns the pods belonging to the victim that are running
+func (v *Victim) RunningPods(clientset kube.Interface) ([]corev1.Pod, error) {
+	pods, err := v.Pods(clientset)
+	if err != nil {
+		return nil, err
+	}
+
+	var running []corev1.Pod
+	for _, pod := range pods {
+		if pod.Status.Phase == corev1.PodRunning {
+			running = append(running, pod)
+		}
+	}
+
+	return running, nil
+}
+
+// DeletePod removes the named pod
+func (v *Victim) DeletePod(clientset kube.Interface, podName string) error {
 	if config.DryRun() {
 		glog.Infof("[DryRun Mode] Terminated pod %s for %s/%s", podName, v.namespace, v.name)
 		return nil
 	}
 
-	deleteOpts := v.GetDeleteOptsForPod()
-	if err := clientset.CoreV1().Pods(v.namespace).Delete(context.TODO(), podName, *deleteOpts); err != nil {
+	gracePeriod := config.GracePeriodSeconds()
+	deleteOpts := metav1.DeleteOptions{GracePeriodSeconds: &gracePeriod}
+	if err := clientset.CoreV1().Pods(v.namespace).Delete(context.TODO(), podName, deleteOpts); err != nil {
 		return err
 	}
 
@@ -147,48 +230,33 @@ func (v *VictimBase) DeletePod(clientset kube.Interface, podName string) error {
 	return nil
 }
 
-// Creates the DeleteOptions object
-// Grace period is derived from config
-func (v *VictimBase) GetDeleteOptsForPod() *metav1.DeleteOptions {
-	gracePeriodSec := config.GracePeriodSeconds()
-
-	return &metav1.DeleteOptions{
-		GracePeriodSeconds: gracePeriodSec,
+// DeleteRandomPods removes killNum of the victim's running pods, picked at
+// random. Asking for more pods than are running kills all of them.
+func (v *Victim) DeleteRandomPods(clientset kube.Interface, killNum int) error {
+	switch {
+	case killNum < 0:
+		return fmt.Errorf("cannot request negative terminations %d for %s %s", killNum, v.kind, v.name)
+	case killNum == 0:
+		return fmt.Errorf("no terminations requested for %s %s", v.kind, v.name)
 	}
-}
 
-// DeleteRandomPods removes specified number of random pods for the victim
-func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) error {
-	// Pick a target pod to delete
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
 		return err
 	}
-
-	numPods := len(pods)
-	switch {
-	case numPods == 0:
+	if len(pods) == 0 {
 		return fmt.Errorf("%s %s has no running pods at the moment", v.kind, v.name)
-	case killNum == 0:
-		return fmt.Errorf("no terminations requested for %s %s", v.kind, v.name)
-	case numPods < killNum:
-		glog.Warningf("%s %s has only %d currently running pods, but %d terminations requested", v.kind, v.name, numPods, killNum)
-		killNum = numPods
-		fallthrough
-	case numPods == killNum:
-		glog.V(6).Infof("Killing ALL %d running pods for %s %s", numPods, v.kind, v.name)
-	case killNum < 0:
-		return fmt.Errorf("cannot request negative terminations %d for %s %s", killNum, v.kind, v.name)
-	case numPods > killNum:
-		glog.V(6).Infof("Killing %d running pods for %s %s", killNum, v.kind, v.name)
-	default:
-		return fmt.Errorf("unexpected behavior for terminating %s %s", v.kind, v.name)
 	}
+
+	if killNum > len(pods) {
+		glog.Warningf("%s %s has only %d currently running pods, but %d terminations requested", v.kind, v.name, len(pods), killNum)
+		killNum = len(pods)
+	}
+	glog.V(6).Infof("Killing %d of the %d running pods for %s %s", killNum, len(pods), v.kind, v.name)
 
 	// Deleting a pod that is already going away succeeds but kills nothing extra,
 	// so take the victims off a shuffled list to keep every pick a different pod
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	r.Shuffle(numPods, func(i, j int) { pods[i], pods[j] = pods[j], pods[i] })
+	rand.Shuffle(len(pods), func(i, j int) { pods[i], pods[j] = pods[j], pods[i] })
 
 	for _, pod := range pods[:killNum] {
 		glog.V(6).Infof("Terminating pod %s for %s %s/%s\n", pod.Name, v.kind, v.namespace, v.name)
@@ -198,36 +266,78 @@ func (v *VictimBase) DeleteRandomPods(clientset kube.Interface, killNum int) err
 		}
 	}
 
-	// Successful termination
 	return nil
 }
 
-// Deprecated for DeleteRandomPods(clientset, 1)
-// Remove a random pod for the victim
-func (v *VictimBase) DeleteRandomPod(clientset kube.Interface) error {
-	// Pick a target pod to delete
+// KillNumberForKillingAll returns the number of pods to kill when every running
+// pod should go
+func (v *Victim) KillNumberForKillingAll(clientset kube.Interface) (int, error) {
+	return v.numberOfRunningPods(clientset)
+}
+
+// KillNumberForFixedPercentage returns the number of pods making up the given
+// percentage of the running pods
+func (v *Victim) KillNumberForFixedPercentage(clientset kube.Interface, killPercentage int) (int, error) {
+	return v.killNumberForPercentage(clientset, killPercentage)
+}
+
+// KillNumberForMaxPercentage returns the number of pods making up a percentage
+// of the running pods drawn at random between 0 and maxPercentage
+func (v *Victim) KillNumberForMaxPercentage(clientset kube.Interface, maxPercentage int) (int, error) {
+	if err := validPercentage(maxPercentage); err != nil {
+		return 0, err
+	}
+
+	return v.killNumberForPercentage(clientset, randomPercentage(maxPercentage))
+}
+
+// randomPercentage draws a percentage between 0 and max, both ends included.
+// A variable so tests can pin the draw down.
+var randomPercentage = func(max int) int {
+	// +1 because IntN draws from [0,n) and the range is meant to include max
+	return rand.IntN(max + 1)
+}
+
+func (v *Victim) killNumberForPercentage(clientset kube.Interface, killPercentage int) (int, error) {
+	if err := validPercentage(killPercentage); err != nil {
+		return 0, err
+	}
+	if killPercentage == 0 {
+		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0", v.kind, v.name)
+		return 0, nil
+	}
+
+	numRunningPods, err := v.numberOfRunningPods(clientset)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(math.Round(float64(numRunningPods) * float64(killPercentage) / 100)), nil
+}
+
+func validPercentage(percentage int) error {
+	if percentage < 0 || percentage > 100 {
+		return fmt.Errorf("percentage value of %d is invalid. Must be [0-100]", percentage)
+	}
+	return nil
+}
+
+func (v *Victim) numberOfRunningPods(clientset kube.Interface) (int, error) {
 	pods, err := v.RunningPods(clientset)
 	if err != nil {
-		return err
+		return 0, fmt.Errorf("failed to get running pods for victim %s %s: %w", v.kind, v.name, err)
 	}
 
-	if len(pods) == 0 {
-		return fmt.Errorf("%s %s has no running pods at the moment", v.kind, v.name)
-	}
-
-	targetPod := RandomPodName(pods)
-
-	glog.V(6).Infof("Terminating pod %s for %s %s\n", targetPod, v.kind, v.name)
-	return v.DeletePod(clientset, targetPod)
+	return len(pods), nil
 }
 
 // IsBlacklisted checks if this victim is blacklisted
-func (v *VictimBase) IsBlacklisted() bool {
+func (v *Victim) IsBlacklisted() bool {
 	return config.IsBlacklistedNamespace(v.namespace)
 }
 
 // IsWhitelisted checks if this victim is whitelisted
-func (v *VictimBase) IsWhitelisted() bool {
+func (v *Victim) IsWhitelisted() bool {
 	return config.IsWhitelistedNamespace(v.namespace)
 }
 
@@ -263,77 +373,4 @@ func NewPodSelector(kind, name, identifier string, podTemplateLabels map[string]
 	}
 
 	return selector, nil
-}
-
-// RandomPodName picks a random pod name from a list of Pods
-func RandomPodName(pods []corev1.Pod) string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	randIndex := r.Intn(len(pods))
-	return pods[randIndex].Name
-}
-
-// KillNumberForKillingAll returns the number of pods to kill based on the number of all running pods
-func (v *VictimBase) KillNumberForKillingAll(clientset kube.Interface) (int, error) {
-	killNum, err := v.numberOfRunningPods(clientset)
-	if err != nil {
-		return 0, err
-	}
-
-	return killNum, nil
-}
-
-// KillNumberForFixedPercentage returns the number of pods to kill based on a kill percentage and the number of running pods
-func (v *VictimBase) KillNumberForFixedPercentage(clientset kube.Interface, killPercentage int) (int, error) {
-	if killPercentage == 0 {
-		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0\n", v.kind, v.name)
-		// Report success
-		return 0, nil
-	}
-	if killPercentage < 0 || killPercentage > 100 {
-		return 0, fmt.Errorf("percentage value of %d is invalid. Must be [0-100]", killPercentage)
-	}
-
-	numRunningPods, err := v.numberOfRunningPods(clientset)
-	if err != nil {
-		return 0, err
-	}
-
-	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
-	killNum := int(math.Round(numberOfPodsToKill))
-
-	return killNum, nil
-}
-
-// KillNumberForMaxPercentage returns a number of pods to kill based on a a random kill percentage (between 0 and maxPercentage) and the number of running pods
-func (v *VictimBase) KillNumberForMaxPercentage(clientset kube.Interface, maxPercentage int) (int, error) {
-	if maxPercentage == 0 {
-		glog.V(6).Infof("Not terminating any pods for %s %s as kill percentage is 0", v.kind, v.name)
-		// Report success
-		return 0, nil
-	}
-	if maxPercentage < 0 || maxPercentage > 100 {
-		return 0, fmt.Errorf("percentage value of %d is invalid. Must be [0-100]", maxPercentage)
-	}
-
-	numRunningPods, err := v.numberOfRunningPods(clientset)
-	if err != nil {
-		return 0, err
-	}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	killPercentage := r.Intn(maxPercentage + 1) // + 1 because Intn works with half open interval [0,n) and we want [0,n]
-	numberOfPodsToKill := float64(numRunningPods) * float64(killPercentage) / 100
-	killNum := int(math.Round(numberOfPodsToKill))
-
-	return killNum, nil
-}
-
-// Returns the number of running pods or 0 if the operation fails
-func (v *VictimBase) numberOfRunningPods(clientset kube.Interface) (int, error) {
-	pods, err := v.RunningPods(clientset)
-	if err != nil {
-		return 0, fmt.Errorf("Failed to get running pods for victim %s %s: %w", v.kind, v.name, err)
-	}
-
-	return len(pods), nil
 }

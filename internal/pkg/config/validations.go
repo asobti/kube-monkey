@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -40,22 +39,28 @@ func ValidateConfigs() error {
 	}
 
 	// StartHour should be < EndHour
-	if !(startHour < endHour) {
+	if startHour >= endHour {
 		return fmt.Errorf("StartHour: %s must be less than %s", param.StartHour, param.EndHour)
 	}
 
 	// RunHour should be < StartHour
-	if !(runHour < startHour) {
+	if runHour >= startHour {
 		return fmt.Errorf("RunHour: %s should be less than %s", param.RunHour, param.StartHour)
+	}
+
+	// An unknown zone would only be noticed when the first kill time is worked
+	// out, which is after kube-monkey reports itself as started
+	if _, err := parseTimezone(); err != nil {
+		return fmt.Errorf("Timezone: %s is not a known time zone: %v", param.Timezone, err)
 	}
 
 	// Namespace entries are patterns, so a typo like "[foo" would silently
 	// stop matching the namespaces it was meant to cover
-	if err := validateNamespacePatterns("BlacklistedNamespaces", param.BlacklistedNamespaces, BlacklistedNamespaces().UnsortedList()); err != nil {
+	if err := validateNamespacePatterns("BlacklistedNamespaces", param.BlacklistedNamespaces, BlacklistedNamespaces()); err != nil {
 		return err
 	}
 
-	if err := validateNamespacePatterns("WhitelistedNamespaces", param.WhitelistedNamespaces, WhitelistedNamespaces().UnsortedList()); err != nil {
+	if err := validateNamespacePatterns("WhitelistedNamespaces", param.WhitelistedNamespaces, WhitelistedNamespaces()); err != nil {
 		return err
 	}
 
@@ -93,7 +98,7 @@ func validateCustomResources() error {
 	seen := sets.NewString()
 	for _, resource := range resources {
 		if resource.Version == "" || resource.Resource == "" {
-			return fmt.Errorf("CustomResources: %s has an entry without a version and a resource", param.CustomResources)
+			return fmt.Errorf("CustomResources: %s has an entry missing its version or its resource", param.CustomResources)
 		}
 
 		// The plural resource name, not the kind, because that is what the
@@ -131,8 +136,9 @@ func IsValidHour(hour int) bool {
 	return hour >= 0 && hour < 24
 }
 
+// isValidHeader checks a configured header reads as "key:value"
 func isValidHeader(header string) bool {
-	re := regexp.MustCompile("^(.+:.+)$")
+	key, value, found := strings.Cut(header, ":")
 
-	return re.MatchString(header)
+	return found && key != "" && value != ""
 }

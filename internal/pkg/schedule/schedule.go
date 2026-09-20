@@ -1,8 +1,12 @@
+/*
+Package schedule draws up the day's terminations: which victims die today and
+at what time.
+*/
 package schedule
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"strings"
 	"time"
@@ -30,45 +34,7 @@ type Schedule struct {
 	entries []*chaos.Chaos
 }
 
-func (s *Schedule) Entries() []*chaos.Chaos {
-	return s.entries
-}
-
-func (s *Schedule) Add(entry *chaos.Chaos) {
-	s.entries = append(s.entries, entry)
-}
-
-func (s *Schedule) String() string {
-	schedString := []string{}
-
-	schedString = append(schedString, fmt.Sprint(Today))
-
-	kubeMonkeyID := os.Getenv("KUBE_MONKEY_ID")
-	if kubeMonkeyID != "" {
-		schedString = append(schedString, fmt.Sprintf(KubeMonkeyID, kubeMonkeyID))
-	}
-
-	if len(s.entries) == 0 {
-		schedString = append(schedString, fmt.Sprint(NoTermination))
-	} else {
-		schedString = append(schedString, fmt.Sprint(HeaderRow))
-		schedString = append(schedString, fmt.Sprint(SepRow))
-		for _, chaos := range s.entries {
-			schedString = append(schedString, fmt.Sprintf(RowFormat, chaos.Victim().Kind(), chaos.Victim().Namespace(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat)))
-		}
-	}
-	schedString = append(schedString, fmt.Sprint(End))
-
-	return strings.Join(schedString, "\n")
-}
-
-func (s Schedule) Print() {
-	glog.V(4).Infof("Status Update: %v terminations scheduled today", len(s.entries))
-	for _, chaos := range s.entries {
-		glog.V(4).Infof("%s %s scheduled for termination at %s", chaos.Victim().Kind(), chaos.Victim().Name(), chaos.KillAt().Format(DateFormat))
-	}
-}
-
+// New draws up today's schedule from the victims that have opted in
 func New() (*Schedule, error) {
 	glog.V(3).Info("Status Update: Generating schedule for terminations")
 	victims, err := factory.EligibleVictims()
@@ -76,10 +42,7 @@ func New() (*Schedule, error) {
 		return nil, err
 	}
 
-	schedule := &Schedule{
-		entries: []*chaos.Chaos{},
-	}
-
+	schedule := &Schedule{}
 	for _, victim := range victims {
 		for _, killtime := range CalculateKillTimes(victim.Mtbf()) {
 			schedule.Add(chaos.New(killtime, victim))
@@ -89,16 +52,44 @@ func New() (*Schedule, error) {
 	return schedule, nil
 }
 
+func (s *Schedule) Entries() []*chaos.Chaos {
+	return s.entries
+}
+
+func (s *Schedule) Add(entry *chaos.Chaos) {
+	s.entries = append(s.entries, entry)
+}
+
+func (s *Schedule) String() string {
+	rows := []string{Today}
+
+	if kubeMonkeyID := os.Getenv("KUBE_MONKEY_ID"); kubeMonkeyID != "" {
+		rows = append(rows, fmt.Sprintf(KubeMonkeyID, kubeMonkeyID))
+	}
+
+	if len(s.entries) == 0 {
+		rows = append(rows, NoTermination)
+	} else {
+		rows = append(rows, HeaderRow, SepRow)
+		for _, entry := range s.entries {
+			victim := entry.Victim()
+			rows = append(rows, fmt.Sprintf(RowFormat, victim.Kind(), victim.Namespace(), victim.Name(), entry.KillAt().Format(DateFormat)))
+		}
+	}
+
+	return strings.Join(append(rows, End), "\n")
+}
+
 // CalculateKillTimes returns the times of today's terminations for a victim
 // with the given mtbf. An mtbf shorter than a day gives more than one
 // termination, a longer one gives none on most days.
 func CalculateKillTimes(mtbf time.Duration) []time.Time {
 	loc := config.Timezone()
+
 	if config.DebugEnabled() && config.DebugScheduleImmediateKill() {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		// calculate a second-offset in the next minute
-		secOffset := r.Intn(60)
-		return []time.Time{time.Now().In(loc).Add(time.Duration(secOffset) * time.Second)}
+		// Somewhere in the next minute, so a debugging run does not have to wait
+		// for the configured hours to come round
+		return []time.Time{time.Now().In(loc).Add(time.Duration(rand.IntN(60)) * time.Second)}
 	}
 
 	killtimes := calendar.KillTimesInRange(mtbf, config.StartHour(), config.EndHour(), loc)
