@@ -26,7 +26,16 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - "/kube-monkey"
-          args: ["-v={{ .Values.args.logLevel }}", "-log_dir={{ .Values.args.logDir }}"]
+          args:
+            - "-v={{ .Values.args.logLevel }}"
+            {{- if .Values.args.logDir }}
+            - "-log_dir={{ .Values.args.logDir }}"
+            {{- else }}
+            - "-logtostderr=true"
+            {{- end }}
+            {{- range .Values.args.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
           {{- if .Values.config.metrics.enabled }}
           ports:
             - name: metrics
