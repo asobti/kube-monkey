@@ -1,11 +1,9 @@
-{{- if .Values.serviceAccount }}
 {{- if not .Values.serviceAccount.name }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ template "kubemonkey.fullname" . }}
   namespace: {{ .Release.Namespace }}
-{{- end}}
 {{- end}}
 
 ---
