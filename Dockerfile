@@ -4,7 +4,7 @@
 # Pinned to the build platform so the compiler always runs natively and
 # cross-compiles to the target, instead of running the whole toolchain
 # under QEMU emulation.
-FROM --platform=$BUILDPLATFORM golang:1.26 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27 AS builder
 
 # BuildKit supplies these per target platform. The defaults only apply to the
 # classic builder, which leaves them unset.
